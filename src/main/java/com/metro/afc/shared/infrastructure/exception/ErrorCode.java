@@ -40,6 +40,10 @@ public enum ErrorCode {
     SETTLEMENT_NOT_FOUND(404,   "Quyết toán không tồn tại"),
     SETTLEMENT_ALREADY_CONFIRMED(409, "Quyết toán đã được xác nhận"),
 
+    //Operator
+    OPERATOR_NOT_FOUND(404, "Không tìm thấy công ty vận hành"),
+    OPERATOR_ALREADY_EXISTS(409, "Công ty vận hành đã tồn tại"),
+
     // Generic
     VALIDATION_ERROR(400,   "Dữ liệu không hợp lệ"),
     INTERNAL_ERROR(500,     "Lỗi hệ thống");
