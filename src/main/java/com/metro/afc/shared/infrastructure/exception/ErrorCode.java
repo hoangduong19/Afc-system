@@ -22,6 +22,7 @@ public enum ErrorCode {
     CARD_BLACKLISTED(403,   "Thẻ đang trong danh sách đen"),
     CARD_INACTIVE(403,      "Thẻ chưa được kích hoạt"),
     CARD_ALREADY_LINKED(409,"Thẻ đã được liên kết với tài khoản khác"),
+    CARD_INVALID_TRANSITION(403, "Khong the chuyen format"),
 
     // Wallet
     WALLET_NOT_FOUND(404,   "Ví không tồn tại"),
