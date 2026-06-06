@@ -30,8 +30,9 @@ public enum ErrorCode {
     INSUFFICIENT_BALANCE(400,"Số dư không đủ"),
 
     // Fare
-    FARE_RULE_NOT_FOUND(404,"Quy tắc giá vé không tồn tại"),
-    FARE_RULE_INACTIVE(400, "Quy tắc giá vé không còn hiệu lực"),
+    FARE_RULE_NOT_FOUND(404,    "Quy tắc giá vé không tồn tại"),
+    FARE_RULE_INACTIVE(400,     "Quy tắc giá vé không còn hiệu lực"),
+    FARE_RULE_ALREADY_EXISTS(409, "Mã quy tắc giá vé đã tồn tại"),
 
     // Trip
     TRIP_NOT_FOUND(404,     "Chuyến đi không tồn tại"),
