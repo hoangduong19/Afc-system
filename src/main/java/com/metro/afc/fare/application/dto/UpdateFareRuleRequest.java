@@ -26,7 +26,9 @@ public record UpdateFareRuleRequest(
         @NotNull(message = "Effective from không được để trống")
         LocalDate effectiveFrom,
 
-        LocalDate effectiveTo
+        LocalDate effectiveTo,
+
+        String reason
 ) {
     public UpdateFareRuleRequest {
         if (minPrice != null && maxPrice != null

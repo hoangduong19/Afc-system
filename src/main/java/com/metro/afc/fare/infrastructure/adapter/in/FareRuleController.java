@@ -1,6 +1,7 @@
 package com.metro.afc.fare.infrastructure.adapter.in;
 
 import com.metro.afc.fare.application.dto.CreateFareRuleRequest;
+import com.metro.afc.fare.application.dto.DisableFareRuleRequest;
 import com.metro.afc.fare.application.dto.FareRuleResponse;
 import com.metro.afc.fare.application.dto.UpdateFareRuleRequest;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
@@ -42,8 +43,10 @@ public class FareRuleController {
 
     @PatchMapping("/{id}/disable")
     @PreAuthorize("hasAuthority('FARE_DISABLE')")
-    public ResponseEntity<Void> disable(@PathVariable UUID id) {
-        fareRuleFacade.disable(id, SecurityUtils.getCurrentUserId());
+    public ResponseEntity<Void> disable(
+            @PathVariable UUID id,
+            @Valid @RequestBody DisableFareRuleRequest request) {
+        fareRuleFacade.disable(id, request, SecurityUtils.getCurrentUserId());
         return ResponseEntity.noContent().build();
     }
 

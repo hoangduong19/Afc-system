@@ -17,10 +17,10 @@ public interface FareRuleUseCase {
 
     FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                     BigDecimal minPrice, BigDecimal maxPrice,
-                    LocalDate effectiveFrom, LocalDate effectiveTo,
+                    LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                     UUID updatedBy);
 
-    void disable(UUID id, UUID disabledBy);
+    void disable(UUID id, String reason, UUID disabledBy);
 
     FareRule findById(UUID id);
     List<FareRule> findAllActive();

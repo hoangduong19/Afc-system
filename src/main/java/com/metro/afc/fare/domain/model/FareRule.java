@@ -95,7 +95,7 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
 
     public FareRule newVersion(BigDecimal baseFare, BigDecimal ratePerKm,
                                BigDecimal minPrice, BigDecimal maxPrice,
-                               LocalDate effectiveFrom, LocalDate effectiveTo,
+                               LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                                UUID createdBy) {
         String oldSnapshot = this.snapshot();
 
@@ -113,12 +113,12 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         next.version       = this.version + 1;
         next.createdBy     = createdBy;
         next.registerEvent(new FareRuleUpdatedEvent(
-                next.id, oldSnapshot, next.snapshot(), createdBy
+                next.id, oldSnapshot, next.snapshot(), reason, createdBy
         ));
         return next;
     }
 
-    public void disable(UUID disabledBy) {
+    public void disable(String reason, UUID disabledBy) {
         if (this.status == FareStatus.INACTIVE) {
             throw new BusinessRuleException(
                     ErrorCode.FARE_RULE_INACTIVE,
@@ -127,7 +127,7 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         }
         String oldSnapshot = snapshot();
         this.status = FareStatus.INACTIVE;
-        this.registerEvent(new FareRuleDisabledEvent(this.id, oldSnapshot, disabledBy));
+        this.registerEvent(new FareRuleDisabledEvent(this.id, oldSnapshot, reason, disabledBy));
     }
 
     public boolean isActive() {

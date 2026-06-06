@@ -6,5 +6,6 @@ public record FareRuleUpdatedEvent(
         UUID newFareRuleId,
         String oldSnapshot,
         String newSnapshot,
+        String reason,
         UUID updatedBy
 ) {}

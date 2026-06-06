@@ -31,6 +31,7 @@ public class FareRuleAuditLogEventHandler {
                 event.newFareRuleId(),
                 event.oldSnapshot(),
                 event.newSnapshot(),
+                event.reason(),
                 event.updatedBy()
         ));
     }
@@ -40,6 +41,7 @@ public class FareRuleAuditLogEventHandler {
         auditLogRepository.save(FareRuleAuditLog.disabled(
                 event.fareRuleId(),
                 event.oldSnapshot(),
+                event.reason(),
                 event.disabledBy()
         ));
     }

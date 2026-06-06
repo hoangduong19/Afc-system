@@ -62,12 +62,14 @@ public class FareRuleAuditLog {
     public static FareRuleAuditLog updated(UUID fareRuleId,
                                            String oldSnapshot,
                                            String newSnapshot,
+                                           String reason,
                                            UUID changedBy) {
         FareRuleAuditLog log = new FareRuleAuditLog();
         log.fareRuleId  = fareRuleId;
         log.changeType  = FareChangeType.UPDATED;
         log.oldValue    = oldSnapshot;
         log.newValue    = newSnapshot;
+        log.reason      = reason;
         log.changedBy   = changedBy;
         log.changedAt   = Instant.now();
         return log;
@@ -75,12 +77,14 @@ public class FareRuleAuditLog {
 
     public static FareRuleAuditLog disabled(UUID fareRuleId,
                                             String oldSnapshot,
+                                            String reason,
                                             UUID changedBy) {
         FareRuleAuditLog log = new FareRuleAuditLog();
         log.fareRuleId  = fareRuleId;
         log.changeType  = FareChangeType.DISABLED;
         log.oldValue    = oldSnapshot;
         log.newValue    = null;
+        log.reason      = reason;
         log.changedBy   = changedBy;
         log.changedAt   = Instant.now();
         return log;

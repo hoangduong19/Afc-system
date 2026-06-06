@@ -46,6 +46,7 @@ public class FareRuleService implements FareRuleUseCase {
     public FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                            BigDecimal minPrice, BigDecimal maxPrice,
                            LocalDate effectiveFrom, LocalDate effectiveTo,
+                           String reason,
                            UUID updatedBy) {
         FareRule current = findOrThrow(id);
         if (!current.isActive()) {
@@ -55,15 +56,15 @@ public class FareRuleService implements FareRuleUseCase {
         fareRuleRepository.save(current);
         return fareRuleRepository.save(
                 current.newVersion(baseFare, ratePerKm, minPrice, maxPrice,
-                        effectiveFrom, effectiveTo, updatedBy)
+                        effectiveFrom, effectiveTo, reason, updatedBy)
         );
     }
 
     @Override
     @Transactional
-    public void disable(UUID id, UUID disabledBy) {
+    public void disable(UUID id, String reason, UUID disabledBy) {
         FareRule fareRule = findOrThrow(id);
-        fareRule.disable(disabledBy);
+        fareRule.disable(reason, disabledBy);
         fareRuleRepository.save(fareRule);
     }
 

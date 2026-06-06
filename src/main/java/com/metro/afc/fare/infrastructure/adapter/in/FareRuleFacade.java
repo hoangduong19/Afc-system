@@ -1,6 +1,7 @@
 package com.metro.afc.fare.infrastructure.adapter.in;
 
 import com.metro.afc.fare.application.dto.CreateFareRuleRequest;
+import com.metro.afc.fare.application.dto.DisableFareRuleRequest;
 import com.metro.afc.fare.application.dto.FareRuleResponse;
 import com.metro.afc.fare.application.dto.UpdateFareRuleRequest;
 import com.metro.afc.fare.application.port.in.FareRuleUseCase;
@@ -41,13 +42,14 @@ public class FareRuleFacade {
                 request.maxPrice(),
                 request.effectiveFrom(),
                 request.effectiveTo(),
+                request.reason(),
                 updatedBy
         );
         return FareRuleResponse.from(fareRule);
     }
 
-    public void disable(UUID id, UUID disabledBy) {
-        fareRuleUseCase.disable(id, disabledBy);
+    public void disable(UUID id, DisableFareRuleRequest request, UUID disabledBy) {
+        fareRuleUseCase.disable(id, request.reason(), disabledBy);
     }
 
     public FareRuleResponse findById(UUID id) {
