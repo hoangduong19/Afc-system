@@ -10,12 +10,11 @@ public record CardResponse(
         String cardUid,
         String status,
         String type,
-        boolean supportsMetro,
-        boolean supportsBus,
+        Boolean supportsMetro,
+        Boolean supportsBus,
         UUID issuedAtStationId,
         UUID linkedUserId,
         Instant activatedAt,
-        Instant linkedAt,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -25,12 +24,11 @@ public record CardResponse(
                 card.getCardUid(),
                 card.getStatus().name(),
                 card.getType().name(),
-                card.isSupportsMetro(),
-                card.isSupportsBus(),
+                card.getSupportsMetro(),
+                card.getSupportsBus(),
                 card.getIssuedAtStationId(),
                 card.getLinkedUserId(),
                 card.getActivatedAt(),
-                card.getLinkedAt(),
                 card.getCreatedAt(),
                 card.getUpdatedAt()
         );

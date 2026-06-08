@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record IssueCardRequest(
-        @NotNull(message = "Station ID không được để trống")
+        @NotNull(message = "Station ID is required")
         UUID stationId
 ) {}

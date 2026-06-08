@@ -11,6 +11,7 @@ public interface StationRepository {
     List<Station> findByRouteId(UUID routeId);
     List<Station> findAll();
     boolean existsByCode(String code);
+    boolean existsById(UUID id);
     boolean existsByRouteIdAndStationOrder(UUID routeId, Integer stationOrder);
     Optional<Station> findMaxKmMarkerByRouteId(UUID routeId);
     Optional<Station> findPreviousStation(UUID routeId, Integer stationOrder);

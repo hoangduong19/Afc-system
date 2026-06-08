@@ -1,8 +1,10 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
+import com.metro.afc.card.application.dto.CardActionRequest;
 import com.metro.afc.card.application.dto.CardResponse;
+import com.metro.afc.card.application.dto.CreateCardRequest;
 import com.metro.afc.card.application.dto.IssueCardRequest;
-import com.metro.afc.card.application.dto.RegisterCardRequest;
+import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,10 +25,9 @@ public class CardController {
     @PostMapping
     @PreAuthorize("hasAuthority('CARD_ISSUE')")
     public ResponseEntity<CardResponse> create(
-            @Valid @RequestBody RegisterCardRequest request) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(cardFacade.create(request));
+            @Valid @RequestBody CreateCardRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cardFacade.create(request, SecurityUtils.getCurrentUserId()));
     }
 
     @PatchMapping("/{id}/issue")
@@ -34,37 +35,59 @@ public class CardController {
     public ResponseEntity<CardResponse> issue(
             @PathVariable UUID id,
             @Valid @RequestBody IssueCardRequest request) {
-        return ResponseEntity.ok(cardFacade.issue(id, request));
+        return ResponseEntity.ok(
+                cardFacade.issue(id, request, SecurityUtils.getCurrentUserId())
+        );
     }
 
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasAuthority('CARD_ACTIVATE')")
     public ResponseEntity<CardResponse> activate(@PathVariable UUID id) {
-        return ResponseEntity.ok(cardFacade.activate(id));
+        return ResponseEntity.ok(
+                cardFacade.activate(id, SecurityUtils.getCurrentUserId())
+        );
     }
 
     @PatchMapping("/{id}/suspend")
     @PreAuthorize("hasAuthority('CARD_SUSPEND')")
-    public ResponseEntity<CardResponse> suspend(@PathVariable UUID id) {
-        return ResponseEntity.ok(cardFacade.suspend(id));
+    public ResponseEntity<CardResponse> suspend(
+            @PathVariable UUID id,
+            @Valid @RequestBody CardActionRequest request) {
+        return ResponseEntity.ok(
+                cardFacade.suspend(id, request, SecurityUtils.getCurrentUserId())
+        );
     }
 
     @PatchMapping("/{id}/unsuspend")
     @PreAuthorize("hasAuthority('CARD_SUSPEND')")
-    public ResponseEntity<CardResponse> unsuspend(@PathVariable UUID id) {
-        return ResponseEntity.ok(cardFacade.unsuspend(id));
+    public ResponseEntity<CardResponse> unsuspend(
+            @PathVariable UUID id,
+            @Valid @RequestBody CardActionRequest request) {
+        return ResponseEntity.ok(
+                cardFacade.unsuspend(id, request, SecurityUtils.getCurrentUserId())
+        );
     }
 
     @PatchMapping("/{id}/revoke")
     @PreAuthorize("hasAuthority('CARD_REVOKE')")
-    public ResponseEntity<CardResponse> revoke(@PathVariable UUID id) {
-        return ResponseEntity.ok(cardFacade.revoke(id));
+    public ResponseEntity<CardResponse> revoke(
+            @PathVariable UUID id,
+            @Valid @RequestBody CardActionRequest request) {
+        return ResponseEntity.ok(
+                cardFacade.revoke(id, request, SecurityUtils.getCurrentUserId())
+        );
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('CARD_READ')")
     public ResponseEntity<CardResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(cardFacade.findById(id));
+    }
+
+    @GetMapping("/uid/{cardUid}")
+    @PreAuthorize("hasAuthority('CARD_READ')")
+    public ResponseEntity<CardResponse> findByCardUid(@PathVariable String cardUid) {
+        return ResponseEntity.ok(cardFacade.findByCardUid(cardUid));
     }
 
     @GetMapping

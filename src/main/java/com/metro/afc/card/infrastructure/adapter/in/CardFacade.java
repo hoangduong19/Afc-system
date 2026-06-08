@@ -1,10 +1,10 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
+import com.metro.afc.card.application.dto.CardActionRequest;
 import com.metro.afc.card.application.dto.CardResponse;
+import com.metro.afc.card.application.dto.CreateCardRequest;
 import com.metro.afc.card.application.dto.IssueCardRequest;
-import com.metro.afc.card.application.dto.RegisterCardRequest;
 import com.metro.afc.card.application.port.in.CardUseCase;
-import com.metro.afc.card.domain.model.Card;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,48 +17,44 @@ public class CardFacade {
 
     private final CardUseCase cardUseCase;
 
-    public CardResponse create(RegisterCardRequest request) {
-        Card card = cardUseCase.create(
-                request.cardUid(),
-                request.supportsMetro(),
-                request.supportsBus()
-        );
-        return CardResponse.from(card);
+    public CardResponse create(CreateCardRequest request, UUID createdBy) {
+        return CardResponse.from(cardUseCase.create(
+                request.cardUid(), request.type(), request.userId(),
+                request.supportsMetro(), request.supportsBus(),
+                createdBy
+        ));
     }
 
-    public CardResponse issue(UUID id, IssueCardRequest request) {
-        Card card = cardUseCase.issue(id, request.stationId());
-        return CardResponse.from(card);
+    public CardResponse issue(UUID id, IssueCardRequest request, UUID changedBy) {
+        return CardResponse.from(cardUseCase.issue(id, request.stationId(), changedBy));
     }
 
-    public CardResponse activate(UUID id) {
-        Card card = cardUseCase.activate(id);
-        return CardResponse.from(card);
+    public CardResponse activate(UUID id, UUID changedBy) {
+        return CardResponse.from(cardUseCase.activate(id, changedBy));
     }
 
-    public CardResponse suspend(UUID id) {
-        Card card = cardUseCase.suspend(id);
-        return CardResponse.from(card);
+    public CardResponse suspend(UUID id, CardActionRequest request, UUID changedBy) {
+        return CardResponse.from(cardUseCase.suspend(id, request.reason(), changedBy));
     }
 
-    public CardResponse unsuspend(UUID id) {
-        Card card = cardUseCase.unsuspend(id);
-        return CardResponse.from(card);
+    public CardResponse unsuspend(UUID id, CardActionRequest request, UUID changedBy) {
+        return CardResponse.from(cardUseCase.unsuspend(id, request.reason(), changedBy));
     }
 
-    public CardResponse revoke(UUID id) {
-        Card card = cardUseCase.revoke(id);
-        return CardResponse.from(card);
+    public CardResponse revoke(UUID id, CardActionRequest request, UUID changedBy) {
+        return CardResponse.from(cardUseCase.revoke(id, request.reason(), changedBy));
     }
 
     public CardResponse findById(UUID id) {
         return CardResponse.from(cardUseCase.findById(id));
     }
 
+    public CardResponse findByCardUid(String cardUid) {
+        return CardResponse.from(cardUseCase.findByCardUid(cardUid));
+    }
+
     public List<CardResponse> findAll() {
-        return cardUseCase.findAll()
-                .stream()
-                .map(CardResponse::from)
-                .toList();
+        return cardUseCase.findAll().stream()
+                .map(CardResponse::from).toList();
     }
 }

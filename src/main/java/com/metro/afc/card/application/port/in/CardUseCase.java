@@ -1,17 +1,20 @@
 package com.metro.afc.card.application.port.in;
 
 import com.metro.afc.card.domain.model.Card;
+import com.metro.afc.card.domain.model.enums.CardType;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface CardUseCase {
-    Card create(String cardUid, boolean supportsMetro, boolean supportsBus);
-    Card issue(UUID id, UUID stationId);
-    Card activate(UUID id);
-    Card suspend(UUID id);
-    Card unsuspend(UUID id);
-    Card revoke(UUID id);
+    Card create(String cardUid, CardType type, UUID userId,
+                Boolean supportsMetro, Boolean supportsBus, UUID createdBy);
+    Card issue(UUID id, UUID stationId, UUID changedBy);
+    Card activate(UUID id, UUID changedBy);
+    Card suspend(UUID id, String reason, UUID changedBy);
+    Card unsuspend(UUID id, String reason, UUID changedBy);
+    Card revoke(UUID id, String reason, UUID changedBy);
     Card findById(UUID id);
+    Card findByCardUid(String cardUid);
     List<Card> findAll();
 }

@@ -31,6 +31,9 @@ public class StationRepositoryImpl implements StationRepository {
     }
 
     @Override
+    public boolean existsById(UUID id) {return jpa.existsById(id);}
+
+    @Override
     public boolean existsByCode(String code) {
         return jpa.existsByCode(code);
     }

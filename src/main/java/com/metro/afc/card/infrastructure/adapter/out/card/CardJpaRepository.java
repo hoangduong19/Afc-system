@@ -1,4 +1,4 @@
-package com.metro.afc.card.infrastructure.adapter.out;
+package com.metro.afc.card.infrastructure.adapter.out.card;
 
 import com.metro.afc.card.domain.model.Card;
 import org.springframework.data.jpa.repository.JpaRepository;
