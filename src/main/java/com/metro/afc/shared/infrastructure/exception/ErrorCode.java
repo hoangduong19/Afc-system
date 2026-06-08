@@ -52,6 +52,12 @@ public enum ErrorCode {
     ROUTE_ALREADY_EXISTS(409, "Route code already exists"),
     ROUTE_HAS_STATIONS(400,   "Route has stations, cannot be deleted"),
 
+    //Stationn
+    STATION_NOT_FOUND(404,          "Station not found"),
+    STATION_ALREADY_EXISTS(409,     "Station code already exists"),
+    STATION_ORDER_DUPLICATE(409,    "Station order already exists in this route"),
+    STATION_KM_MARKER_INVALID(400,  "km_marker must be in ascending order"),
+
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),
     INTERNAL_ERROR(500,     "Internal server error");
