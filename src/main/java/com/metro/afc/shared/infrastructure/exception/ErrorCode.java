@@ -24,6 +24,7 @@ public enum ErrorCode {
     CARD_ALREADY_LINKED(409,"Card is already linked to another account"),
     CARD_ALREADY_EXISTS(409,      "Card ID already exists"),
     CARD_INVALID_TRANSITION(400,  "Invalid card status transition"),
+    CARD_NOT_LINKED(400,     "Card is not linked to any user"),
 
     // Wallet
     WALLET_NOT_FOUND(404,   "Wallet not found"),
@@ -57,6 +58,11 @@ public enum ErrorCode {
     STATION_ALREADY_EXISTS(409,     "Station code already exists"),
     STATION_ORDER_DUPLICATE(409,    "Station order already exists in this route"),
     STATION_KM_MARKER_INVALID(400,  "km_marker must be in ascending order"),
+
+    // Blacklist
+    BLACKLIST_NOT_FOUND(404,        "Blacklist entry not found"),
+    CARD_ALREADY_BLACKLISTED(409,   "Card is already blacklisted"),
+    BLACKLIST_ALREADY_REMOVED(400,  "Card is not in active blacklist"),
 
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),
