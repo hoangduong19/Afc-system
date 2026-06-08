@@ -1,6 +1,7 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
-import com.metro.afc.card.application.dto.*;
+import com.metro.afc.card.application.dto.card.*;
+import com.metro.afc.card.application.dto.cardLink.LinkCardRequest;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +73,24 @@ public class CardController {
             @Valid @RequestBody CardActionRequest request) {
         return ResponseEntity.ok(
                 cardFacade.revoke(id, request, SecurityUtils.getCurrentUserId())
+        );
+    }
+
+    @PatchMapping("/{id}/link")
+    @PreAuthorize("hasAuthority('CARD_LINK')")
+    public ResponseEntity<CardResponse> link(
+            @PathVariable UUID id,
+            @Valid @RequestBody LinkCardRequest request) {
+        return ResponseEntity.ok(
+                cardFacade.link(id, request, SecurityUtils.getCurrentUserId())
+        );
+    }
+
+    @PatchMapping("/{id}/unlink")
+    @PreAuthorize("hasAuthority('CARD_LINK')")
+    public ResponseEntity<CardResponse> unlink(@PathVariable UUID id) {
+        return ResponseEntity.ok(
+                cardFacade.unlink(id, SecurityUtils.getCurrentUserId())
         );
     }
 

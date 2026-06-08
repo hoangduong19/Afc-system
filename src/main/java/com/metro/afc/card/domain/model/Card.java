@@ -1,6 +1,8 @@
 package com.metro.afc.card.domain.model;
 
-import com.metro.afc.card.domain.events.CardStatusChangedEvent;
+import com.metro.afc.card.domain.events.cardLink.CardLinkedEvent;
+import com.metro.afc.card.domain.events.cardStatus.CardStatusChangedEvent;
+import com.metro.afc.card.domain.events.cardLink.CardUnlinkedEvent;
 import com.metro.afc.card.domain.model.enums.CardStatus;
 import com.metro.afc.card.domain.model.enums.CardType;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
@@ -150,6 +152,36 @@ public class Card extends AbstractAggregateRoot<Card> {
                     "Cannot transition from " + this.status + " to " + target
             );
         }
+    }
+
+    public void link(UUID userId, UUID performedBy) {
+        if (this.linkedUserId != null) {
+            throw new BusinessRuleException(
+                    ErrorCode.CARD_ALREADY_LINKED, "Card is already linked to a user"
+            );
+        }
+        if (this.status != CardStatus.ACTIVE) {
+            throw new BusinessRuleException(
+                    ErrorCode.CARD_INVALID_TRANSITION, "Card must be ACTIVE to link"
+            );
+        }
+        this.linkedUserId = userId;
+        this.linkedAt     = Instant.now();
+        this.type         = CardType.IDENTIFIED;
+        this.registerEvent(new CardLinkedEvent(id, userId, performedBy));
+    }
+
+    public void unlink(UUID performedBy) {
+        if (this.linkedUserId == null) {
+            throw new BusinessRuleException(
+                    ErrorCode.CARD_NOT_LINKED, "Card is not linked to any user"
+            );
+        }
+        UUID previousUserId = this.linkedUserId;
+        this.linkedUserId   = null;
+        this.linkedAt       = null;
+        this.type           = CardType.ANON;
+        this.registerEvent(new CardUnlinkedEvent(id, previousUserId, performedBy));
     }
 
     @PrePersist

@@ -1,7 +1,7 @@
 package com.metro.afc.card.domain.events.handler;
 
 import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
-import com.metro.afc.card.domain.events.CardStatusChangedEvent;
+import com.metro.afc.card.domain.events.cardStatus.CardStatusChangedEvent;
 import com.metro.afc.card.domain.model.CardStatusHistory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

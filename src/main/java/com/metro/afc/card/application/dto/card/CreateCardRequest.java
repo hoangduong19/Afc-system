@@ -1,4 +1,4 @@
-package com.metro.afc.card.application.dto;
+package com.metro.afc.card.application.dto.card;
 
 import com.metro.afc.card.domain.model.enums.CardType;
 import jakarta.validation.constraints.NotBlank;

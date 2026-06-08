@@ -1,6 +1,6 @@
 package com.metro.afc.card.infrastructure.adapter.out.messaging;
 
-import com.metro.afc.card.domain.events.CardStatusChangedEvent;
+import com.metro.afc.card.domain.events.cardStatus.CardStatusChangedEvent;
 import com.metro.afc.shared.infrastructure.config.RabbitMQConfig;
 import com.metro.afc.shared.messaging.CardStatusMessage;
 import lombok.RequiredArgsConstructor;

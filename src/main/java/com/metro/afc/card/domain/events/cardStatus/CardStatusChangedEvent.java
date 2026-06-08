@@ -1,4 +1,4 @@
-package com.metro.afc.card.domain.events;
+package com.metro.afc.card.domain.events.cardStatus;
 
 import com.metro.afc.card.domain.model.enums.CardStatus;
 

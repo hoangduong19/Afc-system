@@ -82,6 +82,22 @@ public class CardService implements CardUseCase {
     }
 
     @Override
+    @Transactional
+    public Card link(UUID id, UUID userId, UUID performedBy) {
+        Card card = findOrThrow(id);
+        card.link(userId, performedBy);
+        return cardRepository.save(card);
+    }
+
+    @Override
+    @Transactional
+    public Card unlink(UUID id, UUID performedBy) {
+        Card card = findOrThrow(id);
+        card.unlink(performedBy);
+        return cardRepository.save(card);
+    }
+
+    @Override
     public Card findById(UUID id) {
         return findOrThrow(id);
     }

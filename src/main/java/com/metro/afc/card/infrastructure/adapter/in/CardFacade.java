@@ -1,6 +1,7 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
-import com.metro.afc.card.application.dto.*;
+import com.metro.afc.card.application.dto.card.*;
+import com.metro.afc.card.application.dto.cardLink.LinkCardRequest;
 import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.card.domain.model.Card;
 import com.metro.afc.card.domain.model.CardStatusHistory;
@@ -42,6 +43,14 @@ public class CardFacade {
 
     public CardResponse revoke(UUID id, CardActionRequest request, UUID changedBy) {
         return CardResponse.from(cardUseCase.revoke(id, request.reason(), changedBy));
+    }
+
+    public CardResponse link(UUID id, LinkCardRequest request, UUID performedBy) {
+        return CardResponse.from(cardUseCase.link(id, request.userId(), performedBy));
+    }
+
+    public CardResponse unlink(UUID id, UUID performedBy) {
+        return CardResponse.from(cardUseCase.unlink(id, performedBy));
     }
 
     public CardResponse findById(UUID id) {

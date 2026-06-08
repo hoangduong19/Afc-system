@@ -19,4 +19,6 @@ public interface CardUseCase {
     Card findByCardUid(String cardUid);
     List<CardStatusHistory> findStatusHistory(UUID cardId);
     List<Card> findAll();
+    Card link(UUID id, UUID userId, UUID performedBy);
+    Card unlink(UUID id, UUID performedBy);
 }

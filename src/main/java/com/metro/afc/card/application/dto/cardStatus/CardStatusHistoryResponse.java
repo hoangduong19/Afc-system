@@ -1,4 +1,4 @@
-package com.metro.afc.card.application.dto;
+package com.metro.afc.card.application.dto.cardStatus;
 
 import com.metro.afc.card.domain.model.CardStatusHistory;
 

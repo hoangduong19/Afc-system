@@ -1,11 +1,14 @@
-package com.metro.afc.card.application.dto;
+package com.metro.afc.card.application.dto.card;
 
+import com.metro.afc.card.application.dto.cardStatus.CardStatusHistoryResponse;
 import com.metro.afc.card.domain.model.Card;
+import com.metro.afc.card.domain.model.CardStatusHistory;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
-public record CardResponse(
+public record CardDetailResponse(
         UUID id,
         String cardUid,
         String status,
@@ -16,10 +19,12 @@ public record CardResponse(
         UUID linkedUserId,
         Instant activatedAt,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        List<CardStatusHistoryResponse> statusHistory
 ) {
-    public static CardResponse from(Card card) {
-        return new CardResponse(
+    public static CardDetailResponse from(Card card,
+                                          List<CardStatusHistory> history) {
+        return new CardDetailResponse(
                 card.getId(),
                 card.getCardUid(),
                 card.getStatus().name(),
@@ -30,7 +35,10 @@ public record CardResponse(
                 card.getLinkedUserId(),
                 card.getActivatedAt(),
                 card.getCreatedAt(),
-                card.getUpdatedAt()
+                card.getUpdatedAt(),
+                history.stream()
+                        .map(CardStatusHistoryResponse::from)
+                        .toList()
         );
     }
 }
