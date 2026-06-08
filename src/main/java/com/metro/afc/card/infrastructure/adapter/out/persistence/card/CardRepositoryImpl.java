@@ -31,6 +31,9 @@ public class CardRepositoryImpl implements CardRepository {
     }
 
     @Override
+    public boolean existsById(UUID id) {return jpa.existsById(id);}
+
+    @Override
     public List<Card> findAll() {
         return jpa.findAll();
     }

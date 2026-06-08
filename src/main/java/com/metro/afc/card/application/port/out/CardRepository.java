@@ -10,6 +10,7 @@ public interface CardRepository {
     Optional<Card> findById(UUID id);
     Optional<Card> findByCardUid(String cardUid);
     boolean existsByCardUid(String cardUid);
+    boolean existsById(UUID id);
     List<Card> findAll();
     Card save(Card card);
 }
