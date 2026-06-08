@@ -23,6 +23,11 @@ public class RabbitMQConfig {
     public static final String CARD_STATUS_QUEUE    = "card.status.queue";
     public static final String FARE_RULE_QUEUE      = "fare.rule.queue";
 
+    // Blacklist
+    public static final String BLACKLIST_ADDED   = "blacklist.added";
+    public static final String BLACKLIST_REMOVED = "blacklist.removed";
+    public static final String BLACKLIST_QUEUE   = "blacklist.queue";
+
     @Bean
     public TopicExchange afcExchange() {
         return new TopicExchange(AFC_EXCHANGE);
@@ -32,6 +37,12 @@ public class RabbitMQConfig {
     public Queue cardStatusQueue() {
         return QueueBuilder.durable(CARD_STATUS_QUEUE).build();
     }
+
+    @Bean
+    public Queue blacklistQueue() {
+        return QueueBuilder.durable(BLACKLIST_QUEUE).build();
+    }
+
 
     @Bean
     public Queue fareRuleQueue() {
@@ -52,6 +63,14 @@ public class RabbitMQConfig {
                 .bind(fareRuleQueue())
                 .to(afcExchange())
                 .with("fare.rule.*");
+    }
+
+    @Bean
+    public Binding blacklistBinding() {
+        return BindingBuilder
+                .bind(blacklistQueue())
+                .to(afcExchange())
+                .with("blacklist.*");
     }
 
     @Bean
