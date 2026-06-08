@@ -1,4 +1,4 @@
-package com.metro.afc.card.infrastructure.adapter.out.cardHistory;
+package com.metro.afc.card.infrastructure.adapter.out.persistence.cardHistory;
 
 import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
 import com.metro.afc.card.domain.model.CardStatusHistory;

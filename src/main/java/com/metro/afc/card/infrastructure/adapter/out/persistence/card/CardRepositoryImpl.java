@@ -1,4 +1,4 @@
-package com.metro.afc.card.infrastructure.adapter.out.card;
+package com.metro.afc.card.infrastructure.adapter.out.persistence.card;
 
 import com.metro.afc.card.application.port.out.CardRepository;
 import com.metro.afc.card.domain.model.Card;
