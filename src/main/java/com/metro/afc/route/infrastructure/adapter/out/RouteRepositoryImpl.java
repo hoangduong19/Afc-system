@@ -36,6 +36,11 @@ public class RouteRepositoryImpl implements RouteRepository {
     }
 
     @Override
+    public boolean existsById(UUID id) {
+        return jpa.existsById(id);
+    }
+
+    @Override
     public Route save(Route route) {
         return jpa.save(route);
     }
