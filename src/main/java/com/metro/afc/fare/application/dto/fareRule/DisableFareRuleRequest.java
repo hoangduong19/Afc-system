@@ -1,8 +1,8 @@
-package com.metro.afc.fare.application.dto;
+package com.metro.afc.fare.application.dto.fareRule;
 
 import jakarta.validation.constraints.NotBlank;
 
 public record DisableFareRuleRequest(
-        @NotBlank(message = "Lý do không được để trống")
+        @NotBlank(message = "Reason cannot be null")
         String reason
 ) {}

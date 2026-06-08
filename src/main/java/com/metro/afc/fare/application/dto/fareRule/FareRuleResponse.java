@@ -1,4 +1,4 @@
-package com.metro.afc.fare.application.dto;
+package com.metro.afc.fare.application.dto.fareRule;
 
 import com.metro.afc.fare.domain.model.FareRule;
 
@@ -27,10 +27,10 @@ public record FareRuleResponse(
                 fareRule.getId(),
                 fareRule.getCode(),
                 fareRule.getMode().name(),
-                fareRule.getBaseFare(),
-                fareRule.getRatePerKm(),
-                fareRule.getMinPrice(),
-                fareRule.getMaxPrice(),
+                fareRule.getBaseFare().getAmount(),
+                fareRule.getRatePerKm().getAmount(),
+                fareRule.getMinPrice().getAmount(),
+                fareRule.getMaxPrice().getAmount(),
                 fareRule.getEffectiveFrom(),
                 fareRule.getEffectiveTo(),
                 fareRule.getStatus().name(),

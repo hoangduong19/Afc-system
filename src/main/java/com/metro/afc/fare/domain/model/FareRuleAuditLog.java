@@ -1,6 +1,6 @@
 package com.metro.afc.fare.domain.model;
 
-import com.metro.afc.fare.domain.event.FareChangeType;
+import com.metro.afc.fare.domain.event.fareRule.FareChangeType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

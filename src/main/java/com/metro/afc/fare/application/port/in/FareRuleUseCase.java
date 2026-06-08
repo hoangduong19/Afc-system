@@ -1,7 +1,7 @@
 package com.metro.afc.fare.application.port.in;
 
 import com.metro.afc.fare.domain.model.FareRule;
-import com.metro.afc.fare.domain.model.enums.FareMode;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

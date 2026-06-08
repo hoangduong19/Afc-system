@@ -1,7 +1,7 @@
 package com.metro.afc.fare.application.port.out;
 
 import com.metro.afc.fare.domain.model.FareRule;
-import com.metro.afc.fare.domain.model.enums.FareStatus;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 
 import java.util.List;
 import java.util.Optional;

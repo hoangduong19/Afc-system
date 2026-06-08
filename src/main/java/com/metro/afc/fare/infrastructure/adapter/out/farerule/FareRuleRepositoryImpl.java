@@ -2,7 +2,7 @@ package com.metro.afc.fare.infrastructure.adapter.out.farerule;
 
 import com.metro.afc.fare.application.port.out.FareRuleRepository;
 import com.metro.afc.fare.domain.model.FareRule;
-import com.metro.afc.fare.domain.model.enums.FareStatus;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

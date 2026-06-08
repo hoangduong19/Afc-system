@@ -1,7 +1,7 @@
 package com.metro.afc.fare.infrastructure.adapter.out.farerule;
 
 import com.metro.afc.fare.domain.model.FareRule;
-import com.metro.afc.fare.domain.model.enums.FareStatus;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,10 +1,11 @@
 package com.metro.afc.fare.domain.model;
 
-import com.metro.afc.fare.domain.event.FareRuleCreatedEvent;
-import com.metro.afc.fare.domain.event.FareRuleDisabledEvent;
-import com.metro.afc.fare.domain.event.FareRuleUpdatedEvent;
-import com.metro.afc.fare.domain.model.enums.FareMode;
-import com.metro.afc.fare.domain.model.enums.FareStatus;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleCreatedEvent;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleDisabledEvent;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleUpdatedEvent;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
+import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import jakarta.persistence.*;
@@ -35,17 +36,25 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
     @Column(nullable = false, length = 20)
     private FareMode mode;
 
-    @Column(name = "base_fare", nullable = false, precision = 15, scale = 2)
-    private BigDecimal baseFare;
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "base_fare", nullable = false, precision = 15, scale = 2))
+    private Money baseFare;
 
-    @Column(name = "rate_per_km", nullable = false, precision = 15, scale = 2)
-    private BigDecimal ratePerKm;
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "rate_per_km", nullable = false, precision = 15, scale = 2))
+    private Money ratePerKm;
 
-    @Column(name = "min_price", nullable = false, precision = 15, scale = 2)
-    private BigDecimal minPrice;
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "min_price", nullable = false, precision = 15, scale = 2))
+    private Money minPrice;
 
-    @Column(name = "max_price", nullable = false, precision = 15, scale = 2)
-    private BigDecimal maxPrice;
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "max_price", nullable = false, precision = 15, scale = 2))
+    private Money maxPrice;
 
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
@@ -66,19 +75,22 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // ── Factory ──────────────────────────────────────────────────
+
     public static FareRule create(String code, FareMode mode,
                                   BigDecimal baseFare, BigDecimal ratePerKm,
                                   BigDecimal minPrice, BigDecimal maxPrice,
                                   LocalDate effectiveFrom, LocalDate effectiveTo,
                                   UUID createdBy) {
+        validatePriceRange(minPrice, maxPrice);
         FareRule rule      = new FareRule();
         rule.id            = UUID.randomUUID();
         rule.code          = code.trim().toUpperCase();
         rule.mode          = mode;
-        rule.baseFare      = baseFare;
-        rule.ratePerKm     = ratePerKm;
-        rule.minPrice      = minPrice;
-        rule.maxPrice      = maxPrice;
+        rule.baseFare      = Money.of(baseFare);
+        rule.ratePerKm     = Money.of(ratePerKm);
+        rule.minPrice      = Money.of(minPrice);
+        rule.maxPrice      = Money.of(maxPrice);
         rule.effectiveFrom = effectiveFrom;
         rule.effectiveTo   = effectiveTo;
         rule.status        = FareStatus.ACTIVE;
@@ -87,6 +99,8 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         rule.registerEvent(new FareRuleCreatedEvent(rule.id, rule.snapshot(), createdBy));
         return rule;
     }
+
+    // ── Domain behavior ──────────────────────────────────────────
 
     public void closeVersion(LocalDate newVersionEffectiveFrom) {
         this.effectiveTo = newVersionEffectiveFrom.minusDays(1);
@@ -97,16 +111,17 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
                                BigDecimal minPrice, BigDecimal maxPrice,
                                LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                                UUID createdBy) {
+        validatePriceRange(minPrice, maxPrice);
         String oldSnapshot = this.snapshot();
 
         FareRule next      = new FareRule();
         next.id            = UUID.randomUUID();
         next.code          = this.code;
         next.mode          = this.mode;
-        next.baseFare      = baseFare;
-        next.ratePerKm     = ratePerKm;
-        next.minPrice      = minPrice;
-        next.maxPrice      = maxPrice;
+        next.baseFare      = Money.of(baseFare);
+        next.ratePerKm     = Money.of(ratePerKm);
+        next.minPrice      = Money.of(minPrice);
+        next.maxPrice      = Money.of(maxPrice);
         next.effectiveFrom = effectiveFrom;
         next.effectiveTo   = effectiveTo;
         next.status        = FareStatus.ACTIVE;
@@ -119,26 +134,28 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
     }
 
     public void disable(String reason, UUID disabledBy) {
-        if (this.status == FareStatus.INACTIVE) {
+        if (this.status == FareStatus.INACTIVE)
             throw new BusinessRuleException(
                     ErrorCode.FARE_RULE_INACTIVE,
-                    "Fare rule đã ở trạng thái INACTIVE"
+                    "Fare rule is already inactive"
             );
-        }
         String oldSnapshot = snapshot();
         this.status = FareStatus.INACTIVE;
         this.registerEvent(new FareRuleDisabledEvent(this.id, oldSnapshot, reason, disabledBy));
     }
 
-    public boolean isActive() {
-        return this.status == FareStatus.ACTIVE;
+    public boolean isActive() { return this.status == FareStatus.ACTIVE; }
+
+    public Money calculateFare(BigDecimal distanceKm) {
+        Money fare = baseFare.add(ratePerKm.multiply(distanceKm));
+        if (fare.isLessThan(minPrice))    return minPrice;
+        if (fare.isGreaterThan(maxPrice)) return maxPrice;
+        return fare;
     }
 
-    public BigDecimal calculateFare(BigDecimal distanceKm) {
-        BigDecimal fare = baseFare.add(ratePerKm.multiply(distanceKm));
-        if (fare.compareTo(minPrice) < 0) return minPrice;
-        if (fare.compareTo(maxPrice) > 0) return maxPrice;
-        return fare;
+    private static void validatePriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
+        if (minPrice.compareTo(maxPrice) > 0)
+            throw new IllegalArgumentException("minPrice must be <= maxPrice");
     }
 
     private String snapshot() {
@@ -148,15 +165,14 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
                         "\"minPrice\":%s,\"maxPrice\":%s," +
                         "\"version\":%d,\"status\":\"%s\"," +
                         "\"effectiveFrom\":\"%s\",\"effectiveTo\":%s}",
-                id, code, mode, baseFare, ratePerKm,
-                minPrice, maxPrice, version, status,
-                effectiveFrom,
+                id, code, mode,
+                baseFare.getAmount(), ratePerKm.getAmount(),
+                minPrice.getAmount(), maxPrice.getAmount(),
+                version, status, effectiveFrom,
                 effectiveTo != null ? "\"" + effectiveTo + "\"" : "null"
         );
     }
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = Instant.now();
-    }
+    protected void onCreate() { createdAt = Instant.now(); }
 }

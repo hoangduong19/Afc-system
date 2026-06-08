@@ -1,9 +1,9 @@
 package com.metro.afc.fare.domain.event.handler;
 
 import com.metro.afc.fare.application.port.out.FareRuleAuditLogRepository;
-import com.metro.afc.fare.domain.event.FareRuleCreatedEvent;
-import com.metro.afc.fare.domain.event.FareRuleDisabledEvent;
-import com.metro.afc.fare.domain.event.FareRuleUpdatedEvent;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleCreatedEvent;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleDisabledEvent;
+import com.metro.afc.fare.domain.event.fareRule.FareRuleUpdatedEvent;
 import com.metro.afc.fare.domain.model.FareRuleAuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

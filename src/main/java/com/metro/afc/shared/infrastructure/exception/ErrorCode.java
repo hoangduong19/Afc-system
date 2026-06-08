@@ -64,6 +64,11 @@ public enum ErrorCode {
     CARD_ALREADY_BLACKLISTED(409,   "Card is already blacklisted"),
     BLACKLIST_ALREADY_REMOVED(400,  "Card is not in active blacklist"),
 
+    // FareDiscount
+    FARE_DISCOUNT_NOT_FOUND(404,   "Fare discount not found"),
+    FARE_DISCOUNT_INACTIVE(400,    "Fare discount is already inactive"),
+    FARE_DISCOUNT_ALREADY_EXISTS(409, "Active discount for this passenger type already exists"),
+
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),
     INTERNAL_ERROR(500,     "Internal server error");

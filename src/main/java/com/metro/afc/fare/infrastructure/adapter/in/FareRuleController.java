@@ -1,9 +1,9 @@
 package com.metro.afc.fare.infrastructure.adapter.in;
 
-import com.metro.afc.fare.application.dto.CreateFareRuleRequest;
-import com.metro.afc.fare.application.dto.DisableFareRuleRequest;
-import com.metro.afc.fare.application.dto.FareRuleResponse;
-import com.metro.afc.fare.application.dto.UpdateFareRuleRequest;
+import com.metro.afc.fare.application.dto.fareRule.CreateFareRuleRequest;
+import com.metro.afc.fare.application.dto.fareRule.DisableFareRuleRequest;
+import com.metro.afc.fare.application.dto.fareRule.FareRuleResponse;
+import com.metro.afc.fare.application.dto.fareRule.UpdateFareRuleRequest;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
