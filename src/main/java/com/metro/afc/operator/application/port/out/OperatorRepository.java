@@ -11,5 +11,6 @@ public interface OperatorRepository {
     Optional<Operator> findByCode(String code);
     List<Operator> findAll();
     boolean existsByCode(String code);
+    boolean existsById(UUID id);
     Operator save(Operator operator);
 }

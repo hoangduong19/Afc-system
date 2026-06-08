@@ -31,6 +31,11 @@ public class OperatorRepositoryImpl implements OperatorRepository {
     }
 
     @Override
+    public boolean existsById(UUID id) {
+        return jpa.existsById(id);
+    }
+
+    @Override
     public boolean existsByCode(String code) {
         return jpa.existsByCode(code);
     }
