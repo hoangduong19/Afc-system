@@ -3,53 +3,58 @@ package com.metro.afc.shared.infrastructure.exception;
 public enum ErrorCode {
 
     // Auth
-    INVALID_CREDENTIALS(401, "Sai tên đăng nhập hoặc mật khẩu"),
-    UNAUTHORIZED(401,       "Chưa xác thực"),
-    FORBIDDEN(403,          "Không có quyền thực hiện thao tác này"),
-    TOKEN_INVALID(401,      "Token không hợp lệ"),
-    TOKEN_EXPIRED(401,      "Token đã hết hạn"),
+    INVALID_CREDENTIALS(401, "Invalid username or password"),
+    UNAUTHORIZED(401,       "Unauthorized access"),
+    FORBIDDEN(403,          "You do not have permission to perform this action"),
+    TOKEN_INVALID(401,      "Invalid token"),
+    TOKEN_EXPIRED(401,      "Token has expired"),
 
     // User
-    USER_NOT_FOUND(404,     "Người dùng không tồn tại"),
-    USER_ALREADY_EXISTS(409,"Tên đăng nhập hoặc email đã tồn tại"),
-    USER_INACTIVE(403,      "Tài khoản đã bị vô hiệu hóa"),
+    USER_NOT_FOUND(404,     "User not found"),
+    USER_ALREADY_EXISTS(409,"Username or email already exists"),
+    USER_INACTIVE(403,      "Account has been deactivated"),
 
     // Role
-    ROLE_NOT_FOUND(404,     "Role không tồn tại"),
+    ROLE_NOT_FOUND(404,     "Role not found"),
 
     // Card
-    CARD_NOT_FOUND(404,     "Thẻ không tồn tại"),
-    CARD_BLACKLISTED(403,   "Thẻ đang trong danh sách đen"),
-    CARD_INACTIVE(403,      "Thẻ chưa được kích hoạt"),
-    CARD_ALREADY_LINKED(409,"Thẻ đã được liên kết với tài khoản khác"),
-    CARD_ALREADY_EXISTS(409,      "Mã thẻ đã tồn tại"),
-    CARD_INVALID_TRANSITION(400,  "Trạng thái thẻ không hợp lệ"),
+    CARD_NOT_FOUND(404,     "Card not found"),
+    CARD_BLACKLISTED(403,   "Card is blacklisted"),
+    CARD_INACTIVE(403,      "Card is not activated"),
+    CARD_ALREADY_LINKED(409,"Card is already linked to another account"),
+    CARD_ALREADY_EXISTS(409,      "Card ID already exists"),
+    CARD_INVALID_TRANSITION(400,  "Invalid card status transition"),
 
     // Wallet
-    WALLET_NOT_FOUND(404,   "Ví không tồn tại"),
-    INSUFFICIENT_BALANCE(400,"Số dư không đủ"),
+    WALLET_NOT_FOUND(404,   "Wallet not found"),
+    INSUFFICIENT_BALANCE(400,"Insufficient balance"),
 
     // Fare
-    FARE_RULE_NOT_FOUND(404,    "Quy tắc giá vé không tồn tại"),
-    FARE_RULE_INACTIVE(400,     "Quy tắc giá vé không còn hiệu lực"),
-    FARE_RULE_ALREADY_EXISTS(409, "Mã quy tắc giá vé đã tồn tại"),
+    FARE_RULE_NOT_FOUND(404,    "Fare rule not found"),
+    FARE_RULE_INACTIVE(400,     "Fare rule is no longer active"),
+    FARE_RULE_ALREADY_EXISTS(409, "Fare rule code already exists"),
 
     // Trip
-    TRIP_NOT_FOUND(404,     "Chuyến đi không tồn tại"),
-    TRIP_ALREADY_STARTED(409,"Thẻ đang có chuyến đi chưa kết thúc"),
-    TAP_VALIDATION_FAILED(400,"Không thể thực hiện tap"),
+    TRIP_NOT_FOUND(404,     "Trip not found"),
+    TRIP_ALREADY_STARTED(409,"Card currently has an incomplete trip"),
+    TAP_VALIDATION_FAILED(400,"Tap validation failed"),
 
     // Settlement
-    SETTLEMENT_NOT_FOUND(404,   "Quyết toán không tồn tại"),
-    SETTLEMENT_ALREADY_CONFIRMED(409, "Quyết toán đã được xác nhận"),
+    SETTLEMENT_NOT_FOUND(404,   "Settlement not found"),
+    SETTLEMENT_ALREADY_CONFIRMED(409, "Settlement has already been confirmed"),
 
-    //Operator
-    OPERATOR_NOT_FOUND(404, "Không tìm thấy công ty vận hành"),
-    OPERATOR_ALREADY_EXISTS(409, "Công ty vận hành đã tồn tại"),
+    // Operator
+    OPERATOR_NOT_FOUND(404, "Transit operator not found"),
+    OPERATOR_ALREADY_EXISTS(409, "Transit operator already exists"),
+
+    //Route
+    ROUTE_NOT_FOUND(404,      "Route not found"),
+    ROUTE_ALREADY_EXISTS(409, "Route code already exists"),
+    ROUTE_HAS_STATIONS(400,   "Route has stations, cannot be deleted"),
 
     // Generic
-    VALIDATION_ERROR(400,   "Dữ liệu không hợp lệ"),
-    INTERNAL_ERROR(500,     "Lỗi hệ thống");
+    VALIDATION_ERROR(400,   "Invalid input data"),
+    INTERNAL_ERROR(500,     "Internal server error");
 
     private final int httpStatus;
     private final String message;
