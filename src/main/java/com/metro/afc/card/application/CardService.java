@@ -2,7 +2,9 @@ package com.metro.afc.card.application;
 
 import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.card.application.port.out.CardRepository;
+import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
 import com.metro.afc.card.domain.model.Card;
+import com.metro.afc.card.domain.model.CardStatusHistory;
 import com.metro.afc.card.domain.model.enums.CardType;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
@@ -21,6 +23,7 @@ public class CardService implements CardUseCase {
 
     private final CardRepository     cardRepository;
     private final StationRepository stationRepository;
+    private final CardStatusHistoryRepository cardStatusHistoryRepository;
 
     @Override
     @Transactional
@@ -87,6 +90,12 @@ public class CardService implements CardUseCase {
     public Card findByCardUid(String cardUid) {
         return cardRepository.findByCardUid(cardUid.trim().toUpperCase())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.CARD_NOT_FOUND));
+    }
+
+    @Override
+    public List<CardStatusHistory> findStatusHistory(UUID cardId) {
+        findOrThrow(cardId); // validate card exists
+        return cardStatusHistoryRepository.findByCardId(cardId);
     }
 
     @Override

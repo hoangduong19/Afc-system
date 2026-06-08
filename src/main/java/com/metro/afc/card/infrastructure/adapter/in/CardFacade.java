@@ -1,10 +1,9 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
-import com.metro.afc.card.application.dto.CardActionRequest;
-import com.metro.afc.card.application.dto.CardResponse;
-import com.metro.afc.card.application.dto.CreateCardRequest;
-import com.metro.afc.card.application.dto.IssueCardRequest;
+import com.metro.afc.card.application.dto.*;
 import com.metro.afc.card.application.port.in.CardUseCase;
+import com.metro.afc.card.domain.model.Card;
+import com.metro.afc.card.domain.model.CardStatusHistory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +50,12 @@ public class CardFacade {
 
     public CardResponse findByCardUid(String cardUid) {
         return CardResponse.from(cardUseCase.findByCardUid(cardUid));
+    }
+
+    public CardDetailResponse findDetailById(UUID id) {
+        Card card = cardUseCase.findById(id);
+        List<CardStatusHistory> history = cardUseCase.findStatusHistory(id);
+        return CardDetailResponse.from(card, history);
     }
 
     public List<CardResponse> findAll() {

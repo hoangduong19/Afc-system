@@ -1,9 +1,6 @@
 package com.metro.afc.card.infrastructure.adapter.in;
 
-import com.metro.afc.card.application.dto.CardActionRequest;
-import com.metro.afc.card.application.dto.CardResponse;
-import com.metro.afc.card.application.dto.CreateCardRequest;
-import com.metro.afc.card.application.dto.IssueCardRequest;
+import com.metro.afc.card.application.dto.*;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -88,6 +85,12 @@ public class CardController {
     @PreAuthorize("hasAuthority('CARD_READ')")
     public ResponseEntity<CardResponse> findByCardUid(@PathVariable String cardUid) {
         return ResponseEntity.ok(cardFacade.findByCardUid(cardUid));
+    }
+
+    @GetMapping("/{id}/detail")
+    @PreAuthorize("hasAuthority('CARD_READ')")
+    public ResponseEntity<CardDetailResponse> findDetailById(@PathVariable UUID id) {
+        return ResponseEntity.ok(cardFacade.findDetailById(id));
     }
 
     @GetMapping

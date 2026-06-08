@@ -1,6 +1,7 @@
 package com.metro.afc.card.application.port.in;
 
 import com.metro.afc.card.domain.model.Card;
+import com.metro.afc.card.domain.model.CardStatusHistory;
 import com.metro.afc.card.domain.model.enums.CardType;
 
 import java.util.List;
@@ -16,5 +17,6 @@ public interface CardUseCase {
     Card revoke(UUID id, String reason, UUID changedBy);
     Card findById(UUID id);
     Card findByCardUid(String cardUid);
+    List<CardStatusHistory> findStatusHistory(UUID cardId);
     List<Card> findAll();
 }
