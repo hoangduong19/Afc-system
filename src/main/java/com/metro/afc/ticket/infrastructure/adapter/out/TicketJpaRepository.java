@@ -2,9 +2,13 @@ package com.metro.afc.ticket.infrastructure.adapter.out;
 
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +16,9 @@ import java.util.UUID;
 public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
     Optional<Ticket> findByCardIdAndStatus(UUID cardId, TicketStatus status);
     boolean existsByCardIdAndStatus(UUID cardId, TicketStatus status);
+
+    @Modifying
+    @Query("UPDATE Ticket t SET t.status = 'EXPIRED' " +
+            "WHERE t.status = 'ACTIVE' AND t.validTo < :today")
+    int expireOverdueTickets(@Param("today") LocalDate today);
 }

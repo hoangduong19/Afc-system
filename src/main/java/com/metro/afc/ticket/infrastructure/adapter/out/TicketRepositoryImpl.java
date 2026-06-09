@@ -6,6 +6,7 @@ import com.metro.afc.ticket.domain.enums.TicketStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,5 +30,10 @@ public class TicketRepositoryImpl implements TicketRepository {
     @Override
     public boolean existsActiveTicketByCardId(UUID cardId) {
         return jpa.existsByCardIdAndStatus(cardId, TicketStatus.ACTIVE);
+    }
+
+    @Override
+    public int expireOverdueTickets(LocalDate today) {
+        return jpa.expireOverdueTickets(today);
     }
 }
