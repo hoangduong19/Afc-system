@@ -369,6 +369,7 @@ CREATE TABLE trips (
     status                VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS',
     debt_amount           DECIMAL(15, 2),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    external_transaction_id UUID UNIQUE;
     CONSTRAINT chk_trip_status     CHECK (status         IN ('IN_PROGRESS','COMPLETED','DEBT')),
     CONSTRAINT chk_payment_method  CHECK (payment_method IN ('TICKET','WALLET','PREPAID'))
 );

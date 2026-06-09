@@ -16,6 +16,7 @@ public interface StationRepository {
     Optional<Station> findMaxKmMarkerByRouteId(UUID routeId);
     Optional<Station> findPreviousStation(UUID routeId, Integer stationOrder);
     Optional<Station> findNextStation(UUID routeId, Integer stationOrder);
+    Optional<Station> findByCode(String code);
     Station save(Station station);
     void deleteById(UUID id);
 }

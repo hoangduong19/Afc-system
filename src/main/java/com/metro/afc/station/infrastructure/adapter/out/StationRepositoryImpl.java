@@ -59,6 +59,11 @@ public class StationRepositoryImpl implements StationRepository {
     }
 
     @Override
+    public Optional<Station> findByCode(String code) {
+        return jpa.findByCode(code);
+    }
+
+    @Override
     public Station save(Station station) {
         return jpa.save(station);
     }

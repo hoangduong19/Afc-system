@@ -19,6 +19,8 @@ public interface StationJpaRepository extends JpaRepository<Station, UUID> {
 
     boolean existsByRouteIdAndStationOrder(UUID routeId, Integer stationOrder);
 
+    Optional<Station> findByCode(String code);
+
     @Query("SELECT s FROM Station s WHERE s.routeId = :routeId " +
             "AND s.stationOrder < :stationOrder " +
             "ORDER BY s.stationOrder DESC LIMIT 1")
