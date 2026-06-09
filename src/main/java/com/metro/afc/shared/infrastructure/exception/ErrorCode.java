@@ -26,6 +26,12 @@ public enum ErrorCode {
     CARD_INVALID_TRANSITION(400,  "Invalid card status transition"),
     CARD_NOT_LINKED(400,     "Card is not linked to any user"),
 
+    // Ticket
+    TICKET_NOT_FOUND(404,       "Ticket not found"),
+    TICKET_INVALID_STATUS(400,  "Invalid ticket status"),
+    TICKET_ALREADY_LINKED(409,  "Ticket already linked to a card"),
+    CARD_NOT_ACTIVE(400,        "Card must be ACTIVE"),
+
     // Wallet
     WALLET_NOT_FOUND(404,   "Wallet not found"),
     INSUFFICIENT_BALANCE(400,"Insufficient balance"),

@@ -28,6 +28,10 @@ public class RabbitMQConfig {
     public static final String BLACKLIST_REMOVED = "blacklist.removed";
     public static final String BLACKLIST_QUEUE   = "blacklist.queue";
 
+    // Ticket
+    public static final String TICKET_CREATED = "ticket.created";
+    public static final String TICKET_QUEUE   = "ticket.queue";
+
     @Bean
     public TopicExchange afcExchange() {
         return new TopicExchange(AFC_EXCHANGE);
@@ -47,6 +51,10 @@ public class RabbitMQConfig {
     @Bean
     public Queue fareRuleQueue() {
         return QueueBuilder.durable(FARE_RULE_QUEUE).build();
+    }
+
+    @Bean public Queue ticketQueue() {
+        return QueueBuilder.durable(TICKET_QUEUE).build();
     }
 
     @Bean
@@ -71,6 +79,11 @@ public class RabbitMQConfig {
                 .bind(blacklistQueue())
                 .to(afcExchange())
                 .with("blacklist.*");
+    }
+
+    @Bean public Binding ticketBinding() {
+        return BindingBuilder.bind(ticketQueue())
+                .to(afcExchange()).with(TICKET_CREATED);
     }
 
     @Bean

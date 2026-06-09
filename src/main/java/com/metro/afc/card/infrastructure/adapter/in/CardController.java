@@ -3,6 +3,9 @@ package com.metro.afc.card.infrastructure.adapter.in;
 import com.metro.afc.card.application.dto.card.*;
 import com.metro.afc.card.application.dto.cardLink.LinkCardRequest;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
+import com.metro.afc.ticket.application.dto.LinkTicketRequest;
+import com.metro.afc.ticket.application.dto.TicketResponse;
+import com.metro.afc.ticket.infrastructure.adapter.in.TicketFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,7 @@ import java.util.UUID;
 public class CardController {
 
     private final CardFacade cardFacade;
+    private final TicketFacade ticketFacade;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CARD_ISSUE')")
@@ -92,6 +96,21 @@ public class CardController {
         return ResponseEntity.ok(
                 cardFacade.unlink(id, SecurityUtils.getCurrentUserId())
         );
+    }
+
+    @PostMapping("/{cardId}/link-ticket")
+    @PreAuthorize("hasAuthority('CARD_LINK')")
+    public ResponseEntity<TicketResponse> linkTicket(
+            @PathVariable UUID cardId,
+            @Valid @RequestBody LinkTicketRequest request) {
+        return ResponseEntity.ok(ticketFacade.linkToCard(cardId, request));
+    }
+
+    @GetMapping("/{cardId}/active-ticket")
+    @PreAuthorize("hasAuthority('CARD_READ')")
+    public ResponseEntity<TicketResponse> getActiveTicket(
+            @PathVariable UUID cardId) {
+        return ResponseEntity.ok(ticketFacade.findActiveTicketByCardId(cardId));
     }
 
     @GetMapping("/{id}")
