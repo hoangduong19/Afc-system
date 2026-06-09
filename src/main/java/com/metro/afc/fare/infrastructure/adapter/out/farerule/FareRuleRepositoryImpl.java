@@ -2,6 +2,7 @@ package com.metro.afc.fare.infrastructure.adapter.out.farerule;
 
 import com.metro.afc.fare.application.port.out.FareRuleRepository;
 import com.metro.afc.fare.domain.model.FareRule;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,11 @@ public class FareRuleRepositoryImpl implements FareRuleRepository {
     @Override
     public Optional<FareRule> findActiveByCode(String code) {
         return jpa.findByCodeAndStatus(code, FareStatus.ACTIVE);
+    }
+
+    @Override
+    public Optional<FareRule> findActiveByMode(FareMode mode) {
+        return jpa.findByModeAndStatus(mode, FareStatus.ACTIVE);
     }
 
     @Override

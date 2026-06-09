@@ -12,6 +12,7 @@ public interface FareDiscountRepository {
     Optional<FareDiscount> findById(UUID id);
     List<FareDiscount> findAll();
     List<FareDiscount> findAllActive();
+    Optional<FareDiscount> findActiveByPassengerType(PassengerType type);
     boolean existsByPassengerTypeAndStatus(PassengerType type, DiscountStatus status);
     FareDiscount save(FareDiscount discount);
 }

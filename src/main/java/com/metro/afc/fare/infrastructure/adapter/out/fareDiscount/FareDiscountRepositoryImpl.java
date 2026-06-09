@@ -23,6 +23,11 @@ public class FareDiscountRepositoryImpl implements FareDiscountRepository {
     }
 
     @Override
+    public Optional<FareDiscount> findActiveByPassengerType(PassengerType type) {
+        return jpa.findByPassengerTypeAndStatus(type, DiscountStatus.ACTIVE);
+    }
+
+    @Override
     public List<FareDiscount> findAll() { return jpa.findAll(); }
 
     @Override

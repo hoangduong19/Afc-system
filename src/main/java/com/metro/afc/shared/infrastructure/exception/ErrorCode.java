@@ -58,6 +58,8 @@ public enum ErrorCode {
     STATION_ALREADY_EXISTS(409,     "Station code already exists"),
     STATION_ORDER_DUPLICATE(409,    "Station order already exists in this route"),
     STATION_KM_MARKER_INVALID(400,  "km_marker must be in ascending order"),
+    STATION_SAME(400, "From and to station must be different"),
+
 
     // Blacklist
     BLACKLIST_NOT_FOUND(404,        "Blacklist entry not found"),
