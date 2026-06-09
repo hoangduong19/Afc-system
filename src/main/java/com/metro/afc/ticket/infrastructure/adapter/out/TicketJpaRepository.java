@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import java.util.UUID;
 public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
     Optional<Ticket> findByCardIdAndStatus(UUID cardId, TicketStatus status);
     boolean existsByCardIdAndStatus(UUID cardId, TicketStatus status);
+    List<Ticket> findByUserId(UUID userId);
+    List<Ticket> findByUserIdAndStatus(UUID userId, TicketStatus status);
 
     @Modifying
     @Query("UPDATE Ticket t SET t.status = 'EXPIRED' " +

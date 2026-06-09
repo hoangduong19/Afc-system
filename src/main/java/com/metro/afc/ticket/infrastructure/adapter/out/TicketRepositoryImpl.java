@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +31,16 @@ public class TicketRepositoryImpl implements TicketRepository {
     @Override
     public boolean existsActiveTicketByCardId(UUID cardId) {
         return jpa.existsByCardIdAndStatus(cardId, TicketStatus.ACTIVE);
+    }
+
+    @Override
+    public List<Ticket> findByUserId(UUID userId) {
+        return jpa.findByUserId(userId);
+    }
+
+    @Override
+    public List<Ticket> findByUserIdAndStatus(UUID userId, TicketStatus status) {
+        return jpa.findByUserIdAndStatus(userId, status);
     }
 
     @Override

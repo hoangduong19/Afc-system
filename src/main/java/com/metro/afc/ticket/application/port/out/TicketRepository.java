@@ -1,8 +1,10 @@
 package com.metro.afc.ticket.application.port.out;
 
 import com.metro.afc.ticket.domain.Ticket;
+import com.metro.afc.ticket.domain.enums.TicketStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +14,6 @@ public interface TicketRepository {
     Optional<Ticket> findActiveTicketByCardId(UUID cardId);
     boolean existsActiveTicketByCardId(UUID cardId);
     int expireOverdueTickets(LocalDate today);
+    List<Ticket> findByUserId(UUID userId);
+    List<Ticket> findByUserIdAndStatus(UUID userId, TicketStatus status);
 }

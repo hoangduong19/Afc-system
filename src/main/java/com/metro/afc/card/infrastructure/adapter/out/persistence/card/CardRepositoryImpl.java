@@ -39,6 +39,11 @@ public class CardRepositoryImpl implements CardRepository {
     }
 
     @Override
+    public List<Card> findByLinkedUserId(UUID userId) {
+        return jpa.findByLinkedUserId(userId);
+    }
+
+    @Override
     public Card save(Card card) {
         return jpa.save(card);
     }

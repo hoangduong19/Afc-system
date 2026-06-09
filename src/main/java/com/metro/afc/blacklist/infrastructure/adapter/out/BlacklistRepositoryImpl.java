@@ -5,6 +5,7 @@ import com.metro.afc.blacklist.domain.Blacklist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,5 +39,10 @@ public class BlacklistRepositoryImpl implements BlacklistRepository {
     @Override
     public boolean existsActiveByCardId(UUID cardId) {
         return jpa.existsByCardIdAndIsActiveTrue(cardId);
+    }
+
+    @Override
+    public List<Blacklist> findChangedSince(Instant since) {
+        return jpa.findChangedSince(since);
     }
 }

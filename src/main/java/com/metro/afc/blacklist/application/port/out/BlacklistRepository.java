@@ -2,6 +2,7 @@ package com.metro.afc.blacklist.application.port.out;
 
 import com.metro.afc.blacklist.domain.Blacklist;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,5 +12,6 @@ public interface BlacklistRepository {
     Optional<Blacklist> findById(UUID id);
     Optional<Blacklist> findActiveByCardId(UUID cardId);
     List<Blacklist> findAllActive();
+    List<Blacklist> findChangedSince(Instant since);
     boolean existsActiveByCardId(UUID cardId);
 }

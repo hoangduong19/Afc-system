@@ -11,6 +11,7 @@ public interface CardRepository {
     Optional<Card> findByCardUid(String cardUid);
     boolean existsByCardUid(String cardUid);
     boolean existsById(UUID id);
+    List<Card> findByLinkedUserId(UUID userId);
     List<Card> findAll();
     Card save(Card card);
 }
