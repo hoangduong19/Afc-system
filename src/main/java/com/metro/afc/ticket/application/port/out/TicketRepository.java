@@ -2,6 +2,7 @@ package com.metro.afc.ticket.application.port.out;
 
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
+import com.metro.afc.ticket.domain.enums.TicketType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,4 +17,5 @@ public interface TicketRepository {
     int expireOverdueTickets(LocalDate today);
     List<Ticket> findByUserId(UUID userId);
     List<Ticket> findByUserIdAndStatus(UUID userId, TicketStatus status);
+    Optional<Ticket> findActiveByCardIdAndType(UUID cardId, TicketType type);
 }

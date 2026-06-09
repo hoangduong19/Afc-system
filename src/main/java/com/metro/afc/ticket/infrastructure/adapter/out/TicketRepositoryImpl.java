@@ -3,6 +3,7 @@ package com.metro.afc.ticket.infrastructure.adapter.out;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
+import com.metro.afc.ticket.domain.enums.TicketType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,11 @@ public class TicketRepositoryImpl implements TicketRepository {
     @Override
     public List<Ticket> findByUserIdAndStatus(UUID userId, TicketStatus status) {
         return jpa.findByUserIdAndStatus(userId, status);
+    }
+
+    @Override
+    public Optional<Ticket> findActiveByCardIdAndType(UUID cardId, TicketType type) {
+        return jpa.findByCardIdAndTypeAndStatus(cardId, type, TicketStatus.ACTIVE);
     }
 
     @Override
