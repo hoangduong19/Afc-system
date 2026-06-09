@@ -318,7 +318,7 @@ CREATE INDEX idx_wallet_tx_created ON wallet_transactions(created_at);
 
 CREATE TABLE tickets (
     id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    card_id          UUID NOT NULL REFERENCES cards(id),
+    card_id          UUID REFERENCES cards(id),
     user_id          UUID REFERENCES users(id),
     type             VARCHAR(20) NOT NULL,
     price            DECIMAL(15, 2) NOT NULL,
