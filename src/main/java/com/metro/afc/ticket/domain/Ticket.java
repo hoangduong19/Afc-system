@@ -7,6 +7,8 @@ import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import com.metro.afc.ticket.domain.enums.TicketType;
 import com.metro.afc.ticket.domain.events.TicketCreatedEvent;
+import com.metro.afc.ticket.domain.events.TicketLinkedToCardEvent;
+import com.metro.afc.ticket.domain.events.TicketUnlinkedFromCardEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -144,6 +146,18 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
                     "Ticket already linked to a card"
             );
         this.cardId = cardId;
+        this.registerEvent(new TicketLinkedToCardEvent(this));
+    }
+
+    public void unlinkFromCard() {
+        if (this.cardId == null)
+            throw new BusinessRuleException(
+                    ErrorCode.TICKET_INVALID_STATUS,
+                    "Ticket is not linked to any card"
+            );
+        UUID previousCardId = this.cardId;
+        this.cardId = null;
+        this.registerEvent(new TicketUnlinkedFromCardEvent(this.id, previousCardId));
     }
 
     @PrePersist

@@ -106,6 +106,12 @@ public class CardController {
         return ResponseEntity.ok(ticketFacade.linkToCard(cardId, request));
     }
 
+    @DeleteMapping("/{cardId}/unlink-ticket")
+    @PreAuthorize("hasAuthority('CARD_LINK')")
+    public ResponseEntity<TicketResponse> unlinkTicket(@PathVariable UUID cardId) {
+        return ResponseEntity.ok(ticketFacade.unlinkFromCard(cardId));
+    }
+
     @GetMapping("/{cardId}/active-ticket")
     @PreAuthorize("hasAuthority('CARD_READ')")
     public ResponseEntity<TicketResponse> getActiveTicket(

@@ -92,7 +92,7 @@ public class TicketService implements TicketUseCase {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.FARE_RULE_NOT_FOUND));
 
         // Monthly pass: giá cố định theo QĐ 3316/2025
-        Money price = resolveMonthlyPassPrice(mode, passengerType, durationDays);
+        Money price = resolveMonthlyPassPrice(mode, durationDays);
 
         UUID discountId  = null;
         if (passengerType != null) {
@@ -132,6 +132,15 @@ public class TicketService implements TicketUseCase {
     }
 
     @Override
+    @Transactional
+    public Ticket unlinkFromCard(UUID cardId) {
+        Ticket ticket = ticketRepository.findActiveTicketByCardId(cardId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.TICKET_NOT_FOUND));
+        ticket.unlinkFromCard();
+        return ticketRepository.save(ticket);
+    }
+
+    @Override
     public Optional<Ticket> findActiveTicketByCardId(UUID cardId) {
         return ticketRepository.findActiveTicketByCardId(cardId);
     }
@@ -139,25 +148,13 @@ public class TicketService implements TicketUseCase {
     // ── Monthly pass price (QĐ 3316/2025) ───────────────────────
 
     private Money resolveMonthlyPassPrice(FareMode mode,
-                                          PassengerType passengerType,
                                           int durationDays) {
-        boolean isPriority = passengerType == PassengerType.STUDENT
-                || passengerType == PassengerType.SENIOR
-                || passengerType == PassengerType.PRIORITY;
-
         BigDecimal basePrice = switch (mode) {
-            case METRO -> isPriority
-                    ? new BigDecimal("100000")   // 100,000đ ưu tiên
-                    : new BigDecimal("200000");  // 200,000đ thường
-            case BUS   -> isPriority
-                    ? new BigDecimal("140000")   // 140,000đ ưu tiên
-                    : new BigDecimal("280000");  // 280,000đ thường
-            case ANY   -> isPriority
-                    ? new BigDecimal("250000")   // đa phương thức ưu tiên
-                    : new BigDecimal("500000");  // đa phương thức thường
+            case METRO -> new BigDecimal("200000");
+            case BUS   -> new BigDecimal("280000");
+            case ANY   -> new BigDecimal("500000");
         };
 
-        // Scale theo durationDays nếu khác 30 ngày
         if (durationDays != 30) {
             basePrice = basePrice
                     .multiply(BigDecimal.valueOf(durationDays))

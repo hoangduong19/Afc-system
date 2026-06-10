@@ -19,5 +19,7 @@ public interface TicketUseCase {
 
     Ticket linkToCard(UUID ticketId, UUID cardId);
 
+    Ticket unlinkFromCard(UUID ticketId);
+
     Optional<Ticket> findActiveTicketByCardId(UUID cardId);
 }

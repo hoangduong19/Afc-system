@@ -48,6 +48,12 @@ public class TicketFacade {
         return TicketResponse.from(ticket, null, null);
     }
 
+    public TicketResponse unlinkFromCard(UUID ticketId) {
+        return TicketResponse.from(
+                ticketUseCase.unlinkFromCard(ticketId), null, null
+        );
+    }
+
     public TicketResponse findActiveTicketByCardId(UUID cardId) {
         return ticketUseCase.findActiveTicketByCardId(cardId)
                 .map(t -> TicketResponse.from(t, null, null))
