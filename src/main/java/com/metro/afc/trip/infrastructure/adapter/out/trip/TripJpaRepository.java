@@ -1,4 +1,4 @@
-package com.metro.afc.trip.infrastructure.adapter.out;
+package com.metro.afc.trip.infrastructure.adapter.out.trip;
 
 import com.metro.afc.trip.domain.Trip;
 import org.springframework.data.jpa.repository.JpaRepository;

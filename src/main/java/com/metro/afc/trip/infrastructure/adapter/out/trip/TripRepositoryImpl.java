@@ -1,4 +1,4 @@
-package com.metro.afc.trip.infrastructure.adapter.out;
+package com.metro.afc.trip.infrastructure.adapter.out.trip;
 
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;

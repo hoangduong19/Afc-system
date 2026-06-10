@@ -158,4 +158,13 @@ public class FareCalculationService implements FareCalculationUseCase {
                 finalPrice.getAmount()
         );
     }
+
+    public BigDecimal calculateRaw(Station from, Station to,
+                                   FareRule fareRule,
+                                   BigDecimal distanceKm) {
+        BigDecimal distance = distanceKm != null
+                ? distanceKm
+                : to.getKmMarker().subtract(from.getKmMarker()).abs();
+        return fareRule.calculateFare(distance).getAmount();
+    }
 }

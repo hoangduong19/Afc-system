@@ -1,8 +1,9 @@
 package com.metro.afc.trip.application.dto;
 
-import com.metro.afc.trip.domain.enums.PaymentMethod;
-import com.metro.afc.trip.domain.enums.TicketTypeUsed;
-import com.metro.afc.trip.domain.enums.TripStatus;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
+import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
+import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
+import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,7 +13,8 @@ import java.util.UUID;
 
 public record TransactionItemRequest(
         @NotNull UUID transactionId,
-        @NotBlank String cardUid,
+        String cardUid,
+        UUID ticketId,
         @NotBlank String operatorCode,
         String lineCode,
         @NotBlank String tapInStationCode,
@@ -23,6 +25,7 @@ public record TransactionItemRequest(
         String tapOutDeviceId,
         BigDecimal distanceKm,
         BigDecimal fareAmount,
+        @NotNull FareMode mode,
         @NotNull PaymentMethod paymentMethod,
         TicketTypeUsed ticketType,
         @NotNull TripStatus tripStatus,

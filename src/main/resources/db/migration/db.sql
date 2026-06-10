@@ -400,6 +400,16 @@ CREATE INDEX idx_tap_events_trip    ON tap_events(trip_id);
 CREATE INDEX idx_tap_events_station ON tap_events(station_id);
 CREATE INDEX idx_tap_events_time    ON tap_events(tapped_at);
 
+CREATE TABLE trip_anomalies (
+    id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    trip_id      UUID REFERENCES trips(id),
+    anomaly_type VARCHAR(50)  NOT NULL,
+    severity     VARCHAR(20)  NOT NULL,
+    description  TEXT         NOT NULL,
+    detected_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at  TIMESTAMP,
+    is_resolved  BOOLEAN      NOT NULL DEFAULT FALSE
+);
 -- ═══════════════════════════════════════════════════════════════
 -- 9. SETTLEMENT & RECONCILIATION
 -- ═══════════════════════════════════════════════════════════════
@@ -636,3 +646,4 @@ ALTER TABLE tickets
                 OR
             (mode <> 'BUS' AND scope IS NULL)
             );
+ALTER TABLE trips ALTER COLUMN card_id DROP NOT NULL;

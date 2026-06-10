@@ -1,8 +1,8 @@
 package com.metro.afc.trip.domain;
 
-import com.metro.afc.trip.domain.enums.PaymentMethod;
-import com.metro.afc.trip.domain.enums.TicketTypeUsed;
-import com.metro.afc.trip.domain.enums.TripStatus;
+import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
+import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
+import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,7 +26,7 @@ public class Trip {
             nullable = false, unique = true, columnDefinition = "uuid")
     private UUID externalTransactionId;
 
-    @Column(name = "card_id", nullable = false, columnDefinition = "uuid")
+    @Column(name = "card_id", columnDefinition = "uuid")
     private UUID cardId;
 
     @Column(name = "operator_id", columnDefinition = "uuid")
@@ -64,6 +64,9 @@ public class Trip {
     @Column(name = "ticket_type_used", length = 20)
     private TicketTypeUsed ticketTypeUsed;
 
+    @Column(name = "ticket_id", columnDefinition = "uuid")
+    private UUID ticketId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TripStatus status;
@@ -75,7 +78,8 @@ public class Trip {
     private Instant createdAt;
 
     public static Trip from(UUID externalTransactionId,
-                            UUID cardId, UUID operatorId,
+                            UUID cardId,
+                            UUID ticketId, UUID operatorId,
                             UUID tapInStationId, String tapInGateId, Instant tapInAt,
                             UUID tapOutStationId, String tapOutGateId, Instant tapOutAt,
                             BigDecimal distanceKm, BigDecimal fareAmount,
@@ -85,6 +89,7 @@ public class Trip {
         t.id                      = UUID.randomUUID();
         t.externalTransactionId   = externalTransactionId;
         t.cardId                  = cardId;
+        t.ticketId                = ticketId;
         t.operatorId              = operatorId;
         t.tapInStationId          = tapInStationId;
         t.tapInGateId             = tapInGateId;
