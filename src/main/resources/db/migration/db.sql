@@ -621,3 +621,18 @@ CREATE TABLE refresh_tokens (
 ALTER TABLE revenue_share_rules
     ADD COLUMN created_by UUID REFERENCES users(id),
     ADD COLUMN version    INTEGER NOT NULL DEFAULT 1;
+
+ALTER TABLE tickets
+    ADD COLUMN scope VARCHAR(30);
+
+ALTER TABLE tickets
+    ADD CONSTRAINT chk_ticket_scope
+        CHECK (scope IS NULL OR scope IN ('SINGLE_ROUTE', 'MULTI_ROUTE'));
+
+ALTER TABLE tickets
+    ADD CONSTRAINT chk_ticket_mode_scope
+        CHECK (
+            (mode = 'BUS' AND scope IS NOT NULL)
+                OR
+            (mode <> 'BUS' AND scope IS NULL)
+            );

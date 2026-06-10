@@ -2,8 +2,8 @@ package com.metro.afc.settlement.domain.events.handler;
 
 import com.metro.afc.settlement.domain.RevenueShareRule;
 import com.metro.afc.settlement.domain.RevenueShareRuleAuditLog;
-import com.metro.afc.settlement.domain.events.RevenueShareRuleCreatedEvent;
-import com.metro.afc.settlement.domain.events.RevenueShareRuleDisabledEvent;
+import com.metro.afc.settlement.domain.events.revenueShareRule.RevenueShareRuleCreatedEvent;
+import com.metro.afc.settlement.domain.events.revenueShareRule.RevenueShareRuleDisabledEvent;
 import com.metro.afc.settlement.infrastructure.adapter.out.revenueShareRuleAuditLog.RevenueShareRuleAuditJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

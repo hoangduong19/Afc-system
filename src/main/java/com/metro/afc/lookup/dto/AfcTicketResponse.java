@@ -10,6 +10,7 @@ public record AfcTicketResponse(
         UUID ticketId,
         String type,
         String mode,
+        String scope,
         String status,
         UUID cardId,
         UUID userId,
@@ -23,7 +24,9 @@ public record AfcTicketResponse(
     public static AfcTicketResponse from(Ticket t) {
         return new AfcTicketResponse(
                 t.getId(), t.getType().name(),
-                t.getMode().name(), t.getStatus().name(),
+                t.getMode().name(),
+                t.getScope() != null ? t.getScope().name() : null,
+                t.getStatus().name(),
                 t.getCardId(), t.getUserId(),
                 null, null,
                 t.getPrice().getAmount(),

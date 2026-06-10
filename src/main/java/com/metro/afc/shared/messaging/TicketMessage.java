@@ -9,6 +9,7 @@ public record TicketMessage(
         UUID ticketId,
         String type,
         String mode,
+        String scope,
         UUID cardId,
         UUID userId,
         String fromStationCode,

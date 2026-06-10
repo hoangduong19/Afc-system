@@ -37,7 +37,7 @@ public class TicketFacade {
     public TicketResponse createMonthlyPass(CreateMonthlyPassRequest req,
                                             UUID userId) {
         Ticket ticket = ticketUseCase.createMonthlyPass(
-                userId, req.mode(), req.passengerType(),
+                userId, req.mode(), req.scope(), req.passengerType(),
                 req.validFrom(), req.durationDays()
         );
         return TicketResponse.from(ticket, null, null);

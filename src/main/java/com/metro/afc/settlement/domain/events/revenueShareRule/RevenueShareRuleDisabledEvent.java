@@ -1,4 +1,4 @@
-package com.metro.afc.settlement.domain.events;
+package com.metro.afc.settlement.domain.events.revenueShareRule;
 
 import com.metro.afc.settlement.domain.RevenueShareRule;
 

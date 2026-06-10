@@ -4,6 +4,7 @@ import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
+import com.metro.afc.ticket.domain.enums.PassScope;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import com.metro.afc.ticket.domain.enums.TicketType;
 import com.metro.afc.ticket.domain.events.TicketCreatedEvent;
@@ -60,6 +61,10 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
     @Column(length = 20)
     private FareMode mode;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private PassScope scope;
+
     @Column(name = "valid_from", nullable = false)
     private LocalDate validFrom;
 
@@ -102,22 +107,31 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
 
     // ── Factory: Monthly Pass ────────────────────────────────────
 
-    public static Ticket createMonthlyPass(UUID userId, FareMode mode,
-                                           Money price, UUID fareRuleId,
-                                           UUID discountId, LocalDate validFrom,
-                                           int durationDays) {
-        Ticket t     = new Ticket();
-        t.id         = UUID.randomUUID();
-        t.userId     = userId;
-        t.cardId     = null;
-        t.type       = TicketType.MONTHLY_PASS;
-        t.price      = price;
+    public static Ticket createMonthlyPass(
+            UUID userId,
+            FareMode mode,
+            PassScope scope,
+            Money price,
+            UUID fareRuleId,
+            UUID discountId,
+            LocalDate validFrom,
+            int durationDays
+    ) {
+        validatePassScope(mode, scope);
+
+        Ticket t = new Ticket();
+        t.id = UUID.randomUUID();
+        t.userId = userId;
+        t.cardId = null;
+        t.type = TicketType.MONTHLY_PASS;
+        t.mode = mode;
+        t.scope = scope;
+        t.price = price;
         t.fareRuleId = fareRuleId;
         t.discountId = discountId;
-        t.mode       = mode;
-        t.validFrom  = validFrom;
-        t.validTo    = validFrom.plusDays(durationDays);
-        t.status     = TicketStatus.ACTIVE;
+        t.validFrom = validFrom;
+        t.validTo = validFrom.plusDays(durationDays);
+        t.status = TicketStatus.ACTIVE;
         t.registerEvent(new TicketCreatedEvent(t));
         return t;
     }
@@ -158,6 +172,22 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
         UUID previousCardId = this.cardId;
         this.cardId = null;
         this.registerEvent(new TicketUnlinkedFromCardEvent(this.id, previousCardId));
+    }
+
+    private static void validatePassScope(FareMode mode, PassScope scope) {
+        if (mode == FareMode.BUS && scope == null) {
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_PASS_SCOPE,
+                    "BUS monthly pass requires pass scope"
+            );
+        }
+
+        if (mode != FareMode.BUS && scope != null) {
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_PASS_SCOPE,
+                    "Only BUS monthly pass can have pass scope"
+            );
+        }
     }
 
     @PrePersist

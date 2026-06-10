@@ -1,4 +1,4 @@
-package com.metro.afc.settlement.application.dto;
+package com.metro.afc.settlement.application.dto.revenueShareRule;
 
 import com.metro.afc.settlement.domain.RevenueShareRule;
 

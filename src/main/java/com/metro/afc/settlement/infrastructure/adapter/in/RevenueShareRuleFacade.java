@@ -1,8 +1,8 @@
 package com.metro.afc.settlement.infrastructure.adapter.in;
 
-import com.metro.afc.settlement.application.dto.CreateRevenueShareRuleRequest;
-import com.metro.afc.settlement.application.dto.RevenueShareRuleResponse;
-import com.metro.afc.settlement.application.dto.UpdateRevenueShareRuleRequest;
+import com.metro.afc.settlement.application.dto.revenueShareRule.CreateRevenueShareRuleRequest;
+import com.metro.afc.settlement.application.dto.revenueShareRule.RevenueShareRuleResponse;
+import com.metro.afc.settlement.application.dto.revenueShareRule.UpdateRevenueShareRuleRequest;
 import com.metro.afc.settlement.application.port.in.RevenueShareRuleUseCase;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;

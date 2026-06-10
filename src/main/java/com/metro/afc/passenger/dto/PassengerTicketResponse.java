@@ -11,6 +11,7 @@ public record PassengerTicketResponse(
         UUID ticketId,
         String type,
         String mode,
+        String scope,
         String status,
         BigDecimal price,
         String fromStationCode,
@@ -25,6 +26,7 @@ public record PassengerTicketResponse(
         return new PassengerTicketResponse(
                 t.getId(), t.getType().name(),
                 t.getMode().name(), t.getStatus().name(),
+                t.getScope() != null ? t.getScope().name() : null,
                 t.getPrice().getAmount(),
                 null, null,
                 t.getValidFrom(), t.getValidTo(),

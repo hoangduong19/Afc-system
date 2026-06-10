@@ -19,6 +19,7 @@ import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.ticket.application.port.in.TicketUseCase;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
 import com.metro.afc.ticket.domain.Ticket;
+import com.metro.afc.ticket.domain.enums.PassScope;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -85,14 +86,14 @@ public class TicketService implements TicketUseCase {
 
     @Override
     @Transactional
-    public Ticket createMonthlyPass(UUID userId, FareMode mode,
+    public Ticket createMonthlyPass(UUID userId, FareMode mode, PassScope scope,
                                     PassengerType passengerType,
                                     LocalDate validFrom, int durationDays) {
         FareRule fareRule = fareRuleRepository.findActiveByMode(mode)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.FARE_RULE_NOT_FOUND));
 
         // Monthly pass: giá cố định theo QĐ 3316/2025
-        Money price = resolveMonthlyPassPrice(mode, durationDays);
+        Money price = resolveMonthlyPassPrice(mode, scope, durationDays);
 
         UUID discountId  = null;
         if (passengerType != null) {
@@ -105,7 +106,7 @@ public class TicketService implements TicketUseCase {
         }
 
         return ticketRepository.save(Ticket.createMonthlyPass(
-                userId, mode, price, fareRule.getId(),
+                userId, mode, scope, price, fareRule.getId(),
                 discountId, validFrom, durationDays
         ));
     }
@@ -147,12 +148,20 @@ public class TicketService implements TicketUseCase {
 
     // ── Monthly pass price (QĐ 3316/2025) ───────────────────────
 
-    private Money resolveMonthlyPassPrice(FareMode mode,
-                                          int durationDays) {
+    private Money resolveMonthlyPassPrice(
+            FareMode mode,
+            PassScope scope,
+            int durationDays
+    ) {
+        validatePassScope(mode, scope);
+
         BigDecimal basePrice = switch (mode) {
+            case BUS -> switch (scope) {
+                case SINGLE_ROUTE -> new BigDecimal("140000");
+                case MULTI_ROUTE -> new BigDecimal("280000");
+            };
             case METRO -> new BigDecimal("200000");
-            case BUS   -> new BigDecimal("280000");
-            case ANY   -> new BigDecimal("500000");
+            case ANY -> new BigDecimal("500000");
         };
 
         if (durationDays != 30) {
@@ -162,5 +171,21 @@ public class TicketService implements TicketUseCase {
         }
 
         return Money.of(basePrice);
+    }
+
+    private static void validatePassScope(FareMode mode, PassScope scope) {
+        if (mode == FareMode.BUS && scope == null) {
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_PASS_SCOPE,
+                    "BUS monthly pass requires pass scope"
+            );
+        }
+
+        if (mode != FareMode.BUS && scope != null) {
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_PASS_SCOPE,
+                    "Only BUS monthly pass can have pass scope"
+            );
+        }
     }
 }

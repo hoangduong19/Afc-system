@@ -2,6 +2,7 @@ package com.metro.afc.ticket.application.dto;
 
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.fare.domain.model.enums.fareRuleDiscount.PassengerType;
+import com.metro.afc.ticket.domain.enums.PassScope;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,6 +11,8 @@ import java.time.LocalDate;
 public record CreateMonthlyPassRequest(
         @NotNull(message = "Mode is required")
         FareMode mode,
+
+        PassScope scope,
 
         PassengerType passengerType,
 

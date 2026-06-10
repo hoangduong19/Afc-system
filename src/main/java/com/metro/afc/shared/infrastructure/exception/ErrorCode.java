@@ -31,6 +31,7 @@ public enum ErrorCode {
     TICKET_INVALID_STATUS(400,  "Invalid ticket status"),
     TICKET_ALREADY_LINKED(409,  "Ticket already linked to a card"),
     CARD_NOT_ACTIVE(400,        "Card must be ACTIVE"),
+    INVALID_PASS_SCOPE(400, "Invalid pass scope"),
 
     // Wallet
     WALLET_NOT_FOUND(404,   "Wallet not found"),
