@@ -2,7 +2,7 @@ package com.metro.afc.settlement.infrastructure.adapter.out.revenueShareRule;
 
 import com.metro.afc.settlement.application.port.out.RevenueShareRuleRepository;
 import com.metro.afc.settlement.domain.RevenueShareRule;
-import com.metro.afc.settlement.domain.enums.RuleStatus;
+import com.metro.afc.settlement.domain.enums.revenueShare.RuleStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

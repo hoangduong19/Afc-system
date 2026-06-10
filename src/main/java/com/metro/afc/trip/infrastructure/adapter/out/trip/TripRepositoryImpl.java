@@ -28,4 +28,9 @@ public class TripRepositoryImpl implements TripRepository {
             UUID operatorId, Instant from, Instant to) {
         return jpa.findByOperatorIdAndTapInAtBetween(operatorId, from, to);
     }
+
+    @Override
+    public List<Trip> findCompletedTripsInPeriod(Instant from, Instant to) {
+        return jpa.findCompletedTripsInPeriod(from, to);
+    }
 }

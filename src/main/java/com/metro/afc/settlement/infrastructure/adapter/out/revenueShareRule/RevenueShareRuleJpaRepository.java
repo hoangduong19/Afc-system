@@ -1,7 +1,7 @@
 package com.metro.afc.settlement.infrastructure.adapter.out.revenueShareRule;
 
 import com.metro.afc.settlement.domain.RevenueShareRule;
-import com.metro.afc.settlement.domain.enums.RuleStatus;
+import com.metro.afc.settlement.domain.enums.revenueShare.RuleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

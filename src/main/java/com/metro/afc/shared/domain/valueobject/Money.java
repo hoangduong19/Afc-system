@@ -30,6 +30,11 @@ public class Money {
         return new Money(this.amount.add(other.amount));
     }
 
+    public Money subtract(Money other) {
+        BigDecimal result = this.amount.subtract(other.amount);
+        return new Money(result.max(BigDecimal.ZERO));
+    }
+
     public Money multiply(BigDecimal factor) {
         return new Money(this.amount.multiply(factor)
                 .setScale(2, RoundingMode.HALF_UP));

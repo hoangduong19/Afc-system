@@ -1,7 +1,7 @@
 package com.metro.afc.settlement.application.port.in;
 
 import com.metro.afc.settlement.domain.RevenueShareRule;
-import com.metro.afc.settlement.domain.enums.ShareModel;
+import com.metro.afc.settlement.domain.enums.revenueShare.ShareModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

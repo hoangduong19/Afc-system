@@ -50,6 +50,10 @@ public enum ErrorCode {
     // Settlement
     SETTLEMENT_NOT_FOUND(404,   "Settlement not found"),
     SETTLEMENT_ALREADY_CONFIRMED(409, "Settlement has already been confirmed"),
+    SETTLEMENT_ALREADY_EXISTS(409, "Settlement already exists for this period"),
+    SETTLEMENT_NOT_PENDING(400,    "Settlement is not in DRAFT status"),
+    SETTLEMENT_NO_TRIPS(400,       "No completed trips found in this period"),
+    SETTLEMENT_RECONCILE_FAIL(400, "Cannot confirm: reconciliation MISMATCH"),
 
     // Operator
     OPERATOR_NOT_FOUND(404, "Transit operator not found"),

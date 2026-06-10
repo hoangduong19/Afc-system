@@ -4,7 +4,7 @@ import com.metro.afc.operator.application.port.out.OperatorRepository;
 import com.metro.afc.settlement.application.port.in.RevenueShareRuleUseCase;
 import com.metro.afc.settlement.application.port.out.RevenueShareRuleRepository;
 import com.metro.afc.settlement.domain.RevenueShareRule;
-import com.metro.afc.settlement.domain.enums.ShareModel;
+import com.metro.afc.settlement.domain.enums.revenueShare.ShareModel;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;

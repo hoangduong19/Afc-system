@@ -1,6 +1,6 @@
 package com.metro.afc.settlement.application.dto.revenueShareRule;
 
-import com.metro.afc.settlement.domain.enums.ShareModel;
+import com.metro.afc.settlement.domain.enums.revenueShare.ShareModel;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;

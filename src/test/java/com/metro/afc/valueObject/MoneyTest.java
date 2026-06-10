@@ -63,4 +63,20 @@ class MoneyTest {
         Money b = Money.of(new BigDecimal("30000"));
         assertTrue(a.isGreaterThan(b));
     }
+
+    @Test
+    void subtract_normal() {
+        Money a = Money.of(new BigDecimal("100000"));
+        Money b = Money.of(new BigDecimal("25000"));
+        assertEquals(0, new BigDecimal("75000")
+                .compareTo(a.subtract(b).getAmount()));
+    }
+
+    @Test
+    void subtract_resultNegative_clampsToZero() {
+        Money a = Money.of(new BigDecimal("100"));
+        Money b = Money.of(new BigDecimal("500"));
+        assertEquals(0, BigDecimal.ZERO
+                .compareTo(a.subtract(b).getAmount()));
+    }
 }

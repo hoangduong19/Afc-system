@@ -1,7 +1,7 @@
 package com.metro.afc.settlement.domain;
 
-import com.metro.afc.settlement.domain.enums.RuleStatus;
-import com.metro.afc.settlement.domain.enums.ShareModel;
+import com.metro.afc.settlement.domain.enums.revenueShare.RuleStatus;
+import com.metro.afc.settlement.domain.enums.revenueShare.ShareModel;
 import com.metro.afc.settlement.domain.events.revenueShareRule.RevenueShareRuleCreatedEvent;
 import com.metro.afc.settlement.domain.events.revenueShareRule.RevenueShareRuleDisabledEvent;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
