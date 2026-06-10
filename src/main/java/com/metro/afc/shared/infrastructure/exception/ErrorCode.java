@@ -77,6 +77,12 @@ public enum ErrorCode {
     FARE_DISCOUNT_INACTIVE(400,    "Fare discount is already inactive"),
     FARE_DISCOUNT_ALREADY_EXISTS(409, "Active discount for this passenger type already exists"),
 
+    // RevenueShareRule
+    REVENUE_SHARE_RULE_NOT_FOUND(404,         "Revenue share rule not found"),
+    REVENUE_SHARE_RULE_ALREADY_EXISTS(409,    "Operator already has an active revenue share rule"),
+    REVENUE_SHARE_RULE_ALREADY_INACTIVE(400,  "Revenue share rule is already inactive"),
+    REVENUE_SHARE_RULE_INVALID(400,           "Invalid revenue share rule configuration"),
+
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),
     INTERNAL_ERROR(500,     "Internal server error");

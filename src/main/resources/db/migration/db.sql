@@ -618,3 +618,6 @@ CREATE TABLE refresh_tokens (
     expires_at  TIMESTAMP NOT NULL,
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE revenue_share_rules
+    ADD COLUMN created_by UUID REFERENCES users(id),
+    ADD COLUMN version    INTEGER NOT NULL DEFAULT 1;
