@@ -12,4 +12,5 @@ public interface RevenueShareRuleRepository {
     Optional<RevenueShareRule> findActiveByOperatorId(UUID operatorId);
     List<RevenueShareRule> findAllByOperatorId(UUID operatorId);
     boolean existsActiveByOperatorId(UUID operatorId);
+    List<RevenueShareRule> findAll();
 }

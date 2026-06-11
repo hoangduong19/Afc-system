@@ -1,4 +1,4 @@
-package com.metro.afc.settlement;
+package com.metro.afc.settlement.application;
 
 import com.metro.afc.operator.application.port.out.OperatorRepository;
 import com.metro.afc.settlement.application.port.in.RevenueShareRuleUseCase;
@@ -87,5 +87,10 @@ public class RevenueShareRuleService implements RevenueShareRuleUseCase {
     @Override
     public List<RevenueShareRule> findAllByOperatorId(UUID operatorId) {
         return ruleRepository.findAllByOperatorId(operatorId);
+    }
+
+    @Override
+    public List<RevenueShareRule> findAll() {
+        return ruleRepository.findAll();
     }
 }

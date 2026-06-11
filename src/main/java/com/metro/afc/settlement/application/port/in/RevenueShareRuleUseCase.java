@@ -25,4 +25,5 @@ public interface RevenueShareRuleUseCase {
 
     Optional<RevenueShareRule> findActiveByOperatorId(UUID operatorId);
     List<RevenueShareRule> findAllByOperatorId(UUID operatorId);
+    List<RevenueShareRule> findAll();
 }

@@ -59,4 +59,10 @@ public class RevenueShareRuleController {
             @PathVariable UUID operatorId) {
         return ResponseEntity.ok(facade.findAllByOperatorId(operatorId));
     }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('SETTLEMENT_READ')")
+    public ResponseEntity<List<RevenueShareRuleResponse>> findAll() {
+        return ResponseEntity.ok(facade.findAll());
+    }
 }

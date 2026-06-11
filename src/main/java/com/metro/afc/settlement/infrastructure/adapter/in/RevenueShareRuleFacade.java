@@ -53,4 +53,10 @@ public class RevenueShareRuleFacade {
                 .map(RevenueShareRuleResponse::from)
                 .toList();
     }
+
+    public List<RevenueShareRuleResponse> findAll() {
+        return useCase.findAll().stream()
+                .map(RevenueShareRuleResponse::from)
+                .toList();
+    }
 }

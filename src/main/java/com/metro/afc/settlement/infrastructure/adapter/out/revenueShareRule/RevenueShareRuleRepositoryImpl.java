@@ -40,4 +40,9 @@ public class RevenueShareRuleRepositoryImpl implements RevenueShareRuleRepositor
     public boolean existsActiveByOperatorId(UUID operatorId) {
         return jpa.existsByOperatorIdAndStatus(operatorId, RuleStatus.ACTIVE);
     }
+
+    @Override
+    public List<RevenueShareRule> findAll() {
+        return jpa.findAll();
+    }
 }
