@@ -88,6 +88,10 @@ public enum ErrorCode {
     REVENUE_SHARE_RULE_ALREADY_INACTIVE(400,  "Revenue share rule is already inactive"),
     REVENUE_SHARE_RULE_INVALID(400,           "Invalid revenue share rule configuration"),
 
+    // Anomaly
+    ANOMALY_NOT_FOUND(404,          "Anomaly not found"),
+    ANOMALY_ALREADY_RESOLVED(400,   "Anomaly is already resolved"),
+
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),
     INTERNAL_ERROR(500,     "Internal server error");

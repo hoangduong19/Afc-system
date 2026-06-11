@@ -2,10 +2,14 @@ package com.metro.afc.trip.infrastructure.adapter.out.tripAnamoly;
 
 import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.domain.TripAnomaly;
+import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -26,4 +30,16 @@ public class TripAnomalyRepositoryImpl implements TripAnomalyRepository {
     public List<TripAnomaly> findAllUnresolved() {
         return jpa.findByIsResolvedFalse();
     }
+
+    @Override
+    public Optional<TripAnomaly> findById(UUID id) {
+        return jpa.findById(id);
+    }
+
+    @Override
+    public Page<TripAnomaly> findAllWithFilters(AnomalySeverity severity,
+                                                Boolean isResolved, Pageable pageable) {
+        return jpa.findAllWithFilters(severity, isResolved, pageable);
+    }
+
 }

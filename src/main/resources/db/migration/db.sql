@@ -647,3 +647,4 @@ ALTER TABLE tickets
             (mode <> 'BUS' AND scope IS NULL)
             );
 ALTER TABLE trips ALTER COLUMN card_id DROP NOT NULL;
+ALTER TABLE trip_anomalies ADD COLUMN resolve_notes TEXT;

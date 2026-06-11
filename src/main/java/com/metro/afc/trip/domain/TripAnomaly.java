@@ -1,5 +1,7 @@
 package com.metro.afc.trip.domain;
 
+import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
+import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalyType;
 import jakarta.persistence.*;
@@ -43,6 +45,9 @@ public class TripAnomaly {
     @Column(name = "is_resolved", nullable = false)
     private Boolean isResolved;
 
+    @Column(name = "resolve_notes")
+    private String resolveNotes;
+
     public static TripAnomaly of(UUID tripId, AnomalyType type,
                                  AnomalySeverity severity, String description) {
         TripAnomaly a  = new TripAnomaly();
@@ -54,6 +59,17 @@ public class TripAnomaly {
         a.detectedAt   = Instant.now();
         a.isResolved   = false;
         return a;
+    }
+
+    public void resolve(String notes) {
+        if (Boolean.TRUE.equals(this.isResolved))
+            throw new BusinessRuleException(
+                    ErrorCode.ANOMALY_ALREADY_RESOLVED,
+                    "Anomaly is already resolved"
+            );
+        this.isResolved   = true;
+        this.resolvedAt   = Instant.now();
+        this.resolveNotes = notes;
     }
 
     @PrePersist
