@@ -1,0 +1,9 @@
+DB_NAME=afc_db
+DB_USERNAME=afc_user
+DB_PASSWORD=afc_password
+JWT_SECRET=afc-jwt-secret-key-2025-minimum-32-chars
+
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest

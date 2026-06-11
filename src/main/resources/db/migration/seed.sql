@@ -1,10 +1,24 @@
+
+INSERT INTO users (username, email, password_hash, full_name, status)
+VALUES (
+           'admin',
+           'admin@afc.vn',
+           '$2a$10$PDjj6hQ88hOiA7YvrNSOQeinFqz4ghkipd3pTdQcYJaXWk1OOe3Mu',
+           'System Admin',
+           'ACTIVE'
+       );
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r
+WHERE u.username = 'admin' AND r.code = 'ACC_ADMIN';
+
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: OPERATORS
 -- ═══════════════════════════════════════════════════════════════
 
 INSERT INTO operators (code, name, status) VALUES
-                                               ('HURC',      'Hanoi Urban Railway Company',        'ACTIVE'),
-                                               ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội',       'ACTIVE');
+                                               ('HURC',      'Hanoi Urban Railway Company',  'ACTIVE'),
+                                               ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội', 'ACTIVE');
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: ROUTES
@@ -12,53 +26,48 @@ INSERT INTO operators (code, name, status) VALUES
 
 INSERT INTO routes (operator_id, code, name, type) VALUES
                                                        ((SELECT id FROM operators WHERE code = 'HURC'),
-                                                        'HN_2A',    'Cát Linh - Hà Đông',   'METRO'),
-
+                                                        'HN_2A',     'Cát Linh - Hà Đông',              'METRO'),
                                                        ((SELECT id FROM operators WHERE code = 'HURC'),
-                                                        'HN_3_1',   'Nhổn - Ga Hà Nội',     'METRO'),
-
+                                                        'HN_3_1',    'Nhổn - Ga Hà Nội',                'METRO'),
                                                        ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
-                                                        'HN_BRT_01','BRT 01: Yên Nghĩa - Kim Mã', 'BUS'),
-
+                                                        'HN_BRT_01', 'BRT 01: Yên Nghĩa - Kim Mã',      'BUS'),
                                                        ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
-                                                        'HN_BUS_32','Buýt 32: Bến xe Giáp Bát - Nhổn', 'BUS');
+                                                        'HN_BUS_32', 'Buýt 32: Giáp Bát - Nhổn',        'BUS');
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: STATIONS — Tuyến 2A (km_marker từ QĐ 3316/2025 Phụ lục III)
--- Công thức: km = (fare_ga1_to_gaN - 8000) / 850
+-- SEED: STATIONS — Tuyến 2A
 -- ═══════════════════════════════════════════════════════════════
 
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_01', 'Cát Linh',     0.000,  1),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_02', 'La Thành',     0.700,  2),  -- (8595-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_03', 'Thái Hà',      1.600,  3),  -- (9360-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_04', 'Láng',         2.700,  4),  -- (10295-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_05', 'Thượng Đình',  3.900,  5),  -- (11315-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_06', 'Vành Đai 3',   5.000,  6),  -- (12250-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_07', 'Phùng Khoang', 6.400,  7),  -- (13440-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_08', 'Văn Quán',     7.500,  8),  -- (14375-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_09', 'Hà Đông',      8.800,  9),  -- (15480-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_10', 'La Khê',       10.000, 10), -- (16500-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_11', 'Văn Khê',      11.400, 11), -- (17690-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_12', 'Yên Nghĩa',    12.500, 12); -- (18625-8000)/850
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_02', 'La Thành',     0.700,  2),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_03', 'Thái Hà',      1.600,  3),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_04', 'Láng',         2.700,  4),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_05', 'Thượng Đình',  3.900,  5),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_06', 'Vành Đai 3',   5.000,  6),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_07', 'Phùng Khoang', 6.400,  7),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_08', 'Văn Quán',     7.500,  8),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_09', 'Hà Đông',      8.800,  9),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_10', 'La Khê',       10.000, 10),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_11', 'Văn Khê',      11.400, 11),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_12', 'Yên Nghĩa',    12.500, 12);
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: STATIONS — Tuyến 3.1 (km_marker từ QĐ 3316/2025 Phụ lục III)
--- Công thức: km = (fare_ga1_to_gaN - 8000) / 850
+-- SEED: STATIONS — Tuyến 3.1
 -- ═══════════════════════════════════════════════════════════════
 
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_01', 'Nhổn',                0.000, 1),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_02', 'Minh Khai',           1.100, 2),  -- (8935-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_03', 'Phú Diễn',            2.200, 3),  -- (9870-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_04', 'Cầu Diễn',            3.000, 4),  -- (10550-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_05', 'Lê Đức Thọ',          4.100, 5),  -- (11485-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_06', 'Đại học Quốc Gia',    5.100, 6),  -- (12335-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_07', 'Chùa Hà',             6.300, 7),  -- (13355-8000)/850
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_08', 'Cầu Giấy',            7.400, 8);  -- (14290-8000)/850
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_01', 'Nhổn',               0.000, 1),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_02', 'Minh Khai',          1.100, 2),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_03', 'Phú Diễn',           2.200, 3),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_04', 'Cầu Diễn',           3.000, 4),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_05', 'Lê Đức Thọ',         4.100, 5),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_06', 'Đại học Quốc Gia',   5.100, 6),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_07', 'Chùa Hà',            6.300, 7),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_08', 'Cầu Giấy',           7.400, 8);
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: STATIONS — BRT 01 (kết nối metro 2A, km_marker ước tính)
+-- SEED: STATIONS — BRT 01
 -- ═══════════════════════════════════════════════════════════════
 
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
@@ -74,15 +83,336 @@ INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BRT_01'), 'BRT01_10', 'Kim Mã',            14.000, 10);
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: STATIONS — Buýt 32 (kết nối metro 3.1 ga Nhổn, km_marker ước tính)
+-- SEED: STATIONS — Buýt 32
 -- ═══════════════════════════════════════════════════════════════
 
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_01', 'Bến xe Giáp Bát',  0.000,  1),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_02', 'Ngã tư Giải Phóng',1.800,  2),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_03', 'Ga Hà Nội',         3.200,  3),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_04', 'Cầu Giấy',          7.500,  4),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_05', 'Hồ Tùng Mậu',       10.200, 5),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_06', 'Phú Diễn',           13.800, 6),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_07', 'Minh Khai',          15.900, 7),
-                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_08', 'Nhổn',               18.200, 8);
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_01', 'Bến xe Giáp Bát',   0.000,  1),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_02', 'Ngã tư Giải Phóng', 1.800,  2),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_03', 'Ga Hà Nội',          3.200,  3),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_04', 'Cầu Giấy',           7.500,  4),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_05', 'Hồ Tùng Mậu',        10.200, 5),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_06', 'Phú Diễn',            13.800, 6),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_07', 'Minh Khai',           15.900, 7),
+                                                                          ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_08', 'Nhổn',                18.200, 8);
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: FARE RULES (QĐ 3316/2025)
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO fare_rules (code, mode, base_fare, rate_per_km,
+                        min_price, max_price,
+                        effective_from, status, version, created_by)
+VALUES
+    ('HN_METRO_STANDARD', 'METRO',
+     8000, 850, 8000, 30000,
+     '2025-07-01', 'ACTIVE', 1,
+     (SELECT id FROM users WHERE username = 'admin')),
+
+    ('HN_BUS_STANDARD', 'BUS',
+     3000, 450, 3000, 30000,
+     '2025-07-01', 'ACTIVE', 1,
+     (SELECT id FROM users WHERE username = 'admin'));
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: FARE DISCOUNTS (QĐ 3316/2025)
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO fare_discounts (passenger_type, discount_type,
+                            discount_value, effective_from, status)
+VALUES
+    ('STUDENT',  'PERCENT', 50,  '2025-07-01', 'ACTIVE'),
+    ('SENIOR',   'PERCENT', 100, '2025-07-01', 'ACTIVE'),
+    ('PRIORITY', 'PERCENT', 100, '2025-07-01', 'ACTIVE');
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: REVENUE SHARE RULES
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO revenue_share_rules (operator_id, share_model, share_percentage,
+                                 effective_from, status, version, created_by)
+VALUES
+    ((SELECT id FROM operators WHERE code = 'HURC'),
+     'KM_BASED', 65.00, '2025-07-01', 'ACTIVE', 1,
+     (SELECT id FROM users WHERE username = 'admin')),
+
+    ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
+     'KM_BASED', 35.00, '2025-07-01', 'ACTIVE', 1,
+     (SELECT id FROM users WHERE username = 'admin'));
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: INTEROP CONFIGS
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO interop_configs (from_operator_id, to_operator_id,
+                             transfer_discount, enabled)
+VALUES
+    ((SELECT id FROM operators WHERE code = 'HURC'),
+     (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+     0, true),
+
+    ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
+     (SELECT id FROM operators WHERE code = 'HURC'),
+     0, true);
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: CARDS
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO cards (card_uid, status, type, supports_metro,
+                   supports_bus, activated_at)
+VALUES
+    ('CARD-ANON-001', 'ACTIVE', 'ANON', true, true,
+     CURRENT_TIMESTAMP),
+    ('CARD-ANON-002', 'ACTIVE', 'ANON', true, false,
+     CURRENT_TIMESTAMP),
+    ('CARD-ANON-003', 'SUSPENDED', 'ANON', true, true,
+     CURRENT_TIMESTAMP),
+    ('CARD-ID-001',   'ACTIVE', 'IDENTIFIED', true, true,
+     CURRENT_TIMESTAMP);
+
+-- Link CARD-ID-001 với admin
+UPDATE cards
+SET linked_user_id = (SELECT id FROM users WHERE username = 'admin'),
+    linked_at      = CURRENT_TIMESTAMP
+WHERE card_uid = 'CARD-ID-001';
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: BLACKLIST
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO blacklist (card_id, reason, added_by, is_active)
+VALUES (
+           (SELECT id FROM cards WHERE card_uid = 'CARD-ANON-003'),
+           'Seed: thẻ tạm khóa để test blacklist',
+           (SELECT id FROM users WHERE username = 'admin'),
+           true
+       );
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: TICKETS
+-- ═══════════════════════════════════════════════════════════════
+
+-- Single trip (Cát Linh → Văn Quán, METRO)
+INSERT INTO tickets (card_id, user_id, type, price,
+                     fare_rule_id, discount_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           NULL,
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP',
+           14375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           NULL,
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO',
+           CURRENT_DATE,
+           CURRENT_DATE + INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- Single trip STUDENT (giảm 50% → 7187.5đ)
+INSERT INTO tickets (card_id, user_id, type, price,
+                     fare_rule_id, discount_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           NULL,
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP',
+           7187.50,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO',
+           CURRENT_DATE,
+           CURRENT_DATE + INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- Single trip đã USED
+INSERT INTO tickets (card_id, user_id, type, price,
+                     fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status, used_at)
+VALUES (
+           NULL,
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP',
+           14375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO',
+           CURRENT_DATE - INTERVAL '1 day',
+           CURRENT_DATE,
+           'USED',
+           CURRENT_TIMESTAMP - INTERVAL '2 hours'
+       );
+
+-- Monthly pass METRO (link vào CARD-ID-001)
+INSERT INTO tickets (card_id, user_id, type, price,
+                     fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001'),
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS',
+           200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- Monthly pass BUS STUDENT (virtual, chưa link card)
+INSERT INTO tickets (card_id, user_id, type, price,
+                     fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           NULL,
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS',
+           70000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'SINGLE_ROUTE'
+       );
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: MONTHLY PASS VIRTUAL (không có card)
+-- ═══════════════════════════════════════════════════════════════
+
+-- METRO normal 200k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- METRO STUDENT 50% → 100k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 100000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- METRO SENIOR/PRIORITY 100% → 0đ - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 0.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'SENIOR'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE'
+       );
+
+-- BUS SINGLE_ROUTE normal 140k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 140000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'SINGLE_ROUTE'
+       );
+
+-- BUS SINGLE_ROUTE STUDENT 50% → 70k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 70000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'SINGLE_ROUTE'
+       );
+
+-- BUS MULTI_ROUTE normal 280k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 280000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'MULTI_ROUTE'
+       );
+
+-- BUS MULTI_ROUTE STUDENT → 140k - ACTIVE
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 140000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE),
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'MULTI_ROUTE'
+       );
+
+-- METRO EXPIRED (tháng trước)
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 day',
+           'EXPIRED'
+       );
+
+-- BUS SINGLE_ROUTE tháng sau (chưa có hiệu lực)
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 140000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '2 month' - INTERVAL '1 day',
+           'ACTIVE',
+           'SINGLE_ROUTE'
+       );

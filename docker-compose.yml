@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: afc-postgres
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-afc_db}
+      POSTGRES_USER:     ${DB_USERNAME:-afc_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-afc_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration/db.sql:/docker-entrypoint-initdb.d/01_db.sql
+      - ./src/main/resources/db/migration/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-afc_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: afc-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: afc-backend
+    environment:
+      DB_HOST:           postgres
+      DB_NAME:           ${DB_NAME:-afc_db}
+      DB_USERNAME:       ${DB_USERNAME:-afc_user}
+      DB_PASSWORD:       ${DB_PASSWORD:-afc_password}
+      RABBITMQ_HOST:     rabbitmq
+      RABBITMQ_PORT:     5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      JWT_SECRET:        ${JWT_SECRET:-your-secret-key-here}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
