@@ -2,6 +2,7 @@ package com.metro.afc.trip.infrastructure.adapter.out.trip;
 
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
+import com.metro.afc.trip.domain.TripSpecification;
 import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,8 +43,11 @@ public class TripRepositoryImpl implements TripRepository {
     public Page<Trip> findWithFilters(UUID cardId, UUID operatorId,
                                       TripStatus status, Instant from, Instant to,
                                       Pageable pageable) {
-        return jpa.findWithFilters(
-                cardId, operatorId, status, from, to, pageable);
+        return jpa.findAll(
+                TripSpecification.withFilters(
+                        cardId, operatorId, status, from, to),
+                pageable
+        );
     }
 
     @Override
