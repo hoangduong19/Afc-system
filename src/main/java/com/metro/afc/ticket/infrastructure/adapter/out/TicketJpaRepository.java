@@ -4,6 +4,8 @@ import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import com.metro.afc.ticket.domain.enums.TicketType;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +29,18 @@ public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
     @Query("UPDATE Ticket t SET t.status = 'EXPIRED' " +
             "WHERE t.status = 'ACTIVE' AND t.validTo < :today")
     int expireOverdueTickets(@Param("today") LocalDate today);
+
+    @Query("""
+    SELECT t FROM Ticket t
+    WHERE (:type IS NULL OR t.type = :type)
+    AND (:status IS NULL OR t.status = :status)
+    AND (:from IS NULL OR t.validFrom >= :from)
+    AND (:to IS NULL OR t.validTo <= :to)
+    """)
+    Page<Ticket> findAllWithFilters(
+            @Param("type")   TicketType type,
+            @Param("status") TicketStatus status,
+            @Param("from")   LocalDate from,
+            @Param("to")     LocalDate to,
+            Pageable pageable);
 }

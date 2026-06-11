@@ -5,6 +5,8 @@ import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import com.metro.afc.ticket.domain.enums.TicketType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -52,5 +54,13 @@ public class TicketRepositoryImpl implements TicketRepository {
     @Override
     public int expireOverdueTickets(LocalDate today) {
         return jpa.expireOverdueTickets(today);
+    }
+
+    @Override
+    public Page<Ticket> findAllWithFilters(TicketType type,
+                                           TicketStatus status, LocalDate fromDate,
+                                           LocalDate toDate, Pageable pageable) {
+        return jpa.findAllWithFilters(type, status,
+                fromDate, toDate, pageable);
     }
 }
