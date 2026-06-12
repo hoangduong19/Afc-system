@@ -3,11 +3,13 @@ package com.metro.afc.settlement.domain;
 import com.metro.afc.settlement.application.dto.settlement.OperatorTripData;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
+import com.metro.afc.settlement.domain.events.settlement.SettlementConfirmedDomainEvent;
 import com.metro.afc.shared.domain.valueobject.Money;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,7 +22,7 @@ import java.util.UUID;
 @Table(name = "settlements")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Settlement {
+public class Settlement extends AbstractAggregateRoot<Settlement> {
 
     @Id
     @Column(columnDefinition = "uuid")
@@ -146,6 +148,7 @@ public class Settlement {
     public void confirm() {
         this.status      = SettlementStatus.CONFIRMED;
         this.confirmedAt = Instant.now();
+        registerEvent(new SettlementConfirmedDomainEvent(this.id));
     }
 
     @PrePersist

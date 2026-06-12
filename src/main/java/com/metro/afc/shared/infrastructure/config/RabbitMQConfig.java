@@ -34,6 +34,10 @@ public class RabbitMQConfig {
     public static final String TICKET_UNLINKED       = "ticket.unlinked";
     public static final String TICKET_UNLINKED_QUEUE = "ticket.unlinked.queue";
 
+    // Settlement
+    public static final String SETTLEMENT_CONFIRMED       = "settlement.confirmed";
+    public static final String SETTLEMENT_CONFIRMED_QUEUE = "settlement.confirmed.queue";
+
     @Bean
     public TopicExchange afcExchange() {
         return new TopicExchange(AFC_EXCHANGE);
@@ -62,6 +66,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue ticketUnlinkedQueue() {
         return QueueBuilder.durable(TICKET_UNLINKED_QUEUE).build();
+    }
+
+    @Bean
+    public Queue settlementConfirmedQueue() {
+        return QueueBuilder.durable(SETTLEMENT_CONFIRMED_QUEUE).build();
     }
 
     @Bean
@@ -101,6 +110,13 @@ public class RabbitMQConfig {
                 .with(TICKET_UNLINKED);
     }
 
+    @Bean
+    public Binding settlementConfirmedBinding() {
+        return BindingBuilder
+                .bind(settlementConfirmedQueue())
+                .to(afcExchange())
+                .with(SETTLEMENT_CONFIRMED);
+    }
 
     @Bean
     public MessageConverter messageConverter() {
