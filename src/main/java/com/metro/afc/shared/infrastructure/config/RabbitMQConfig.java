@@ -38,6 +38,50 @@ public class RabbitMQConfig {
     public static final String SETTLEMENT_CONFIRMED       = "settlement.confirmed";
     public static final String SETTLEMENT_CONFIRMED_QUEUE = "settlement.confirmed.queue";
 
+    // Dev Test
+    public static final String SYNC_CARD_ALL     = "sync.card.all";
+    public static final String SYNC_TICKET_ALL   = "sync.ticket.all";
+    public static final String SYNC_OPERATOR_ALL = "sync.operator.all";
+
+    public static final String SYNC_CARD_QUEUE     = "sync.card.queue";
+    public static final String SYNC_TICKET_QUEUE   = "sync.ticket.queue";
+    public static final String SYNC_OPERATOR_QUEUE = "sync.operator.queue";
+
+    @Bean
+    public Queue syncCardQueue() {
+        return QueueBuilder.durable(SYNC_CARD_QUEUE).build();
+    }
+
+    @Bean
+    public Queue syncTicketQueue() {
+        return QueueBuilder.durable(SYNC_TICKET_QUEUE).build();
+    }
+
+    @Bean
+    public Queue syncOperatorQueue() {
+        return QueueBuilder.durable(SYNC_OPERATOR_QUEUE).build();
+    }
+
+    @Bean
+    public Binding syncCardBinding() {
+        return BindingBuilder.bind(syncCardQueue())
+                .to(afcExchange()).with(SYNC_CARD_ALL);
+    }
+
+    @Bean
+    public Binding syncTicketBinding() {
+        return BindingBuilder.bind(syncTicketQueue())
+                .to(afcExchange()).with(SYNC_TICKET_ALL);
+    }
+
+    @Bean
+    public Binding syncOperatorBinding() {
+        return BindingBuilder.bind(syncOperatorQueue())
+                .to(afcExchange()).with(SYNC_OPERATOR_ALL);
+    }
+
+    // ////
+
     @Bean
     public TopicExchange afcExchange() {
         return new TopicExchange(AFC_EXCHANGE);
