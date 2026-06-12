@@ -19,4 +19,5 @@ public interface TripRepository {
     Page<Trip> findWithFilters(UUID cardId, UUID operatorId,
                                TripStatus status, Instant from, Instant to, Pageable pageable);
     Optional<Trip> findById(UUID id);
+    List<Trip> findInProgressBefore(Instant threshold);
 }

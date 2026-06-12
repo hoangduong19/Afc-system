@@ -55,4 +55,9 @@ public class TripRepositoryImpl implements TripRepository {
         return jpa.findById(id);
     }
 
+    @Override
+    public List<Trip> findInProgressBefore(Instant threshold) {
+        return jpa.findInProgressBefore(threshold);
+    }
+
 }

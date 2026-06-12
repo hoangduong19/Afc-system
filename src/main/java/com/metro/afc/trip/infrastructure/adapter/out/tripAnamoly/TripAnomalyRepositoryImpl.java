@@ -3,6 +3,7 @@ package com.metro.afc.trip.infrastructure.adapter.out.tripAnamoly;
 import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.domain.TripAnomaly;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
+import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalyType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,5 +47,11 @@ public class TripAnomalyRepositoryImpl implements TripAnomalyRepository {
     @Override
     public long countUnresolvedInPeriod(Instant from, Instant to) {
         return jpa.countUnresolvedInPeriod(from, to);
+    }
+
+    @Override
+    public boolean existsByTripIdAndType(UUID tripId,
+                                         AnomalyType type) {
+        return jpa.existsByTripIdAndAnomalyType(tripId, type);
     }
 }

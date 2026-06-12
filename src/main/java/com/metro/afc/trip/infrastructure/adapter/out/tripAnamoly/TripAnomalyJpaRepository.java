@@ -2,6 +2,7 @@ package com.metro.afc.trip.infrastructure.adapter.out.tripAnamoly;
 
 import com.metro.afc.trip.domain.TripAnomaly;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
+import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalyType;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,4 +40,7 @@ public interface TripAnomalyJpaRepository
     long countUnresolvedInPeriod(
             @Param("from") Instant from,
             @Param("to")   Instant to);
+
+    boolean existsByTripIdAndAnomalyType(
+            UUID tripId, AnomalyType anomalyType);
 }

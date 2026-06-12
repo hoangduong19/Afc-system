@@ -26,4 +26,8 @@ public interface TripJpaRepository
             @Param("from") Instant from,
             @Param("to")   Instant to);
 
+    @Query("SELECT t FROM Trip t WHERE t.status = 'IN_PROGRESS' " +
+            "AND t.tapInAt < :threshold")
+    List<Trip> findInProgressBefore(
+            @Param("threshold") Instant threshold);
 }

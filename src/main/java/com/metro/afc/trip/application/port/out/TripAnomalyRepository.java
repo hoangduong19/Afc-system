@@ -2,6 +2,7 @@ package com.metro.afc.trip.application.port.out;
 
 import com.metro.afc.trip.domain.TripAnomaly;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
+import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalyType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,4 +19,5 @@ public interface TripAnomalyRepository {
                                          Boolean isResolved, Pageable pageable);
     Optional<TripAnomaly> findById(UUID id);
     long countUnresolvedInPeriod(Instant from, Instant to);
+    boolean existsByTripIdAndType(UUID tripId, AnomalyType type);
 }
