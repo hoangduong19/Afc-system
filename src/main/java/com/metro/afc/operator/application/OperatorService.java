@@ -41,6 +41,16 @@ public class OperatorService implements OperatorUseCase {
 
     @Override
     @Transactional
+    public void activate(UUID id) {
+        Operator operator = operatorRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.OPERATOR_NOT_FOUND));
+
+        operator.activate();
+        operatorRepository.save(operator);
+    }
+
+    @Override
+    @Transactional
     public void deactivate(UUID id) {
         Operator operator = operatorRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.OPERATOR_NOT_FOUND));

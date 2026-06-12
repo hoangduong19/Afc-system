@@ -27,6 +27,10 @@ public class OperatorFacade {
         return OperatorResponse.from(operator);
     }
 
+    public void activate(UUID id) {
+        operatorUseCase.activate(id);
+    }
+
     public void deactivate(UUID id) {
         operatorUseCase.deactivate(id);
     }

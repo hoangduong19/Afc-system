@@ -9,6 +9,7 @@ public interface OperatorUseCase {
     Operator create(String code, String name);
     Operator update(UUID id, String name);
     void deactivate(UUID id);
+    void activate(UUID id);
     Operator findById(UUID id);
     List<Operator> findAll();
 }

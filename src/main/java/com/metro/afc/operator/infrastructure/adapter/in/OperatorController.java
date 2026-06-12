@@ -37,6 +37,13 @@ public class OperatorController {
         return ResponseEntity.ok(operatorFacade.update(id, request));
     }
 
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasAuthority('OPERATOR_UPDATE')")
+    public ResponseEntity<Void> activate(@PathVariable UUID id) {
+        operatorFacade.activate(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasAuthority('OPERATOR_UPDATE')")
     public ResponseEntity<Void> deactivate(@PathVariable UUID id) {
