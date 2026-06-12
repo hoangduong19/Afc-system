@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,4 +43,8 @@ public class TripAnomalyRepositoryImpl implements TripAnomalyRepository {
         return jpa.findAllWithFilters(severity, isResolved, pageable);
     }
 
+    @Override
+    public long countUnresolvedInPeriod(Instant from, Instant to) {
+        return jpa.countUnresolvedInPeriod(from, to);
+    }
 }

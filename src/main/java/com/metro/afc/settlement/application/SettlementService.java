@@ -15,6 +15,7 @@ import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;
+import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
 import jakarta.transaction.Transactional;
@@ -36,6 +37,7 @@ public class SettlementService implements SettlementUseCase {
     private final SettlementRepository settlementRepository;
     private final TripRepository tripRepository;
     private final OperatorRepository operatorRepository;
+    private final TripAnomalyRepository anomalyRepository;
 
     private static final BigDecimal DEFAULT_TOLERANCE =
             new BigDecimal("100");
@@ -58,6 +60,15 @@ public class SettlementService implements SettlementUseCase {
         if (trips.isEmpty())
             throw new BusinessRuleException(
                     ErrorCode.SETTLEMENT_NO_TRIPS);
+
+        long unresolved = anomalyRepository.countUnresolvedInPeriod(
+                period.fromInstant(), period.toInstant());
+
+        if (unresolved > 0)
+            throw new BusinessRuleException(
+                    ErrorCode.SETTLEMENT_HAS_UNRESOLVED_ANOMALIES,
+                    unresolved + " unresolved anomalies found in period "
+                            + period.format());
 
         // 3. Tổng hệ thống
         Money totalExpected = Money.of(trips.stream()

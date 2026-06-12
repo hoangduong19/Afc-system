@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,4 +28,15 @@ public interface TripAnomalyJpaRepository
             @Param("severity") AnomalySeverity severity,
             @Param("isResolved") Boolean isResolved,
             Pageable pageable);
+
+    @Query("""
+    SELECT COUNT(a) FROM TripAnomaly a
+    JOIN Trip t ON a.tripId = t.id
+    WHERE a.isResolved = false
+    AND t.tapInAt >= :from
+    AND t.tapInAt < :to
+    """)
+    long countUnresolvedInPeriod(
+            @Param("from") Instant from,
+            @Param("to")   Instant to);
 }

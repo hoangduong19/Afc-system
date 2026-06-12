@@ -54,6 +54,8 @@ public enum ErrorCode {
     SETTLEMENT_NOT_PENDING(400,    "Settlement is not in DRAFT status"),
     SETTLEMENT_NO_TRIPS(400,       "No completed trips found in this period"),
     SETTLEMENT_RECONCILE_FAIL(400, "Cannot confirm: reconciliation MISMATCH"),
+    SETTLEMENT_HAS_UNRESOLVED_ANOMALIES(400,
+            "Cannot run settlement: unresolved anomalies exist in this period"),
 
     // Operator
     OPERATOR_NOT_FOUND(404, "Transit operator not found"),
