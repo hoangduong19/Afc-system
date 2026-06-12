@@ -44,6 +44,10 @@ public class AnomalyController {
             @Valid @RequestBody ResolveAnomalyRequest request) {
         return ResponseEntity.ok(
                 AnomalyResponse.from(
-                        anomalyUseCase.resolve(id, request.notes())));
+                        anomalyUseCase.resolve(
+                                id,
+                                request.notes(),
+                                request.correctedFare()
+                        )));
     }
 }

@@ -1,5 +1,7 @@
 package com.metro.afc.trip.domain;
 
+import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
+import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
 import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
 import com.metro.afc.trip.domain.enums.trip.TripStatus;
@@ -104,6 +106,14 @@ public class Trip {
         t.status                  = status;
         t.debtAmount              = debtAmount;
         return t;
+    }
+
+    public void correctFare(BigDecimal correctedFare) {
+        if (correctedFare == null
+                || correctedFare.compareTo(BigDecimal.ZERO) < 0)
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_FARE_AMOUNT);
+        this.fareAmount = correctedFare;
     }
 
     @PrePersist

@@ -41,6 +41,7 @@ public enum ErrorCode {
     FARE_RULE_NOT_FOUND(404,    "Fare rule not found"),
     FARE_RULE_INACTIVE(400,     "Fare rule is no longer active"),
     FARE_RULE_ALREADY_EXISTS(409, "Fare rule code already exists"),
+    INVALID_FARE_AMOUNT(400, "Corrected fare must be non-negative"),
 
     // Trip
     TRIP_NOT_FOUND(404,     "Trip not found"),

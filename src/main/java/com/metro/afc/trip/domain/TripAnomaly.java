@@ -4,11 +4,14 @@ import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalySeverity;
 import com.metro.afc.trip.domain.enums.tripAnomaly.AnomalyType;
+import com.metro.afc.trip.domain.events.FareCorrectedEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,7 +19,7 @@ import java.util.UUID;
 @Table(name = "trip_anomalies")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TripAnomaly {
+public class TripAnomaly extends AbstractAggregateRoot<TripAnomaly> {
 
     @Id
     @Column(columnDefinition = "uuid")
@@ -48,28 +51,37 @@ public class TripAnomaly {
     @Column(name = "resolve_notes")
     private String resolveNotes;
 
-    public static TripAnomaly of(UUID tripId, AnomalyType type,
-                                 AnomalySeverity severity, String description) {
+    @Column(name = "corrected_fare", precision = 15, scale = 2)
+    private BigDecimal correctedFare;
+
+    public static TripAnomaly create(UUID tripId,
+                                     AnomalyType anomalyType,
+                                     AnomalySeverity severity,
+                                     String description) {
         TripAnomaly a  = new TripAnomaly();
         a.id           = UUID.randomUUID();
         a.tripId       = tripId;
-        a.anomalyType  = type;
+        a.anomalyType  = anomalyType;
         a.severity     = severity;
         a.description  = description;
-        a.detectedAt   = Instant.now();
         a.isResolved   = false;
         return a;
     }
 
-    public void resolve(String notes) {
+    public void resolve(String notes, BigDecimal correctedFare) {
         if (Boolean.TRUE.equals(this.isResolved))
             throw new BusinessRuleException(
-                    ErrorCode.ANOMALY_ALREADY_RESOLVED,
-                    "Anomaly is already resolved"
-            );
-        this.isResolved   = true;
-        this.resolvedAt   = Instant.now();
-        this.resolveNotes = notes;
+                    ErrorCode.ANOMALY_ALREADY_RESOLVED);
+        this.isResolved    = true;
+        this.resolvedAt    = Instant.now();
+        this.resolveNotes  = notes;
+        this.correctedFare = correctedFare;
+
+        if (correctedFare != null
+                && this.anomalyType == AnomalyType.FARE_MISMATCH) {
+            registerEvent(new FareCorrectedEvent(
+                    this.tripId, correctedFare));
+        }
     }
 
     @PrePersist

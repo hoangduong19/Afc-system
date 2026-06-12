@@ -22,7 +22,7 @@ public class TransactionIngestionController {
     public ResponseEntity<BatchIngestResponse> ingest(
             @Valid @RequestBody TransactionBatchRequest request) {
         return ResponseEntity.ok(
-                ingestionService.ingest(request.transactions())
+                ingestionService.ingest(request)
         );
     }
 }

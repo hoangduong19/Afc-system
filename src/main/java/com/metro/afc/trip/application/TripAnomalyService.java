@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -29,11 +30,15 @@ public class TripAnomalyService implements TripAnomalyUseCase {
 
     @Override
     @Transactional
-    public TripAnomaly resolve(UUID id, String notes) {
+    public TripAnomaly resolve(UUID id, String notes,
+                               BigDecimal correctedFare) {
         TripAnomaly anomaly = anomalyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.ANOMALY_NOT_FOUND));
-        anomaly.resolve(notes);
+
+        anomaly.resolve(notes, correctedFare);
+        // FareCorrectedEvent tự publish → handler xử lý trip
+
         return anomalyRepository.save(anomaly);
     }
 }

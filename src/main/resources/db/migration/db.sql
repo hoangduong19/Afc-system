@@ -648,3 +648,6 @@ ALTER TABLE tickets
             );
 ALTER TABLE trips ALTER COLUMN card_id DROP NOT NULL;
 ALTER TABLE trip_anomalies ADD COLUMN resolve_notes TEXT;
+
+ALTER TABLE trip_anomalies
+    ADD COLUMN corrected_fare DECIMAL(15, 2);

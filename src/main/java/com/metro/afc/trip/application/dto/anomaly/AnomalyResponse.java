@@ -2,6 +2,7 @@ package com.metro.afc.trip.application.dto.anomaly;
 
 import com.metro.afc.trip.domain.TripAnomaly;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -12,8 +13,10 @@ public record AnomalyResponse(
         String severity,
         String description,
         Boolean isResolved,
+        BigDecimal correctedFare,
         Instant detectedAt,
-        Instant resolvedAt
+        Instant resolvedAt,
+        String resolveNotes
 ) {
     public static AnomalyResponse from(TripAnomaly a) {
         return new AnomalyResponse(
@@ -22,7 +25,10 @@ public record AnomalyResponse(
                 a.getSeverity().name(),
                 a.getDescription(),
                 a.getIsResolved(),
-                a.getDetectedAt(), a.getResolvedAt()
+                a.getCorrectedFare(),
+                a.getDetectedAt(),
+                a.getResolvedAt(),
+                a.getResolveNotes()
         );
     }
 }
