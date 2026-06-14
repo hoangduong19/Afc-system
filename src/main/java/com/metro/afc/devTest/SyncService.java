@@ -1,5 +1,6 @@
 package com.metro.afc.devTest;
 
+import com.metro.afc.blacklist.infrastructure.adapter.out.BlacklistJpaRepository;
 import com.metro.afc.card.infrastructure.adapter.out.persistence.card.CardJpaRepository;
 import com.metro.afc.devTest.message.CardSyncMessage;
 import com.metro.afc.devTest.message.OperatorSyncMessage;
@@ -7,6 +8,7 @@ import com.metro.afc.devTest.message.TicketSyncMessage;
 import com.metro.afc.operator.infrastructure.adapter.out.OperatorJpaRepository;
 import com.metro.afc.shared.infrastructure.config.RabbitMQConfig;
 import com.metro.afc.ticket.infrastructure.adapter.out.TicketJpaRepository;
+import com.metro.afc.trip.application.ExternalIdMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
@@ -18,11 +20,15 @@ public class SyncService {
     private final CardJpaRepository      cardJpaRepository;
     private final TicketJpaRepository    ticketJpaRepository;
     private final OperatorJpaRepository  operatorJpaRepository;
+    private final BlacklistJpaRepository blacklistJpaRepository;
+    private final ExternalIdMapper externalIdMapper;
     private final AmqpTemplate           amqpTemplate;
 
     public void syncCards() {
         cardJpaRepository.findAll().stream()
-                .map(CardSyncMessage::from)
+                .map(card -> CardSyncMessage.from(card,
+                        externalIdMapper.toExternalId(
+                                card.getIssuedAtStationId())))
                 .forEach(msg -> amqpTemplate.convertAndSend(
                         RabbitMQConfig.AFC_EXCHANGE,
                         RabbitMQConfig.SYNC_CARD_ALL, msg));
@@ -30,7 +36,11 @@ public class SyncService {
 
     public void syncTickets() {
         ticketJpaRepository.findAll().stream()
-                .map(TicketSyncMessage::from)
+                .map(ticket -> TicketSyncMessage.from(ticket,
+                        externalIdMapper.toExternalId(
+                                ticket.getFromStationId()),
+                        externalIdMapper.toExternalId(
+                                ticket.getToStationId())))
                 .forEach(msg -> amqpTemplate.convertAndSend(
                         RabbitMQConfig.AFC_EXCHANGE,
                         RabbitMQConfig.SYNC_TICKET_ALL, msg));

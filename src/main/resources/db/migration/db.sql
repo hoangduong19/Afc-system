@@ -651,3 +651,6 @@ ALTER TABLE trip_anomalies ADD COLUMN resolve_notes TEXT;
 
 ALTER TABLE trip_anomalies
     ADD COLUMN corrected_fare DECIMAL(15, 2);
+
+ALTER TABLE stations ADD COLUMN external_id INTEGER;
+ALTER TABLE routes   ADD COLUMN external_id INTEGER;

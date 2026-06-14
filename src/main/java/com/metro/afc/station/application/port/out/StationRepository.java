@@ -19,4 +19,5 @@ public interface StationRepository {
     Optional<Station> findByCode(String code);
     Station save(Station station);
     void deleteById(UUID id);
+    Optional<Station> findByExternalId(Integer externalId);
 }

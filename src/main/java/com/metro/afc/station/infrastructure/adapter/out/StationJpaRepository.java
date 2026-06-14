@@ -36,4 +36,6 @@ public interface StationJpaRepository extends JpaRepository<Station, UUID> {
             @Param("routeId") UUID routeId,
             @Param("stationOrder") Integer stationOrder
     );
+
+    Optional<Station> findByExternalId(Integer externalId);
 }

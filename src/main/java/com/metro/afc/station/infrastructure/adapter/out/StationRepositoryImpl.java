@@ -72,4 +72,9 @@ public class StationRepositoryImpl implements StationRepository {
     public void deleteById(UUID id) {
         jpa.deleteById(id);
     }
+
+    @Override
+    public Optional<Station> findByExternalId(Integer externalId)  {
+        return jpa.findByExternalId(externalId);
+    }
 }

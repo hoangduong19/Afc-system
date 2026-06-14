@@ -40,6 +40,9 @@ public class Station {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "external_id")
+    private Integer externalId;
+
     public static Station create(UUID routeId, String code, String name,
                                  BigDecimal kmMarker, Integer stationOrder) {
         Station station    = new Station();
