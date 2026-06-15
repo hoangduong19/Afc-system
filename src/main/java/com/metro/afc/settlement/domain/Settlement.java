@@ -1,14 +1,19 @@
 package com.metro.afc.settlement.domain;
 
+import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
-import com.metro.afc.settlement.application.dto.settlement.v2.FareParams;
 import com.metro.afc.settlement.application.dto.settlement.v2.TicketRevenueData;
 import com.metro.afc.settlement.application.dto.settlement.v2.TripContribution;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
 import com.metro.afc.settlement.domain.events.settlement.SettlementConfirmedDomainEvent;
 import com.metro.afc.shared.domain.valueobject.Money;
+import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
+import com.metro.afc.shared.infrastructure.exception.ErrorCode;
+import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.PassScope;
+import com.metro.afc.trip.domain.Trip;
+import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,6 +24,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Entity
 @Table(name = "settlements")
@@ -81,6 +89,104 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
         s.toleranceThreshold = toleranceThreshold;
         s.ranBy              = ranBy;
         return s;
+    }
+
+    private record FareParams(BigDecimal openingPrice, BigDecimal pricePerKm) {}
+
+    // Payload record to return both the aggregate and its generated shares to the service
+    public record SettlementResult(Settlement settlement, List<CompanyShare> shares) {}
+
+    // ── Factory & Core Domain Logic ────────────────────────────────────
+
+    public static SettlementResult calculateAndSettle(
+            String period,
+            List<Trip> trips,
+            Map<UUID, Ticket> ticketMap,
+            List<FareRule> activeRules,
+            BigDecimal toleranceThreshold,
+            UUID ranBy) {
+
+        Settlement s = new Settlement();
+        s.id = UUID.randomUUID();
+        s.period = period;
+        s.status = SettlementStatus.DRAFT;
+        s.toleranceThreshold = toleranceThreshold;
+        s.ranBy = ranBy;
+
+        // 1. Calculate Expected Revenues
+        Map<UUID, Money> singleTripShares = s.calculateSingleTripShares(trips);
+        Money singleTripTotal = singleTripShares.values().stream().reduce(Money.of(BigDecimal.ZERO), Money::add);
+
+        List<TicketRevenueData> monthlyData = s.aggregateMonthlyTicketData(trips, ticketMap);
+        Money monthlyTotal = monthlyData.stream().map(TicketRevenueData::ticketPrice).reduce(Money.of(BigDecimal.ZERO), Money::add);
+
+        s.totalExpected = singleTripTotal.add(monthlyTotal);
+
+        // 2. Perform Allocations
+        Map<FareMode, FareParams> fareParams = s.extractFareParams(activeRules);
+        Map<UUID, BigDecimal> operatorTotalKm = s.calculateOperatorTotalKm(trips);
+        Map<UUID, Integer> operatorTripCount = s.calculateOperatorTripCount(trips);
+
+        List<CompanyShare> generatedShares = s.allocateShares(
+                singleTripShares, monthlyData, fareParams, operatorTotalKm, operatorTripCount);
+
+        // 3. Reconcile
+        s.reconcile(generatedShares);
+
+        return new SettlementResult(s, generatedShares);
+    }
+
+    // ── Private Internal Grouping Behaviors ────────────────────────────
+
+    private Map<UUID, Money> calculateSingleTripShares(List<Trip> trips) {
+        return trips.stream()
+                .filter(t -> t.getTicketTypeUsed() == TicketTypeUsed.SINGLE_TRIP && t.getOperatorId() != null && t.getFareAmount() != null)
+                .collect(groupingBy(
+                        Trip::getOperatorId,
+                        Collectors.reducing(Money.of(BigDecimal.ZERO), t -> Money.of(t.getFareAmount()), Money::add)
+                ));
+    }
+
+    private List<TicketRevenueData> aggregateMonthlyTicketData(List<Trip> trips, Map<UUID, Ticket> ticketMap) {
+        return trips.stream()
+                .filter(t -> t.getTicketTypeUsed() == TicketTypeUsed.MONTHLY_PASS && t.getTicketId() != null)
+                .collect(groupingBy(Trip::getTicketId))
+                .entrySet().stream()
+                .filter(e -> ticketMap.containsKey(e.getKey()))
+                .map(e -> {
+                    Ticket ticket = ticketMap.get(e.getKey());
+                    List<TripContribution> contribs = e.getValue().stream()
+                            .filter(t -> t.getOperatorId() != null)
+                            .collect(groupingBy(Trip::getOperatorId))
+                            .entrySet().stream()
+                            .map(op -> new TripContribution(
+                                    op.getKey(),
+                                    op.getValue().get(0).getTransportMode(),
+                                    op.getValue().size(),
+                                    op.getValue().stream().map(t -> t.getDistanceKm() != null ? t.getDistanceKm() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add)
+                            ))
+                            .toList();
+                    return new TicketRevenueData(e.getKey(), ticket.getPrice(), ticket.getMode(), ticket.getScope(), contribs);
+                })
+                .toList();
+    }
+
+    private Map<FareMode, FareParams> extractFareParams(List<FareRule> rules) {
+        Map<FareMode, FareParams> params = new EnumMap<>(FareMode.class);
+        rules.forEach(r -> params.put(r.getMode(), new FareParams(r.getBaseFare().getAmount(), r.getRatePerKm().getAmount())));
+        params.putIfAbsent(FareMode.METRO, new FareParams(new BigDecimal("8000"), new BigDecimal("850")));
+        params.putIfAbsent(FareMode.BUS, new FareParams(new BigDecimal("3000"), new BigDecimal("450")));
+        return params;
+    }
+
+    private Map<UUID, BigDecimal> calculateOperatorTotalKm(List<Trip> trips) {
+        return trips.stream().filter(t -> t.getOperatorId() != null && t.getDistanceKm() != null)
+                .collect(groupingBy(Trip::getOperatorId, Collectors.reducing(BigDecimal.ZERO, Trip::getDistanceKm, BigDecimal::add)));
+    }
+
+    private Map<UUID, Integer> calculateOperatorTripCount(List<Trip> trips) {
+        return trips.stream().filter(t -> t.getOperatorId() != null)
+                .collect(groupingBy(Trip::getOperatorId, Collectors.summingInt(t -> 1)));
     }
 
     // ── Domain behavior ──────────────────────────────────────────
@@ -153,7 +259,11 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
                                       Map<UUID, Money> result) {
         Map<UUID, BigDecimal> weights = new LinkedHashMap<>();
         for (TripContribution tc : ticket.contributions()) {
-            FareParams p = fareParams.getOrDefault(tc.mode(), FareParams.BUS_DEFAULT);
+            FareParams p = fareParams.get(tc.mode());
+
+            if (p == null) {
+                throw new BusinessRuleException(ErrorCode.FARE_RULE_MISCONFIGURED);
+            }
             BigDecimal weight = p.openingPrice()
                     .multiply(BigDecimal.valueOf(tc.tripCount()))
                     .add(p.pricePerKm().multiply(tc.totalKm()));

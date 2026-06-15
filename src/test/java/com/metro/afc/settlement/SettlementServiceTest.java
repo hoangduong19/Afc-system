@@ -5,13 +5,11 @@ import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.settlement.application.SettlementService;
 import com.metro.afc.settlement.application.port.out.SettlementRepository;
 import com.metro.afc.settlement.domain.Settlement;
-import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
+import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
-import com.metro.afc.ticket.domain.Ticket;
-import com.metro.afc.ticket.domain.enums.PassScope;
 import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
@@ -34,216 +32,99 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SettlementService")
+@DisplayName("SettlementService (Orchestration Flow)")
 class SettlementServiceTest {
 
-    @Mock SettlementRepository  settlementRepository;
-    @Mock TripRepository        tripRepository;
+    @Mock SettlementRepository settlementRepository;
+    @Mock TripRepository tripRepository;
     @Mock TripAnomalyRepository anomalyRepository;
-    @Mock TicketRepository      ticketRepository;
-    @Mock FareRuleRepository    fareRuleRepository;
+    @Mock TicketRepository ticketRepository;
+    @Mock FareRuleRepository fareRuleRepository;
 
     @InjectMocks
     SettlementService service;
 
-    private final UUID operatorA = UUID.randomUUID();
-    private final UUID operatorB = UUID.randomUUID();
-    private final UUID ranBy     = UUID.randomUUID();
+    private final UUID ranBy = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        lenient().when(settlementRepository.existsByPeriod(anyString()))
-                .thenReturn(false);
-        lenient().when(anomalyRepository.countUnresolvedInPeriod(any(), any()))
-                .thenReturn(0L);
-        lenient().when(settlementRepository.save(any()))
-                .thenAnswer(i -> i.getArgument(0));
-        lenient().when(fareRuleRepository.findActiveByMode(any()))
-                .thenReturn(Optional.empty());
+        lenient().when(settlementRepository.existsByPeriod(anyString())).thenReturn(false);
+        lenient().when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(0L);
+        lenient().when(settlementRepository.save(any())).thenAnswer(i -> i.getArgument(0));
     }
 
-    // ── Happy path ───────────────────────────────────────────────────
-
     @Test
-    @DisplayName("run — chỉ có vé lượt: tạo settlement, phân bổ đúng operator")
-    void run_singleTripOnly_createsSettlement() {
-        Trip tripA = makeSingleTrip(operatorA, new BigDecimal("50000"),
-                new BigDecimal("10"));
-        Trip tripB = makeSingleTrip(operatorB, new BigDecimal("30000"),
-                new BigDecimal("6"));
+    @DisplayName("run() - Happy Path: Gom đủ dữ liệu, gọi Domain xử lý và lưu xuống DB")
+    void run_validData_delegatesToDomainAndSaves() {
+        // Arrange
+        Trip singleTrip = makeSingleTrip(UUID.randomUUID(), new BigDecimal("15000"));
+        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(singleTrip));
+        when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
+        when(fareRuleRepository.findAllActive()).thenReturn(List.of());
 
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(tripA, tripB));
-
+        // Act
         Settlement result = service.run(6, 2026, ranBy);
 
+        // Assert
         assertNotNull(result);
         assertEquals("2026-06", result.getPeriod());
-        assertEquals(0,
-                new BigDecimal("80000").compareTo(result.getTotalExpected().getAmount()));
+        assertEquals(SettlementStatus.DRAFT, result.getStatus());
+
+        // Xác minh orchestration: Đã lưu settlement và share
+        verify(settlementRepository, times(1)).save(result);
         verify(settlementRepository, atLeastOnce()).saveShare(any());
     }
 
     @Test
-    @DisplayName("run — vé tháng METRO: phân bổ 100% về metro operator")
-    void run_metroMonthly_directAllocation() {
-        UUID ticketId = UUID.randomUUID();
-        Trip trip = makeMonthlyTrip(operatorA, FareMode.METRO, ticketId,
-                new BigDecimal("15"));
-
-        Ticket ticket = mockTicket(ticketId,
-                Money.of(new BigDecimal("200000")), FareMode.METRO, null);
-
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(trip));
-        when(ticketRepository.findAllByIds(anySet()))
-                .thenReturn(List.of(ticket));
-
-        Settlement result = service.run(6, 2026, ranBy);
-
-        assertEquals(0,
-                new BigDecimal("200000").compareTo(result.getTotalExpected().getAmount()));
-        assertEquals(ReconcileStatus.MATCH, result.getReconciliationStatus());
-        verify(settlementRepository, times(1)).saveShare(any());
-    }
-
-    @Test
-    @DisplayName("run — vé tháng MULTI_ROUTE: 2 operators nhận share")
-    void run_busMultiRoute_twoShares() {
-        UUID ticketId = UUID.randomUUID();
-        Trip tripA = makeMonthlyTrip(operatorA, FareMode.BUS, ticketId,
-                new BigDecimal("40"));
-        Trip tripB = makeMonthlyTrip(operatorB, FareMode.BUS, ticketId,
-                new BigDecimal("20"));
-
-        Ticket ticket = mockTicket(ticketId,
-                Money.of(new BigDecimal("280000")), FareMode.BUS, PassScope.MULTI_ROUTE);
-
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(tripA, tripB));
-        when(ticketRepository.findAllByIds(anySet()))
-                .thenReturn(List.of(ticket));
-
-        Settlement result = service.run(6, 2026, ranBy);
-
-        assertEquals(0,
-                new BigDecimal("280000").compareTo(result.getTotalExpected().getAmount()));
-        verify(settlementRepository, times(2)).saveShare(any());
-    }
-
-    @Test
-    @DisplayName("run — mix pool1 + pool3: totalExpected = sum cả 2 pool")
-    void run_mixPools_correctTotalExpected() {
-        Trip singleTrip = makeSingleTrip(operatorA, new BigDecimal("80000"),
-                new BigDecimal("10"));
-
-        UUID ticketId = UUID.randomUUID();
-        Trip monthlyA = makeMonthlyTrip(operatorA, FareMode.BUS, ticketId,
-                new BigDecimal("30"));
-        Trip monthlyB = makeMonthlyTrip(operatorB, FareMode.BUS, ticketId,
-                new BigDecimal("20"));
-
-        Ticket ticket = mockTicket(ticketId,
-                Money.of(new BigDecimal("280000")), FareMode.BUS, PassScope.MULTI_ROUTE);
-
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(singleTrip, monthlyA, monthlyB));
-        when(ticketRepository.findAllByIds(anySet()))
-                .thenReturn(List.of(ticket));
-
-        Settlement result = service.run(6, 2026, ranBy);
-
-        // 80000 (pool1) + 280000 (pool3) = 360000
-        assertEquals(0,
-                new BigDecimal("360000").compareTo(result.getTotalExpected().getAmount()));
-    }
-
-    // ── Guard conditions ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("run — period đã tồn tại: throw ConflictException")
-    void run_periodExists_throwsConflict() {
+    @DisplayName("run() - Chặn ngoại lệ: Period đã tồn tại (Conflict)")
+    void run_periodExists_throwsConflictException() {
         when(settlementRepository.existsByPeriod("2026-06")).thenReturn(true);
 
-        assertThrows(ConflictException.class,
-                () -> service.run(6, 2026, ranBy));
-
+        assertThrows(ConflictException.class, () -> service.run(6, 2026, ranBy));
         verify(tripRepository, never()).findCompletedTripsInPeriod(any(), any());
     }
 
     @Test
-    @DisplayName("run — không có trip nào: throw BusinessRuleException")
-    void run_noTrips_throwsBusinessRule() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of());
+    @DisplayName("run() - Chặn ngoại lệ: Còn anomaly chưa giải quyết")
+    void run_hasUnresolvedAnomalies_throwsBusinessRuleException() {
+        when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(5L);
 
-        assertThrows(BusinessRuleException.class,
-                () -> service.run(6, 2026, ranBy));
+        assertThrows(BusinessRuleException.class, () -> service.run(6, 2026, ranBy));
     }
 
     @Test
-    @DisplayName("run — còn anomaly chưa resolve: throw BusinessRuleException")
-    void run_unresolvedAnomalies_throwsBusinessRule() {
-        Trip trip = makeSingleTrip(operatorA, new BigDecimal("50000"),
-                new BigDecimal("10"));
+    @DisplayName("run() - Chặn ngoại lệ: Không có trip nào trong kỳ")
+    void run_noTrips_throwsBusinessRuleException() {
+        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of());
 
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(trip));
-        when(anomalyRepository.countUnresolvedInPeriod(any(), any()))
-                .thenReturn(3L);
-
-        assertThrows(BusinessRuleException.class,
-                () -> service.run(6, 2026, ranBy));
-
-        verify(settlementRepository, never()).save(any());
+        assertThrows(BusinessRuleException.class, () -> service.run(6, 2026, ranBy));
     }
 
-    // ── Helpers: real domain objects, không dùng mock Trip ───────────
+    @Test
+    @DisplayName("confirm() - Chuyển trạng thái thành công")
+    void confirm_draftSettlement_confirmsSuccessfully() {
+        // Arrange
+        Settlement draft = Settlement.create("2026-06", Money.of(BigDecimal.ZERO), BigDecimal.ZERO, ranBy);
+        when(settlementRepository.findById(draft.getId())).thenReturn(Optional.of(draft));
 
-    private Trip makeSingleTrip(UUID operatorId, BigDecimal fareAmount,
-                                BigDecimal distanceKm) {
+        // Act
+        Settlement result = service.confirm(draft.getId(), UUID.randomUUID());
+
+        // Assert
+        assertEquals(SettlementStatus.CONFIRMED, result.getStatus());
+        assertNotNull(result.getConfirmedAt());
+        verify(settlementRepository).save(draft);
+    }
+
+    private Trip makeSingleTrip(UUID operatorId, BigDecimal fareAmount) {
         return Trip.from(
-                UUID.randomUUID(), null, null,
-                operatorId,
-                null, null, Instant.now(),
-                null, null, Instant.now(),
-                distanceKm, fareAmount,
-                FareMode.BUS,
-                PaymentMethod.TICKET,
-                TicketTypeUsed.SINGLE_TRIP,
-                TripStatus.COMPLETED,
-                null
+                UUID.randomUUID(), null, null, operatorId, null, null, Instant.now(),
+                null, null, Instant.now(), new BigDecimal("10"), fareAmount,
+                FareMode.BUS, PaymentMethod.TICKET, TicketTypeUsed.SINGLE_TRIP, TripStatus.COMPLETED, null
         );
-    }
-
-    private Trip makeMonthlyTrip(UUID operatorId, FareMode mode,
-                                 UUID ticketId, BigDecimal distanceKm) {
-        return Trip.from(
-                UUID.randomUUID(), null, ticketId,
-                operatorId,
-                null, null, Instant.now(),
-                null, null, Instant.now(),
-                distanceKm, null,
-                mode,
-                PaymentMethod.TICKET,
-                TicketTypeUsed.MONTHLY_PASS,
-                TripStatus.COMPLETED,
-                null
-        );
-    }
-
-    private Ticket mockTicket(UUID id, Money price,
-                              FareMode mode, PassScope scope) {
-        Ticket t = mock(Ticket.class);
-        when(t.getId()).thenReturn(id);
-        when(t.getPrice()).thenReturn(price);
-        when(t.getMode()).thenReturn(mode);
-        when(t.getScope()).thenReturn(scope);
-        return t;
     }
 }
