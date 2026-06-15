@@ -1,10 +1,14 @@
 package com.metro.afc.settlement.domain;
 
-import com.metro.afc.settlement.application.dto.settlement.OperatorTripData;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
+import com.metro.afc.settlement.application.dto.settlement.v2.FareParams;
+import com.metro.afc.settlement.application.dto.settlement.v2.TicketRevenueData;
+import com.metro.afc.settlement.application.dto.settlement.v2.TripContribution;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
 import com.metro.afc.settlement.domain.events.settlement.SettlementConfirmedDomainEvent;
 import com.metro.afc.shared.domain.valueobject.Money;
+import com.metro.afc.ticket.domain.enums.PassScope;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,9 +18,7 @@ import org.springframework.data.domain.AbstractAggregateRoot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "settlements")
@@ -83,39 +85,90 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
 
     // ── Domain behavior ──────────────────────────────────────────
 
+    /**
+     * Pool 1: vé lượt → direct (singleTripShares đã group sẵn)
+     * Pool 2: METRO hoặc BUS SINGLE_ROUTE → direct 100%
+     * Pool 3: BUS MULTI_ROUTE hoặc ANY (multimodal) → proportional theo QĐ 3316 mục 3.4
+     *
+     * @param singleTripShares  Map<operatorId, totalFare> từ vé lượt
+     * @param monthlyTickets    danh sách vé tháng cần phân bổ
+     * @param fareParams        GiaMoCua + Gia1km theo FareMode
+     * @param operatorTotalKm   tổng km theo operator (tất cả trips) — cho CompanyShare report
+     * @param operatorTripCount tổng trips theo operator — cho CompanyShare report
+     */
+    // ── Domain: phân bổ doanh thu theo QĐ 3316/2025 mục 3.4 ─────────
+    //
+    //  Pool 1 — vé lượt             : direct (singleTripShares đã group sẵn)
+    //  Pool 2 — METRO / SINGLE_ROUTE: direct 100% về 1 operator
+    //  Pool 3 — MULTI_ROUTE / ANY   : proportional
+    //           DTi = (ai×GiaMoCua_i + bi×Gia1km_i) / Σ(...) × GiaVe
+
     public List<CompanyShare> allocateShares(
-            List<OperatorTripData> operatorData,
-            BigDecimal totalSystemKm) {
+            Map<UUID, Money> singleTripShares,
+            List<TicketRevenueData> monthlyTickets,
+            Map<FareMode, FareParams> fareParams,
+            Map<UUID, BigDecimal> operatorTotalKm,
+            Map<UUID, Integer> operatorTripCount) {
 
-        List<CompanyShare> shares = new ArrayList<>();
+        Map<UUID, Money> revenueMap = new HashMap<>(singleTripShares);
 
-        for (OperatorTripData data : operatorData) {
-            BigDecimal kmRatio = totalSystemKm
-                    .compareTo(BigDecimal.ZERO) == 0
-                    ? BigDecimal.ZERO
-                    : data.totalKm().divide(
-                    totalSystemKm, 6, RoundingMode.HALF_UP);
-
-            Money expectedRevenue = this.totalExpected.multiply(kmRatio);
-
-            Money shareAmount = Money.of(
-                    kmRatio.multiply(this.totalExpected.getAmount())
-                            .setScale(2, RoundingMode.DOWN)
-            );
-
-            Money roundingAdj = Money.of(
-                    expectedRevenue.getAmount()
-                            .subtract(shareAmount.getAmount())
-            );
-
-            shares.add(CompanyShare.of(
-                    this.id, data.operatorId(),
-                    data.totalKm(), data.tripCount(),
-                    expectedRevenue, shareAmount, roundingAdj
-            ));
+        for (TicketRevenueData ticket : monthlyTickets) {
+            if (isSingleRoute(ticket)) {
+                allocateDirect(ticket, revenueMap);
+            } else {
+                allocateProportional(ticket, fareParams, revenueMap);
+            }
         }
 
-        return shares;
+        return revenueMap.entrySet().stream()
+                .map(e -> CompanyShare.of(
+                        this.id,
+                        e.getKey(),
+                        operatorTotalKm.getOrDefault(e.getKey(), BigDecimal.ZERO),
+                        operatorTripCount.getOrDefault(e.getKey(), 0),
+                        e.getValue(),
+                        e.getValue(),
+                        Money.of(BigDecimal.ZERO)
+                ))
+                .toList();
+    }
+
+    // METRO (scope null) hoặc BUS SINGLE_ROUTE → direct
+    private boolean isSingleRoute(TicketRevenueData ticket) {
+        return ticket.mode() == FareMode.METRO
+                || ticket.scope() == PassScope.SINGLE_ROUTE;
+    }
+
+    // Pool 2: 100% về operator duy nhất
+    private void allocateDirect(TicketRevenueData ticket,
+                                Map<UUID, Money> result) {
+        if (ticket.contributions().isEmpty()) return;
+        UUID operatorId = ticket.contributions().get(0).operatorId();
+        result.merge(operatorId, ticket.ticketPrice(), Money::add);
+    }
+
+    // Pool 3: DTi = (ai×GiaMoCua_i + bi×Gia1km_i) / Σ(...) × GiaVe
+    private void allocateProportional(TicketRevenueData ticket,
+                                      Map<FareMode, FareParams> fareParams,
+                                      Map<UUID, Money> result) {
+        Map<UUID, BigDecimal> weights = new LinkedHashMap<>();
+        for (TripContribution tc : ticket.contributions()) {
+            FareParams p = fareParams.getOrDefault(tc.mode(), FareParams.BUS_DEFAULT);
+            BigDecimal weight = p.openingPrice()
+                    .multiply(BigDecimal.valueOf(tc.tripCount()))
+                    .add(p.pricePerKm().multiply(tc.totalKm()));
+            weights.merge(tc.operatorId(), weight, BigDecimal::add);
+        }
+
+        BigDecimal totalWeight = weights.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalWeight.compareTo(BigDecimal.ZERO) == 0) return;
+
+        weights.forEach((opId, w) -> {
+            BigDecimal ratio = w.divide(totalWeight, 10, RoundingMode.HALF_UP);
+            Money share = ticket.ticketPrice().multiply(ratio);
+            result.merge(opId, share, Money::add);
+        });
     }
 
     public void reconcile(List<CompanyShare> shares) {

@@ -1,5 +1,6 @@
 package com.metro.afc.trip.domain;
 
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
@@ -79,12 +80,17 @@ public class Trip {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transport_mode", length = 10)
+    private FareMode transportMode;
+
     public static Trip from(UUID externalTransactionId,
                             UUID cardId,
                             UUID ticketId, UUID operatorId,
                             UUID tapInStationId, String tapInGateId, Instant tapInAt,
                             UUID tapOutStationId, String tapOutGateId, Instant tapOutAt,
                             BigDecimal distanceKm, BigDecimal fareAmount,
+                            FareMode transportMode,
                             PaymentMethod paymentMethod, TicketTypeUsed ticketTypeUsed,
                             TripStatus status, BigDecimal debtAmount) {
         Trip t                    = new Trip();
@@ -101,6 +107,7 @@ public class Trip {
         t.tapOutAt                = tapOutAt;
         t.distanceKm              = distanceKm;
         t.fareAmount              = fareAmount;
+        t.transportMode           = transportMode;
         t.paymentMethod           = paymentMethod;
         t.ticketTypeUsed          = ticketTypeUsed;
         t.status                  = status;

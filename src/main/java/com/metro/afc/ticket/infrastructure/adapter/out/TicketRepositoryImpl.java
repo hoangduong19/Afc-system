@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,5 +63,10 @@ public class TicketRepositoryImpl implements TicketRepository {
                                            LocalDate toDate, Pageable pageable) {
         return jpa.findAllWithFilters(type, status,
                 fromDate, toDate, pageable);
+    }
+
+    @Override
+    public List<Ticket> findAllByIds(Collection<UUID> ids) {
+        return jpa.findAllByIdIn(ids);
     }
 }

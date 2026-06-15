@@ -112,6 +112,7 @@ public class TransactionIngestionService {
                         ? item.tapOutAt() : null,
                 item.distanceKm(),
                 item.fareAmount(),
+                item.mode(),
                 item.paymentMethod(),
                 item.ticketType(),
                 item.tripStatus(),

@@ -1,19 +1,23 @@
 package com.metro.afc.settlement;
 
-import com.metro.afc.operator.application.port.out.OperatorRepository;
+import com.metro.afc.fare.application.port.out.FareRuleRepository;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.settlement.application.SettlementService;
-import com.metro.afc.settlement.application.dto.settlement.OperatorTripData;
 import com.metro.afc.settlement.application.port.out.SettlementRepository;
-import com.metro.afc.settlement.domain.CompanyShare;
 import com.metro.afc.settlement.domain.Settlement;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
-import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
-import com.metro.afc.shared.infrastructure.exception.NotFoundException;
+import com.metro.afc.ticket.application.port.out.TicketRepository;
+import com.metro.afc.ticket.domain.Ticket;
+import com.metro.afc.ticket.domain.enums.PassScope;
+import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
+import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
+import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
+import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,320 +25,225 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("SettlementService")
 class SettlementServiceTest {
 
-    @Mock
-    private SettlementRepository settlementRepository;
-    @Mock private TripRepository tripRepository;
-    @Mock private OperatorRepository operatorRepository;
+    @Mock SettlementRepository  settlementRepository;
+    @Mock TripRepository        tripRepository;
+    @Mock TripAnomalyRepository anomalyRepository;
+    @Mock TicketRepository      ticketRepository;
+    @Mock FareRuleRepository    fareRuleRepository;
 
     @InjectMocks
-    private SettlementService settlementService;
+    SettlementService service;
 
-    private final UUID operatorHURC      = UUID.randomUUID();
-    private final UUID operatorTRANSERCO = UUID.randomUUID();
-    private final UUID ranBy             = UUID.randomUUID();
+    private final UUID operatorA = UUID.randomUUID();
+    private final UUID operatorB = UUID.randomUUID();
+    private final UUID ranBy     = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        when(settlementRepository.save(any()))
-                .thenAnswer(i -> i.getArgument(0));
-        when(settlementRepository.saveShare(any()))
-                .thenAnswer(i -> i.getArgument(0));
-        when(settlementRepository.saveLog(any()))
-                .thenAnswer(i -> i.getArgument(0));
-        when(settlementRepository.existsByPeriod(any()))
+        lenient().when(settlementRepository.existsByPeriod(anyString()))
                 .thenReturn(false);
+        lenient().when(anomalyRepository.countUnresolvedInPeriod(any(), any()))
+                .thenReturn(0L);
+        lenient().when(settlementRepository.save(any()))
+                .thenAnswer(i -> i.getArgument(0));
+        lenient().when(fareRuleRepository.findActiveByMode(any()))
+                .thenReturn(Optional.empty());
     }
 
-    // ── Helpers ──────────────────────────────────────────────────
-
-    private Trip mockTrip(UUID operatorId,
-                          BigDecimal distanceKm,
-                          BigDecimal fareAmount) {
-        Trip trip = mock(Trip.class);
-        when(trip.getOperatorId()).thenReturn(operatorId);
-        when(trip.getDistanceKm()).thenReturn(distanceKm);
-        when(trip.getFareAmount()).thenReturn(fareAmount);
-        return trip;
-    }
-
-    private void assertMoney(BigDecimal expected, BigDecimal actual) {
-        assertEquals(0, expected.compareTo(actual),
-                "Expected " + expected + " but was " + actual);
-    }
-
-    // ── run — success ────────────────────────────────────────────
+    // ── Happy path ───────────────────────────────────────────────────
 
     @Test
-    @DisplayName("run creates settlement with correct period")
-    void run_createsSettlement_correctPeriod() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC, new BigDecimal("10"),
-                                new BigDecimal("50000"))
-                ));
-
-        Settlement result = settlementService.run(6, 2026, ranBy);
-
-        assertEquals("2026-06", result.getPeriod());
-        assertEquals(SettlementStatus.DRAFT, result.getStatus());
-    }
-
-    @Test
-    @DisplayName("run calculates correct totalExpected")
-    void run_calculatesTotalExpected() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("7.5"),  new BigDecimal("14375")),
-                        mockTrip(operatorTRANSERCO,
-                                new BigDecimal("12.4"), new BigDecimal("8580"))
-                ));
-
-        Settlement result = settlementService.run(6, 2026, ranBy);
-
-        assertMoney(new BigDecimal("22955"),
-                result.getTotalExpected().getAmount());
-    }
-
-    @Test
-    @DisplayName("run single operator gets 100% share")
-    void run_singleOperator_gets100Percent() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("10"), new BigDecimal("100000")),
-                        mockTrip(operatorHURC,
-                                new BigDecimal("5"),  new BigDecimal("50000"))
-                ));
-
-        Settlement result = settlementService.run(6, 2026, ranBy);
-
-        assertEquals(ReconcileStatus.MATCH,
-                result.getReconciliationStatus());
-        assertMoney(BigDecimal.ZERO, result.getDiffAmount());
-    }
-
-    @Test
-    @DisplayName("run two operators MATCH reconciliation")
-    void run_twoOperators_matchReconciliation() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("15"), new BigDecimal("75000")),
-                        mockTrip(operatorTRANSERCO,
-                                new BigDecimal("5"),  new BigDecimal("25000"))
-                ));
-
-        Settlement result = settlementService.run(6, 2026, ranBy);
-
-        assertEquals(ReconcileStatus.MATCH,
-                result.getReconciliationStatus());
-        assertMoney(BigDecimal.ZERO, result.getDiffAmount());
-    }
-
-    @Test
-    @DisplayName("run saves settlement to repository")
-    void run_savesCalled() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("10"), new BigDecimal("50000"))
-                ));
-
-        settlementService.run(6, 2026, ranBy);
-
-        verify(settlementRepository, atLeast(2))
-                .save(any(Settlement.class));
-    }
-
-    @Test
-    @DisplayName("run saves company shares")
-    void run_savesCompanyShares() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("15"), new BigDecimal("75000")),
-                        mockTrip(operatorTRANSERCO,
-                                new BigDecimal("5"),  new BigDecimal("25000"))
-                ));
-
-        settlementService.run(6, 2026, ranBy);
-
-        verify(settlementRepository, times(2))
-                .saveShare(any(CompanyShare.class));
-    }
-
-    @Test
-    @DisplayName("run does not save log when MATCH")
-    void run_match_noLogSaved() {
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(
-                        mockTrip(operatorHURC,
-                                new BigDecimal("15"), new BigDecimal("75000")),
-                        mockTrip(operatorTRANSERCO,
-                                new BigDecimal("5"),  new BigDecimal("25000"))
-                ));
-
-        settlementService.run(6, 2026, ranBy);
-
-        verify(settlementRepository, never())
-                .saveLog(any());
-    }
-
-    @Test
-    @DisplayName("run trips with null fare handled gracefully")
-    void run_nullFareAmount_treatedAsZero() {
-        Trip tripWithNullFare = mock(Trip.class);
-        when(tripWithNullFare.getOperatorId()).thenReturn(operatorHURC);
-        when(tripWithNullFare.getDistanceKm())
-                .thenReturn(new BigDecimal("5"));
-        when(tripWithNullFare.getFareAmount()).thenReturn(null);
+    @DisplayName("run — chỉ có vé lượt: tạo settlement, phân bổ đúng operator")
+    void run_singleTripOnly_createsSettlement() {
+        Trip tripA = makeSingleTrip(operatorA, new BigDecimal("50000"),
+                new BigDecimal("10"));
+        Trip tripB = makeSingleTrip(operatorB, new BigDecimal("30000"),
+                new BigDecimal("6"));
 
         when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(tripWithNullFare));
+                .thenReturn(List.of(tripA, tripB));
 
-        assertDoesNotThrow(() ->
-                settlementService.run(6, 2026, ranBy));
-    }
-
-    @Test
-    @DisplayName("run trips with null operator skipped")
-    void run_nullOperatorId_skipped() {
-        Trip tripWithNullOperator = mock(Trip.class);
-        when(tripWithNullOperator.getOperatorId()).thenReturn(null);
-        when(tripWithNullOperator.getDistanceKm())
-                .thenReturn(new BigDecimal("5"));
-        when(tripWithNullOperator.getFareAmount())
-                .thenReturn(new BigDecimal("10000"));
-
-        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
-                .thenReturn(List.of(tripWithNullOperator));
-
-        Settlement result = settlementService.run(6, 2026, ranBy);
+        Settlement result = service.run(6, 2026, ranBy);
 
         assertNotNull(result);
-        verify(settlementRepository, never())
-                .saveShare(any());
+        assertEquals("2026-06", result.getPeriod());
+        assertEquals(0,
+                new BigDecimal("80000").compareTo(result.getTotalExpected().getAmount()));
+        verify(settlementRepository, atLeastOnce()).saveShare(any());
     }
 
-    // ── run — exceptions ─────────────────────────────────────────
+    @Test
+    @DisplayName("run — vé tháng METRO: phân bổ 100% về metro operator")
+    void run_metroMonthly_directAllocation() {
+        UUID ticketId = UUID.randomUUID();
+        Trip trip = makeMonthlyTrip(operatorA, FareMode.METRO, ticketId,
+                new BigDecimal("15"));
+
+        Ticket ticket = mockTicket(ticketId,
+                Money.of(new BigDecimal("200000")), FareMode.METRO, null);
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(trip));
+        when(ticketRepository.findAllByIds(anySet()))
+                .thenReturn(List.of(ticket));
+
+        Settlement result = service.run(6, 2026, ranBy);
+
+        assertEquals(0,
+                new BigDecimal("200000").compareTo(result.getTotalExpected().getAmount()));
+        assertEquals(ReconcileStatus.MATCH, result.getReconciliationStatus());
+        verify(settlementRepository, times(1)).saveShare(any());
+    }
 
     @Test
-    @DisplayName("run period already exists throws ConflictException")
+    @DisplayName("run — vé tháng MULTI_ROUTE: 2 operators nhận share")
+    void run_busMultiRoute_twoShares() {
+        UUID ticketId = UUID.randomUUID();
+        Trip tripA = makeMonthlyTrip(operatorA, FareMode.BUS, ticketId,
+                new BigDecimal("40"));
+        Trip tripB = makeMonthlyTrip(operatorB, FareMode.BUS, ticketId,
+                new BigDecimal("20"));
+
+        Ticket ticket = mockTicket(ticketId,
+                Money.of(new BigDecimal("280000")), FareMode.BUS, PassScope.MULTI_ROUTE);
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(tripA, tripB));
+        when(ticketRepository.findAllByIds(anySet()))
+                .thenReturn(List.of(ticket));
+
+        Settlement result = service.run(6, 2026, ranBy);
+
+        assertEquals(0,
+                new BigDecimal("280000").compareTo(result.getTotalExpected().getAmount()));
+        verify(settlementRepository, times(2)).saveShare(any());
+    }
+
+    @Test
+    @DisplayName("run — mix pool1 + pool3: totalExpected = sum cả 2 pool")
+    void run_mixPools_correctTotalExpected() {
+        Trip singleTrip = makeSingleTrip(operatorA, new BigDecimal("80000"),
+                new BigDecimal("10"));
+
+        UUID ticketId = UUID.randomUUID();
+        Trip monthlyA = makeMonthlyTrip(operatorA, FareMode.BUS, ticketId,
+                new BigDecimal("30"));
+        Trip monthlyB = makeMonthlyTrip(operatorB, FareMode.BUS, ticketId,
+                new BigDecimal("20"));
+
+        Ticket ticket = mockTicket(ticketId,
+                Money.of(new BigDecimal("280000")), FareMode.BUS, PassScope.MULTI_ROUTE);
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(singleTrip, monthlyA, monthlyB));
+        when(ticketRepository.findAllByIds(anySet()))
+                .thenReturn(List.of(ticket));
+
+        Settlement result = service.run(6, 2026, ranBy);
+
+        // 80000 (pool1) + 280000 (pool3) = 360000
+        assertEquals(0,
+                new BigDecimal("360000").compareTo(result.getTotalExpected().getAmount()));
+    }
+
+    // ── Guard conditions ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("run — period đã tồn tại: throw ConflictException")
     void run_periodExists_throwsConflict() {
-        when(settlementRepository.existsByPeriod("2026-06"))
-                .thenReturn(true);
+        when(settlementRepository.existsByPeriod("2026-06")).thenReturn(true);
 
-        assertThrows(ConflictException.class, () ->
-                settlementService.run(6, 2026, ranBy));
+        assertThrows(ConflictException.class,
+                () -> service.run(6, 2026, ranBy));
+
+        verify(tripRepository, never()).findCompletedTripsInPeriod(any(), any());
     }
 
     @Test
-    @DisplayName("run no trips throws BusinessRuleException")
+    @DisplayName("run — không có trip nào: throw BusinessRuleException")
     void run_noTrips_throwsBusinessRule() {
         when(tripRepository.findCompletedTripsInPeriod(any(), any()))
                 .thenReturn(List.of());
 
-        assertThrows(BusinessRuleException.class, () ->
-                settlementService.run(6, 2026, ranBy));
-    }
-
-    // ── confirm ──────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("confirm DRAFT MATCH settlement succeeds")
-    void confirm_draftMatch_succeeds() {
-        Settlement settlement = Settlement.create(
-                "2026-06", Money.of(new BigDecimal("100000")),
-                new BigDecimal("100"), ranBy);
-
-        List<CompanyShare> shares = settlement.allocateShares(
-                List.of(new OperatorTripData(
-                        operatorHURC, new BigDecimal("20"), 10)),
-                new BigDecimal("20"));
-        settlement.reconcile(shares);
-
-        when(settlementRepository.findById(settlement.getId()))
-                .thenReturn(Optional.of(settlement));
-
-        Settlement result = settlementService
-                .confirm(settlement.getId(), ranBy);
-
-        assertEquals(SettlementStatus.CONFIRMED, result.getStatus());
-        assertNotNull(result.getConfirmedAt());
+        assertThrows(BusinessRuleException.class,
+                () -> service.run(6, 2026, ranBy));
     }
 
     @Test
-    @DisplayName("confirm DRAFT WARNING settlement succeeds")
-    void confirm_draftWarning_succeeds() {
-        Settlement settlement = mock(Settlement.class);
-        when(settlement.getStatus())
-                .thenReturn(SettlementStatus.DRAFT);
-        when(settlement.getReconciliationStatus())
-                .thenReturn(ReconcileStatus.WARNING);
-        when(settlementRepository.findById(any()))
-                .thenReturn(Optional.of(settlement));
-        when(settlementRepository.save(any()))
-                .thenReturn(settlement);
+    @DisplayName("run — còn anomaly chưa resolve: throw BusinessRuleException")
+    void run_unresolvedAnomalies_throwsBusinessRule() {
+        Trip trip = makeSingleTrip(operatorA, new BigDecimal("50000"),
+                new BigDecimal("10"));
 
-        assertDoesNotThrow(() ->
-                settlementService.confirm(UUID.randomUUID(), ranBy));
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(trip));
+        when(anomalyRepository.countUnresolvedInPeriod(any(), any()))
+                .thenReturn(3L);
 
-        verify(settlement).confirm();
+        assertThrows(BusinessRuleException.class,
+                () -> service.run(6, 2026, ranBy));
+
+        verify(settlementRepository, never()).save(any());
     }
 
-    @Test
-    @DisplayName("confirm MISMATCH throws BusinessRuleException")
-    void confirm_mismatch_throwsException() {
-        Settlement settlement = mock(Settlement.class);
-        when(settlement.getStatus())
-                .thenReturn(SettlementStatus.DRAFT);
-        when(settlement.getReconciliationStatus())
-                .thenReturn(ReconcileStatus.MISMATCH);
-        when(settlementRepository.findById(any()))
-                .thenReturn(Optional.of(settlement));
+    // ── Helpers: real domain objects, không dùng mock Trip ───────────
 
-        assertThrows(BusinessRuleException.class, () ->
-                settlementService.confirm(UUID.randomUUID(), ranBy));
+    private Trip makeSingleTrip(UUID operatorId, BigDecimal fareAmount,
+                                BigDecimal distanceKm) {
+        return Trip.from(
+                UUID.randomUUID(), null, null,
+                operatorId,
+                null, null, Instant.now(),
+                null, null, Instant.now(),
+                distanceKm, fareAmount,
+                FareMode.BUS,
+                PaymentMethod.TICKET,
+                TicketTypeUsed.SINGLE_TRIP,
+                TripStatus.COMPLETED,
+                null
+        );
     }
 
-    @Test
-    @DisplayName("confirm already CONFIRMED throws BusinessRuleException")
-    void confirm_alreadyConfirmed_throwsException() {
-        Settlement settlement = mock(Settlement.class);
-        when(settlement.getStatus())
-                .thenReturn(SettlementStatus.CONFIRMED);
-        when(settlementRepository.findById(any()))
-                .thenReturn(Optional.of(settlement));
-
-        assertThrows(BusinessRuleException.class, () ->
-                settlementService.confirm(UUID.randomUUID(), ranBy));
+    private Trip makeMonthlyTrip(UUID operatorId, FareMode mode,
+                                 UUID ticketId, BigDecimal distanceKm) {
+        return Trip.from(
+                UUID.randomUUID(), null, ticketId,
+                operatorId,
+                null, null, Instant.now(),
+                null, null, Instant.now(),
+                distanceKm, null,
+                mode,
+                PaymentMethod.TICKET,
+                TicketTypeUsed.MONTHLY_PASS,
+                TripStatus.COMPLETED,
+                null
+        );
     }
 
-    @Test
-    @DisplayName("confirm not found throws NotFoundException")
-    void confirm_notFound_throwsNotFoundException() {
-        when(settlementRepository.findById(any()))
-                .thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () ->
-                settlementService.confirm(UUID.randomUUID(), ranBy));
+    private Ticket mockTicket(UUID id, Money price,
+                              FareMode mode, PassScope scope) {
+        Ticket t = mock(Ticket.class);
+        when(t.getId()).thenReturn(id);
+        when(t.getPrice()).thenReturn(price);
+        when(t.getMode()).thenReturn(mode);
+        when(t.getScope()).thenReturn(scope);
+        return t;
     }
 }

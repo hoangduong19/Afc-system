@@ -654,3 +654,6 @@ ALTER TABLE trip_anomalies
 
 ALTER TABLE stations ADD COLUMN external_id INTEGER;
 ALTER TABLE routes   ADD COLUMN external_id INTEGER;
+ALTER TABLE trips ADD COLUMN transport_mode VARCHAR(10);
+ALTER TABLE operators ADD COLUMN mode VARCHAR(10) NOT NULL DEFAULT 'BUS';
+UPDATE operators SET mode = 'METRO' WHERE code = 'HURC';

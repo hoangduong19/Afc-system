@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,4 +44,6 @@ public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
             @Param("from")   LocalDate from,
             @Param("to")     LocalDate to,
             Pageable pageable);
+
+    List<Ticket> findAllByIdIn(Collection<UUID> ids);
 }

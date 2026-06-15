@@ -1,10 +1,13 @@
 package com.metro.afc.operator.domain.model;
 
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.operator.domain.model.enums.OperatorStatus;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +35,10 @@ public class Operator {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode", length = 10, nullable = false)
+    private FareMode mode;
 
     // ── Factory method ───────────────────────────────────────────
 
