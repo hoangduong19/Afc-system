@@ -24,6 +24,10 @@ public class Money {
         return new Money(amount);
     }
 
+    public static Money ofNullable(BigDecimal amount) {
+        return amount == null ? null : new Money(amount);
+    }
+
     public BigDecimal getAmount() { return amount; }
 
     public Money add(Money other) {
