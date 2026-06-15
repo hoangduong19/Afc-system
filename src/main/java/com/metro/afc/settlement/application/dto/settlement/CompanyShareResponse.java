@@ -10,5 +10,7 @@ public record CompanyShareResponse(
         Integer totalTrips,
         BigDecimal expectedRevenue,
         BigDecimal shareAmount,
+        BigDecimal directShare,
+        BigDecimal proportionalShare,
         BigDecimal roundingAdjustment
 ) {}

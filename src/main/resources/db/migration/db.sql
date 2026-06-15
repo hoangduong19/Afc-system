@@ -666,3 +666,8 @@ UPDATE fare_rules SET monthly_single_price = 200000 WHERE mode = 'METRO';
 UPDATE fare_rules SET monthly_single_price = 500000 WHERE mode = 'ANY';
 UPDATE fare_rules SET monthly_single_price = 140000,
                       monthly_multi_price  = 280000 WHERE mode = 'BUS';
+
+
+ALTER TABLE company_shares
+    ADD COLUMN direct_share       NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    ADD COLUMN proportional_share NUMERIC(15, 2) NOT NULL DEFAULT 0;

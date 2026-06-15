@@ -62,6 +62,8 @@ public class SettlementFacade {
                         share.getTotalTrips(),
                         share.getExpectedRevenue().getAmount(),
                         share.getShareAmount().getAmount(),
+                        share.getDirectShare().getAmount(),
+                        share.getProportionalShare().getAmount(),
                         share.getRoundingAdjustment().getAmount()
                 )).toList();
 
