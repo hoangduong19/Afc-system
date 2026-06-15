@@ -48,6 +48,20 @@ public class CompanyShare {
     private Money shareAmount;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "amount",
+                    column = @Column(name = "direct_share", precision = 15, scale = 2))
+    })
+    private Money directShare;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "amount",
+                    column = @Column(name = "proportional_share", precision = 15, scale = 2))
+    })
+    private Money proportionalShare;
+
+    @Embedded
     @AttributeOverride(name = "amount",
             column = @Column(name = "rounding_adjustment",
                     precision = 15, scale = 2))
@@ -59,7 +73,8 @@ public class CompanyShare {
     public static CompanyShare of(UUID settlementId, UUID operatorId,
                                   BigDecimal totalKm, int totalTrips,
                                   Money expectedRevenue,
-                                  Money shareAmount,
+                                  Money shareAmount, Money directShare,
+                                  Money proportionalShare,
                                   Money roundingAdjustment) {
         CompanyShare s       = new CompanyShare();
         s.id                 = UUID.randomUUID();
@@ -69,6 +84,8 @@ public class CompanyShare {
         s.totalTrips         = totalTrips;
         s.expectedRevenue    = expectedRevenue;
         s.shareAmount        = shareAmount;
+        s.directShare        = directShare;
+        s.proportionalShare    = proportionalShare;
         s.roundingAdjustment = roundingAdjustment;
         return s;
     }

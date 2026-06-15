@@ -216,24 +216,32 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
             Map<UUID, BigDecimal> operatorTotalKm,
             Map<UUID, Integer> operatorTripCount) {
 
-        Map<UUID, Money> revenueMap = new HashMap<>(singleTripShares);
+        // Pool 1 + Pool 2 → direct
+        Map<UUID, Money> directMap = new HashMap<>(singleTripShares);
+        // Pool 3 → proportional
+        Map<UUID, Money> proportionalMap = new HashMap<>();
 
         for (TicketRevenueData ticket : monthlyTickets) {
             if (isSingleRoute(ticket)) {
-                allocateDirect(ticket, revenueMap);
+                allocateDirect(ticket, directMap);
             } else {
-                allocateProportional(ticket, fareParams, revenueMap);
+                allocateProportional(ticket, fareParams, proportionalMap);
             }
         }
+        Map<UUID, Money> totalMap = new HashMap<>(directMap);
+        proportionalMap.forEach((k, v) -> totalMap.merge(k, v, Money::add));
 
-        return revenueMap.entrySet().stream()
-                .map(e -> CompanyShare.of(
+        Set<UUID> allOperators = totalMap.keySet();
+        return allOperators.stream()
+                .map(opId -> CompanyShare.of(
                         this.id,
-                        e.getKey(),
-                        operatorTotalKm.getOrDefault(e.getKey(), BigDecimal.ZERO),
-                        operatorTripCount.getOrDefault(e.getKey(), 0),
-                        e.getValue(),
-                        e.getValue(),
+                        opId,
+                        operatorTotalKm.getOrDefault(opId, BigDecimal.ZERO),
+                        operatorTripCount.getOrDefault(opId, 0),
+                        totalMap.get(opId),                                        // expectedRevenue
+                        totalMap.get(opId),                                        // shareAmount
+                        directMap.getOrDefault(opId, Money.of(BigDecimal.ZERO)),
+                        proportionalMap.getOrDefault(opId, Money.of(BigDecimal.ZERO)),
                         Money.of(BigDecimal.ZERO)
                 ))
                 .toList();

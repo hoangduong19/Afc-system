@@ -416,3 +416,111 @@ VALUES (
            'ACTIVE',
            'SINGLE_ROUTE'
        );
+
+-- ═══════════════════════════════════════════════════════════════
+-- SETTLEMENT TEST SEED — June 2026
+-- Expected: totalExpected = 15,000 + 200,000 + 140,000 + 280,000 = 635,000đ
+-- ═══════════════════════════════════════════════════════════════
+
+-- ── POOL 1: Vé lượt WALLET → direct 100% HURC ─────────────────
+-- fareAmount = 15,000 → singleTripShares[HURC] += 15,000
+INSERT INTO trips (
+    card_id, operator_id,
+    tap_in_station_id, tap_in_gate_id, tap_in_at,
+    distance_km, fare_amount,
+    payment_method, ticket_type_used, transport_mode, status
+) VALUES (
+             (SELECT id FROM cards    WHERE card_uid = 'CARD-ANON-001'),
+             (SELECT id FROM operators WHERE code    = 'HURC'),
+             (SELECT id FROM stations  WHERE code    = 'HN_2A_01'),
+             'GATE_IN_01', CURRENT_TIMESTAMP - INTERVAL '5 days',
+             8.5, 15000.00,
+             'WALLET', 'SINGLE_TRIP', 'METRO', 'COMPLETED'
+         );
+
+-- ── POOL 2a: Vé tháng METRO → isSingleRoute=true → direct 100% HURC ──
+-- ticketPrice = 200,000 → revenueMap[HURC] += 200,000
+INSERT INTO trips (
+    card_id, operator_id, ticket_id,
+    tap_in_station_id, tap_in_gate_id, tap_in_at,
+    distance_km,
+    payment_method, ticket_type_used, transport_mode, status
+) VALUES (
+             (SELECT id FROM cards    WHERE card_uid = 'CARD-ID-001'),
+             (SELECT id FROM operators WHERE code    = 'HURC'),
+             (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
+                                         AND price = 200000 LIMIT 1),
+         (SELECT id FROM stations  WHERE code = 'HN_3_01'),
+    'GATE_IN_02', CURRENT_TIMESTAMP - INTERVAL '4 days',
+    5.0,
+    'TICKET', 'MONTHLY_PASS', 'METRO', 'COMPLETED'
+    );
+
+-- ── POOL 2b: Vé tháng BUS SINGLE_ROUTE → isSingleRoute=true → direct 100% TRANSERCO ──
+-- ticketPrice = 140,000 → revenueMap[TRANSERCO] += 140,000
+INSERT INTO trips (
+    operator_id, ticket_id,
+    tap_in_station_id, tap_in_gate_id, tap_in_at,
+    distance_km,
+    payment_method, ticket_type_used, transport_mode, status
+) VALUES (
+             (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+             (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
+                                         AND price = 140000 LIMIT 1),
+         (SELECT id FROM stations  WHERE code = 'BUS32_01'),
+    'GATE_IN_03', CURRENT_TIMESTAMP - INTERVAL '3 days',
+    10.2,
+    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
+    );
+
+-- ── POOL 3: Vé tháng BUS MULTI_ROUTE → allocateProportional ───────────
+-- 3 trips từ 2 operator khác nhau trên cùng 1 ticket (id = $TICKET_MULTI)
+-- Công thức QĐ 3316 mục 3.4:
+--   weight(TRANSERCO) = 3000×2 + 450×22.0 = 15,900   (BUS: GiaMoCua=3000, Gia1km=450)
+--   weight(HURC)      = 8000×1 + 850×6.0  = 13,100   (METRO: GiaMoCua=8000, Gia1km=850)
+--   totalWeight = 29,000
+--   TRANSERCO → 15900/29000 × 280,000 ≈ 153,517đ
+--   HURC      → 13100/29000 × 280,000 ≈ 126,483đ
+INSERT INTO trips (
+    operator_id, ticket_id,
+    tap_in_station_id, tap_in_gate_id, tap_in_at,
+    distance_km,
+    payment_method, ticket_type_used, transport_mode, status
+) VALUES
+-- Trip 3-A: TRANSERCO, BUS, 14 km
+(
+    (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+                                AND price = 280000 LIMIT 1),
+(SELECT id FROM stations  WHERE code = 'BRT01_01'),
+    'GATE_IN_04', CURRENT_TIMESTAMP - INTERVAL '2 days',
+    14.0,
+    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
+    ),
+-- Trip 3-B: TRANSERCO, BUS, 8 km
+    (
+    (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+    AND price = 280000 LIMIT 1),
+    (SELECT id FROM stations  WHERE code = 'BUS32_05'),
+    'GATE_IN_05', CURRENT_TIMESTAMP - INTERVAL '1 days',
+    8.0,
+    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
+    ),
+-- Trip 3-C: HURC, METRO, 6 km  ← operator thứ 2, kích hoạt proportional
+    (
+    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+    AND price = 280000 LIMIT 1),
+    (SELECT id FROM stations  WHERE code = 'HN_2A_01'),
+    'GATE_IN_06', CURRENT_TIMESTAMP - INTERVAL '2 days 12 hours',
+    6.0,
+    'TICKET', 'MONTHLY_PASS', 'METRO', 'COMPLETED'
+    );
+
+-- ═══════════════════════════════════════════════════════════════
+-- EXPECTED CompanyShare sau settlement:
+--   HURC      = 15,000 + 200,000 + 126,483 = 341,483đ
+--   TRANSERCO =          140,000 + 153,517  = 293,517đ
+--   totalActual = 635,000đ  →  reconciliationStatus = MATCH
+-- ═══════════════════════════════════════════════════════════════
