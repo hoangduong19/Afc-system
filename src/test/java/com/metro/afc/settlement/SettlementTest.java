@@ -131,20 +131,23 @@ class SettlementTest {
         @Test
         @DisplayName("Hệ thống phát hiện MISMATCH nếu độ lệch vượt quá ngưỡng cho phép")
         void triggersMismatch_whenOverTolerance() {
-            // Arrange
             Settlement s = Settlement.create("2026-06", Money.of(new BigDecimal("200000")), new BigDecimal("100"), ranBy);
 
-            // Giả lập hệ thống chia bị thất thoát (199000), lệch 1000đ (vượt tolerance 100đ)
+            // shareAmount = 199,000 → diff = 1,000 > tolerance 100 → MISMATCH
             List<CompanyShare> shares = List.of(
-                    CompanyShare.of(s.getId(), operatorA, BigDecimal.ZERO, 0,
-                            Money.of(new BigDecimal("199000")), Money.of(new BigDecimal("199000")), Money.of(BigDecimal.ZERO))
+                    CompanyShare.of(
+                            s.getId(), operatorA,
+                            BigDecimal.ZERO, 0,
+                            Money.of(new BigDecimal("199000")),  // expectedRevenue
+                            Money.of(new BigDecimal("199000")),  // shareAmount
+                            Money.of(BigDecimal.ZERO),           // directShare      ← thêm
+                            Money.of(BigDecimal.ZERO),           // proportionalShare ← thêm
+                            Money.of(BigDecimal.ZERO)            // roundingAdjustment
+                    )
             );
 
-            // Act
-            // Dùng thủ thuật reflection hoặc gọi trực tiếp method để test logic reconcile nếu cần thiết
             s.reconcile(shares);
 
-            // Assert
             assertEquals(ReconcileStatus.MISMATCH, s.getReconciliationStatus());
         }
     }
