@@ -12,11 +12,13 @@ public interface FareRuleUseCase {
     FareRule create(String code, FareMode mode,
                     BigDecimal baseFare, BigDecimal ratePerKm,
                     BigDecimal minPrice, BigDecimal maxPrice,
+                    BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                     LocalDate effectiveFrom, LocalDate effectiveTo,
                     UUID createdBy);
 
     FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                     BigDecimal minPrice, BigDecimal maxPrice,
+                    BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                     LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                     UUID updatedBy);
 

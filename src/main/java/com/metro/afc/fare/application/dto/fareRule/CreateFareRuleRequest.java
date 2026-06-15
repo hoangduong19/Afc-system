@@ -33,6 +33,14 @@ public record CreateFareRuleRequest(
         @DecimalMin(value = "0.0", message = "Max price must be >= 0")
         BigDecimal maxPrice,
 
+        @NotNull(message = "Monthly single price is required")
+        @DecimalMin(value = "0.0", message = "Monthly single price must be >= 0")
+        BigDecimal monthlySinglePrice,
+
+        // Chỉ bắt buộc khi mode = BUS, null cho METRO/ANY
+        @DecimalMin(value = "0.0", message = "Monthly multi price must be >= 0")
+        BigDecimal monthlyMultiPrice,
+
         @NotNull(message = "Effective from is required")
         LocalDate effectiveFrom,
 
@@ -40,12 +48,21 @@ public record CreateFareRuleRequest(
 ) {
     public CreateFareRuleRequest {
         if (minPrice != null && maxPrice != null
-                && minPrice.compareTo(maxPrice) > 0) {
-            throw new IllegalArgumentException("Min price must not be greater than max price");
-        }
+                && minPrice.compareTo(maxPrice) > 0)
+            throw new IllegalArgumentException(
+                    "Min price must not be greater than max price");
+
         if (effectiveTo != null && effectiveFrom != null
-                && effectiveTo.isBefore(effectiveFrom)) {
-            throw new IllegalArgumentException("Effective to must not be before effective from");
-        }
+                && effectiveTo.isBefore(effectiveFrom))
+            throw new IllegalArgumentException(
+                    "Effective to must not be before effective from");
+
+        if (mode == FareMode.BUS && monthlyMultiPrice == null)
+            throw new IllegalArgumentException(
+                    "Monthly multi price is required for BUS mode");
+
+        if (mode != FareMode.BUS && monthlyMultiPrice != null)
+            throw new IllegalArgumentException(
+                    "Monthly multi price is only applicable for BUS mode");
     }
 }

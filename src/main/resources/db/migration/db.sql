@@ -657,3 +657,12 @@ ALTER TABLE routes   ADD COLUMN external_id INTEGER;
 ALTER TABLE trips ADD COLUMN transport_mode VARCHAR(10);
 ALTER TABLE operators ADD COLUMN mode VARCHAR(10) NOT NULL DEFAULT 'BUS';
 UPDATE operators SET mode = 'METRO' WHERE code = 'HURC';
+
+ALTER TABLE fare_rules
+    ADD COLUMN monthly_single_price DECIMAL(15,2),
+    ADD COLUMN monthly_multi_price  DECIMAL(15,2);
+
+UPDATE fare_rules SET monthly_single_price = 200000 WHERE mode = 'METRO';
+UPDATE fare_rules SET monthly_single_price = 500000 WHERE mode = 'ANY';
+UPDATE fare_rules SET monthly_single_price = 140000,
+                      monthly_multi_price  = 280000 WHERE mode = 'BUS';

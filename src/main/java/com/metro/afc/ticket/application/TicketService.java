@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -89,13 +88,14 @@ public class TicketService implements TicketUseCase {
     public Ticket createMonthlyPass(UUID userId, FareMode mode, PassScope scope,
                                     PassengerType passengerType,
                                     LocalDate validFrom, int durationDays) {
+
         FareRule fareRule = fareRuleRepository.findActiveByMode(mode)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.FARE_RULE_NOT_FOUND));
 
-        // Monthly pass: giá cố định theo QĐ 3316/2025
-        Money price = resolveMonthlyPassPrice(mode, scope, durationDays);
+        // Domain tự validate scope + tính giá
+        Money price = fareRule.calculateMonthlyPassPrice(scope, durationDays);
 
-        UUID discountId  = null;
+        UUID discountId = null;
         if (passengerType != null) {
             Optional<FareDiscount> discount = fareDiscountRepository
                     .findActiveByPassengerType(passengerType);
@@ -146,46 +146,4 @@ public class TicketService implements TicketUseCase {
         return ticketRepository.findActiveTicketByCardId(cardId);
     }
 
-    // ── Monthly pass price (QĐ 3316/2025) ───────────────────────
-
-    private Money resolveMonthlyPassPrice(
-            FareMode mode,
-            PassScope scope,
-            int durationDays
-    ) {
-        validatePassScope(mode, scope);
-
-        BigDecimal basePrice = switch (mode) {
-            case BUS -> switch (scope) {
-                case SINGLE_ROUTE -> new BigDecimal("140000");
-                case MULTI_ROUTE -> new BigDecimal("280000");
-            };
-            case METRO -> new BigDecimal("200000");
-            case ANY -> new BigDecimal("500000");
-        };
-
-        if (durationDays != 30) {
-            basePrice = basePrice
-                    .multiply(BigDecimal.valueOf(durationDays))
-                    .divide(BigDecimal.valueOf(30), 0, RoundingMode.HALF_UP);
-        }
-
-        return Money.of(basePrice);
-    }
-
-    private static void validatePassScope(FareMode mode, PassScope scope) {
-        if (mode == FareMode.BUS && scope == null) {
-            throw new BusinessRuleException(
-                    ErrorCode.INVALID_PASS_SCOPE,
-                    "BUS monthly pass requires pass scope"
-            );
-        }
-
-        if (mode != FareMode.BUS && scope != null) {
-            throw new BusinessRuleException(
-                    ErrorCode.INVALID_PASS_SCOPE,
-                    "Only BUS monthly pass can have pass scope"
-            );
-        }
-    }
 }

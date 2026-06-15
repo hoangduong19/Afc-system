@@ -8,6 +8,7 @@ import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
+import com.metro.afc.ticket.domain.enums.PassScope;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -56,6 +58,16 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
             column = @Column(name = "max_price", nullable = false, precision = 15, scale = 2))
     private Money maxPrice;
 
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "monthly_single_price", precision = 15, scale = 2))
+    private Money monthlySinglePrice;   // BUS SINGLE_ROUTE, METRO, ANY
+
+    @Embedded
+    @AttributeOverride(name = "amount",
+            column = @Column(name = "monthly_multi_price", precision = 15, scale = 2))
+    private Money monthlyMultiPrice;    // BUS MULTI_ROUTE only, null cho các mode khác
+
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
 
@@ -80,6 +92,7 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
     public static FareRule create(String code, FareMode mode,
                                   BigDecimal baseFare, BigDecimal ratePerKm,
                                   BigDecimal minPrice, BigDecimal maxPrice,
+                                  BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                                   LocalDate effectiveFrom, LocalDate effectiveTo,
                                   UUID createdBy) {
         validatePriceRange(minPrice, maxPrice);
@@ -91,6 +104,8 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         rule.ratePerKm     = Money.of(ratePerKm);
         rule.minPrice      = Money.of(minPrice);
         rule.maxPrice      = Money.of(maxPrice);
+        rule.monthlySinglePrice = Money.ofNullable(monthlySinglePrice);
+        rule.monthlyMultiPrice  = Money.ofNullable(monthlyMultiPrice);
         rule.effectiveFrom = effectiveFrom;
         rule.effectiveTo   = effectiveTo;
         rule.status        = FareStatus.ACTIVE;
@@ -109,6 +124,7 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
 
     public FareRule newVersion(BigDecimal baseFare, BigDecimal ratePerKm,
                                BigDecimal minPrice, BigDecimal maxPrice,
+                               BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                                LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                                UUID createdBy) {
         validatePriceRange(minPrice, maxPrice);
@@ -122,6 +138,8 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         next.ratePerKm     = Money.of(ratePerKm);
         next.minPrice      = Money.of(minPrice);
         next.maxPrice      = Money.of(maxPrice);
+        next.monthlySinglePrice = Money.ofNullable(monthlySinglePrice);
+        next.monthlyMultiPrice  = Money.ofNullable(monthlyMultiPrice);
         next.effectiveFrom = effectiveFrom;
         next.effectiveTo   = effectiveTo;
         next.status        = FareStatus.ACTIVE;
@@ -153,6 +171,53 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
         return fare;
     }
 
+    public Money calculateMonthlyPassPrice(PassScope scope, int durationDays) {
+        BigDecimal basePrice = resolveBaseMonthlyPrice(scope);
+
+        if (durationDays != 30) {
+            basePrice = basePrice
+                    .multiply(BigDecimal.valueOf(durationDays))
+                    .divide(BigDecimal.valueOf(30), 0, RoundingMode.HALF_UP);
+        }
+
+        return Money.of(basePrice);
+    }
+
+    private BigDecimal resolveBaseMonthlyPrice(PassScope scope) {
+        if (this.mode == FareMode.BUS) {
+            if (scope == null)
+                throw new BusinessRuleException(
+                        ErrorCode.INVALID_PASS_SCOPE,
+                        "BUS monthly pass requires scope");
+            return switch (scope) {
+                case SINGLE_ROUTE -> {
+                    if (monthlySinglePrice == null)
+                        throw new BusinessRuleException(
+                                ErrorCode.FARE_RULE_MISCONFIGURED,
+                                "monthlySinglePrice not configured for this rule");
+                    yield monthlySinglePrice.getAmount();
+                }
+                case MULTI_ROUTE -> {
+                    if (monthlyMultiPrice == null)
+                        throw new BusinessRuleException(
+                                ErrorCode.FARE_RULE_MISCONFIGURED,
+                                "monthlyMultiPrice not configured for this rule");
+                    yield monthlyMultiPrice.getAmount();
+                }
+            };
+        }
+        // METRO, ANY — scope phải null
+        if (scope != null)
+            throw new BusinessRuleException(
+                    ErrorCode.INVALID_PASS_SCOPE,
+                    "Only BUS monthly pass can have scope");
+        if (monthlySinglePrice == null)
+            throw new BusinessRuleException(
+                    ErrorCode.FARE_RULE_MISCONFIGURED,
+                    "monthlySinglePrice not configured for this rule");
+        return monthlySinglePrice.getAmount();
+    }
+
     private static void validatePriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         if (minPrice.compareTo(maxPrice) > 0)
             throw new IllegalArgumentException("minPrice must be <= maxPrice");
@@ -163,11 +228,14 @@ public class FareRule extends AbstractAggregateRoot<FareRule> {
                 "{\"id\":\"%s\",\"code\":\"%s\",\"mode\":\"%s\"," +
                         "\"baseFare\":%s,\"ratePerKm\":%s," +
                         "\"minPrice\":%s,\"maxPrice\":%s," +
+                        "\"monthlySinglePrice\":%s,\"monthlyMultiPrice\":%s," +
                         "\"version\":%d,\"status\":\"%s\"," +
                         "\"effectiveFrom\":\"%s\",\"effectiveTo\":%s}",
                 id, code, mode,
                 baseFare.getAmount(), ratePerKm.getAmount(),
                 minPrice.getAmount(), maxPrice.getAmount(),
+                monthlySinglePrice != null ? monthlySinglePrice.getAmount() : "null",
+                monthlyMultiPrice  != null ? monthlyMultiPrice.getAmount()  : "null",
                 version, status, effectiveFrom,
                 effectiveTo != null ? "\"" + effectiveTo + "\"" : "null"
         );

@@ -26,6 +26,8 @@ public class FareRuleFacade {
                 request.ratePerKm(),
                 request.minPrice(),
                 request.maxPrice(),
+                request.monthlySinglePrice(),
+                request.monthlyMultiPrice(),
                 request.effectiveFrom(),
                 request.effectiveTo(),
                 createdBy
@@ -40,6 +42,8 @@ public class FareRuleFacade {
                 request.ratePerKm(),
                 request.minPrice(),
                 request.maxPrice(),
+                request.monthlySinglePrice(),
+                request.monthlyMultiPrice(),
                 request.effectiveFrom(),
                 request.effectiveTo(),
                 request.reason(),

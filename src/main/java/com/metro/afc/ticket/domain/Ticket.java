@@ -119,6 +119,15 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
     ) {
         validatePassScope(mode, scope);
 
+        if (validFrom.isBefore(LocalDate.now()))
+            throw new BusinessRuleException(ErrorCode.TICKET_INVALID_VALID_FROM,
+                    "validFrom cannot be in the past");
+
+        if (durationDays <= 0 || durationDays > 365)
+            throw new BusinessRuleException(ErrorCode.TICKET_INVALID_DURATION,
+                    "durationDays must be between 1 and 365");
+
+
         Ticket t = new Ticket();
         t.id = UUID.randomUUID();
         t.userId = userId;
@@ -159,6 +168,10 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
                     ErrorCode.TICKET_ALREADY_LINKED,
                     "Ticket already linked to a card"
             );
+
+        if (this.getValidTo() != null && this.getValidTo().isBefore(LocalDate.now()))
+            throw new BusinessRuleException(ErrorCode.TICKET_EXPIRED,
+                    "Cannot link an expired ticket");
         this.cardId = cardId;
         this.registerEvent(new TicketLinkedToCardEvent(this));
     }

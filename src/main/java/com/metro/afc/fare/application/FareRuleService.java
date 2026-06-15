@@ -29,6 +29,7 @@ public class FareRuleService implements FareRuleUseCase {
     public FareRule create(String code, FareMode mode,
                            BigDecimal baseFare, BigDecimal ratePerKm,
                            BigDecimal minPrice, BigDecimal maxPrice,
+                           BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                            LocalDate effectiveFrom, LocalDate effectiveTo,
                            UUID createdBy) {
         if (fareRuleRepository.existsByCodeAndStatus(
@@ -37,7 +38,7 @@ public class FareRuleService implements FareRuleUseCase {
         }
         return fareRuleRepository.save(
                 FareRule.create(code, mode, baseFare, ratePerKm,
-                        minPrice, maxPrice, effectiveFrom, effectiveTo, createdBy)
+                        minPrice, maxPrice, monthlySinglePrice,monthlyMultiPrice, effectiveFrom, effectiveTo, createdBy)
         );
     }
 
@@ -45,6 +46,7 @@ public class FareRuleService implements FareRuleUseCase {
     @Transactional
     public FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                            BigDecimal minPrice, BigDecimal maxPrice,
+                           BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
                            LocalDate effectiveFrom, LocalDate effectiveTo,
                            String reason,
                            UUID updatedBy) {
@@ -55,7 +57,7 @@ public class FareRuleService implements FareRuleUseCase {
         current.closeVersion(effectiveFrom);
         fareRuleRepository.save(current);
         return fareRuleRepository.save(
-                current.newVersion(baseFare, ratePerKm, minPrice, maxPrice,
+                current.newVersion(baseFare, ratePerKm, minPrice, maxPrice, monthlySinglePrice, monthlyMultiPrice,
                         effectiveFrom, effectiveTo, reason, updatedBy)
         );
     }

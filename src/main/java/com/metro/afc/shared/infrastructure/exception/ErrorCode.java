@@ -32,6 +32,9 @@ public enum ErrorCode {
     TICKET_ALREADY_LINKED(409,  "Ticket already linked to a card"),
     CARD_NOT_ACTIVE(400,        "Card must be ACTIVE"),
     INVALID_PASS_SCOPE(400, "Invalid pass scope"),
+    TICKET_INVALID_VALID_FROM(400, "validFrom cannot be in the past"),
+    TICKET_INVALID_DURATION(400,   "Invalid ticket duration"),
+    TICKET_EXPIRED(400,            "Ticket has expired"),
 
     // Wallet
     WALLET_NOT_FOUND(404,   "Wallet not found"),
@@ -42,6 +45,7 @@ public enum ErrorCode {
     FARE_RULE_INACTIVE(400,     "Fare rule is no longer active"),
     FARE_RULE_ALREADY_EXISTS(409, "Fare rule code already exists"),
     INVALID_FARE_AMOUNT(400, "Corrected fare must be non-negative"),
+    FARE_RULE_MISCONFIGURED(500, "Fare rule is missing required price configuration"),
 
     // Trip
     TRIP_NOT_FOUND(404,     "Trip not found"),
@@ -57,6 +61,8 @@ public enum ErrorCode {
     SETTLEMENT_RECONCILE_FAIL(400, "Cannot confirm: reconciliation MISMATCH"),
     SETTLEMENT_HAS_UNRESOLVED_ANOMALIES(400,
             "Cannot run settlement: unresolved anomalies exist in this period"),
+    SETTLEMENT_FUTURE_PERIOD(400,  "Cannot settle a future period"),
+
 
     // Operator
     OPERATOR_NOT_FOUND(404, "Transit operator not found"),
@@ -94,6 +100,7 @@ public enum ErrorCode {
     // Anomaly
     ANOMALY_NOT_FOUND(404,          "Anomaly not found"),
     ANOMALY_ALREADY_RESOLVED(400,   "Anomaly is already resolved"),
+
 
     // Generic
     VALIDATION_ERROR(400,   "Invalid input data"),

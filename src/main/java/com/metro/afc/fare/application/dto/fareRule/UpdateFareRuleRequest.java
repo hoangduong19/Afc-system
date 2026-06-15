@@ -23,6 +23,14 @@ public record UpdateFareRuleRequest(
         @DecimalMin(value = "0.0", message = "Max price must be >= 0")
         BigDecimal maxPrice,
 
+        @NotNull(message = "Monthly single price is required")
+        @DecimalMin(value = "0.0", message = "Monthly single price must be >= 0")
+        BigDecimal monthlySinglePrice,
+
+        // Null nếu mode không phải BUS — service validate dựa trên mode của FareRule hiện tại
+        @DecimalMin(value = "0.0", message = "Monthly multi price must be >= 0")
+        BigDecimal monthlyMultiPrice,
+
         @NotNull(message = "Effective from is required")
         LocalDate effectiveFrom,
 
@@ -32,12 +40,13 @@ public record UpdateFareRuleRequest(
 ) {
     public UpdateFareRuleRequest {
         if (minPrice != null && maxPrice != null
-                && minPrice.compareTo(maxPrice) > 0) {
-            throw new IllegalArgumentException("Min price must not be greater than max price");
-        }
+                && minPrice.compareTo(maxPrice) > 0)
+            throw new IllegalArgumentException(
+                    "Min price must not be greater than max price");
+
         if (effectiveTo != null && effectiveFrom != null
-                && effectiveTo.isBefore(effectiveFrom)) {
-            throw new IllegalArgumentException("Effective to must not be before effective from");
-        }
+                && effectiveTo.isBefore(effectiveFrom))
+            throw new IllegalArgumentException(
+                    "Effective to must not be before effective from");
     }
 }

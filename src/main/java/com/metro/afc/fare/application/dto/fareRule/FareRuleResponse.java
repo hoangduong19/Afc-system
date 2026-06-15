@@ -15,6 +15,8 @@ public record FareRuleResponse(
         BigDecimal ratePerKm,
         BigDecimal minPrice,
         BigDecimal maxPrice,
+        BigDecimal monthlySinglePrice,
+        BigDecimal monthlyMultiPrice,
         LocalDate effectiveFrom,
         LocalDate effectiveTo,
         String status,
@@ -31,6 +33,10 @@ public record FareRuleResponse(
                 fareRule.getRatePerKm().getAmount(),
                 fareRule.getMinPrice().getAmount(),
                 fareRule.getMaxPrice().getAmount(),
+                fareRule.getMonthlySinglePrice() != null
+                        ? fareRule.getMonthlySinglePrice().getAmount() : null,
+                fareRule.getMonthlyMultiPrice() != null
+                        ? fareRule.getMonthlyMultiPrice().getAmount() : null,
                 fareRule.getEffectiveFrom(),
                 fareRule.getEffectiveTo(),
                 fareRule.getStatus().name(),
