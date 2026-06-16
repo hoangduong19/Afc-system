@@ -3,6 +3,7 @@ package com.metro.afc.card.application;
 import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.card.application.port.out.CardRepository;
 import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
+import com.metro.afc.card.application.port.out.CardUidGeneratorPort;
 import com.metro.afc.card.domain.model.Card;
 import com.metro.afc.card.domain.model.CardStatusHistory;
 import com.metro.afc.card.domain.model.enums.CardType;
@@ -24,17 +25,21 @@ public class CardService implements CardUseCase {
     private final CardRepository     cardRepository;
     private final StationRepository stationRepository;
     private final CardStatusHistoryRepository cardStatusHistoryRepository;
+    private final CardUidGeneratorPort cardUidGenerator;
 
     @Override
     @Transactional
     public Card create(String cardUid, CardType type, UUID userId,
-                       Boolean supportsMetro, Boolean supportsBus,
-                       UUID createdBy) {
-        if (cardRepository.existsByCardUid(cardUid.trim().toUpperCase())) {
+                       Boolean supportsMetro, Boolean supportsBus, UUID createdBy) {
+        String uid = (cardUid != null && !cardUid.isBlank())
+                ? cardUid.trim().toUpperCase()
+                : cardUidGenerator.generate();
+
+        if (cardRepository.existsByCardUid(uid)) {
             throw new ConflictException(ErrorCode.CARD_ALREADY_EXISTS);
         }
         return cardRepository.save(
-                Card.create(cardUid, type, userId, supportsMetro, supportsBus, createdBy)
+                Card.create(uid, type, userId, supportsMetro, supportsBus, createdBy)
         );
     }
 

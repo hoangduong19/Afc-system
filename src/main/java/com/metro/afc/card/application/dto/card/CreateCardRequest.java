@@ -1,14 +1,12 @@
 package com.metro.afc.card.application.dto.card;
 
 import com.metro.afc.card.domain.model.enums.CardType;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
 public record CreateCardRequest(
-        @NotBlank(message = "Card UID is required")
         @Size(max = 100)
         String cardUid,
 
