@@ -685,3 +685,6 @@ CREATE TABLE fare_pass_prices (
                                   CONSTRAINT uq_fare_pass_price
                                       UNIQUE (fare_rule_id, duration_type, duration_months, scope)
 );
+
+ALTER TABLE settlements
+    ADD COLUMN formula_code VARCHAR(30);

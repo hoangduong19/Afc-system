@@ -6,6 +6,7 @@ import com.metro.afc.settlement.application.SettlementService;
 import com.metro.afc.settlement.application.port.out.SettlementRepository;
 import com.metro.afc.settlement.domain.Settlement;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
+import com.metro.afc.settlement.domain.settlementAllocation.AllocationStrategy;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
@@ -20,13 +21,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,49 +40,81 @@ import static org.mockito.Mockito.*;
 @DisplayName("SettlementService (Orchestration Flow)")
 class SettlementServiceTest {
 
-    @Mock SettlementRepository settlementRepository;
-    @Mock TripRepository tripRepository;
+    @Mock SettlementRepository  settlementRepository;
+    @Mock TripRepository        tripRepository;
     @Mock TripAnomalyRepository anomalyRepository;
-    @Mock TicketRepository ticketRepository;
-    @Mock FareRuleRepository fareRuleRepository;
+    @Mock TicketRepository      ticketRepository;
+    @Mock FareRuleRepository    fareRuleRepository;
+    @Mock
+    AllocationStrategy allocationStrategy;
 
-    @InjectMocks
-    SettlementService service;
+    // Construct thủ công để kiểm soát injection rõ ràng
+    private SettlementService service;
 
-    private final UUID ranBy = UUID.randomUUID();
+    private final UUID operatorId = UUID.randomUUID();
+    private final UUID ranBy      = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
+        service = new SettlementService(
+                settlementRepository, tripRepository, anomalyRepository,
+                ticketRepository, fareRuleRepository, allocationStrategy);
+
         lenient().when(settlementRepository.existsByPeriod(anyString())).thenReturn(false);
         lenient().when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(0L);
         lenient().when(settlementRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(allocationStrategy.formulaCode()).thenReturn("QD3316_2025");
     }
 
+    // ── Happy Path ────────────────────────────────────────────────────────────
+
     @Test
-    @DisplayName("run() - Happy Path: Gom đủ dữ liệu, gọi Domain xử lý và lưu xuống DB")
+    @DisplayName("run() - Happy Path: Gom đủ dữ liệu, delegate domain, lưu kết quả")
     void run_validData_delegatesToDomainAndSaves() {
-        // Arrange
-        Trip singleTrip = makeSingleTrip(UUID.randomUUID(), new BigDecimal("15000"));
-        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(singleTrip));
+        Trip trip = makeSingleTrip(new BigDecimal("15000"));
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
         when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
         when(fareRuleRepository.findAllActive()).thenReturn(List.of());
+        // Strategy trả về share khớp với fare của trip → MATCH
+        when(allocationStrategy.allocate(any(), any(), any()))
+                .thenReturn(Map.of(operatorId, Money.of(new BigDecimal("15000"))));
 
-        // Act
         Settlement result = service.run(6, 2026, ranBy);
 
-        // Assert
         assertNotNull(result);
         assertEquals("2026-06", result.getPeriod());
         assertEquals(SettlementStatus.DRAFT, result.getStatus());
+        assertEquals("QD3316_2025", result.getFormulaCode());
 
-        // Xác minh orchestration: Đã lưu settlement và share
-        verify(settlementRepository, times(1)).save(result);
+        verify(settlementRepository).save(result);
         verify(settlementRepository, atLeastOnce()).saveShare(any());
+        // MATCH → không lưu ReconciliationLog
+        verify(settlementRepository, never()).saveLog(any());
     }
 
     @Test
-    @DisplayName("run() - Chặn ngoại lệ: Period đã tồn tại (Conflict)")
-    void run_periodExists_throwsConflictException() {
+    @DisplayName("run() - Ghi ReconciliationLog khi kết quả không MATCH")
+    void run_mismatch_savesReconciliationLog() {
+        Trip trip = makeSingleTrip(new BigDecimal("15000"));
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
+        when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
+        when(fareRuleRepository.findAllActive()).thenReturn(List.of());
+        // Strategy trả về ít hơn → diff = 14500 > tolerance → MISMATCH / WARNING
+        when(allocationStrategy.allocate(any(), any(), any()))
+                .thenReturn(Map.of(operatorId, Money.of(new BigDecimal("14950"))));
+
+        service.run(6, 2026, ranBy);
+
+        verify(settlementRepository).saveLog(any());
+    }
+
+    // ── Business Rule Guards ──────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("run() - ConflictException khi period đã tồn tại")
+    void run_periodExists_throwsConflict() {
         when(settlementRepository.existsByPeriod("2026-06")).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> service.run(6, 2026, ranBy));
@@ -89,42 +122,59 @@ class SettlementServiceTest {
     }
 
     @Test
-    @DisplayName("run() - Chặn ngoại lệ: Còn anomaly chưa giải quyết")
-    void run_hasUnresolvedAnomalies_throwsBusinessRuleException() {
-        when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(5L);
+    @DisplayName("run() - BusinessRuleException khi còn anomaly chưa giải quyết")
+    void run_hasUnresolvedAnomalies_throwsBusinessRule() {
+        when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(3L);
 
         assertThrows(BusinessRuleException.class, () -> service.run(6, 2026, ranBy));
+        verify(tripRepository, never()).findCompletedTripsInPeriod(any(), any());
     }
 
     @Test
-    @DisplayName("run() - Chặn ngoại lệ: Không có trip nào trong kỳ")
-    void run_noTrips_throwsBusinessRuleException() {
+    @DisplayName("run() - BusinessRuleException khi không có trip nào trong kỳ")
+    void run_noTrips_throwsBusinessRule() {
         when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of());
 
         assertThrows(BusinessRuleException.class, () -> service.run(6, 2026, ranBy));
+        verify(allocationStrategy, never()).allocate(any(), any(), any());
     }
 
+    // ── Confirm ───────────────────────────────────────────────────────────────
+
     @Test
-    @DisplayName("confirm() - Chuyển trạng thái thành công")
-    void confirm_draftSettlement_confirmsSuccessfully() {
-        // Arrange
-        Settlement draft = Settlement.create("2026-06", Money.of(BigDecimal.ZERO), BigDecimal.ZERO, ranBy);
+    @DisplayName("confirm() - Chuyển DRAFT → CONFIRMED thành công")
+    void confirm_draft_confirmsSuccessfully() {
+        Settlement draft = Settlement.create(
+                "2026-06", Money.of(BigDecimal.ZERO), BigDecimal.ZERO, ranBy);
         when(settlementRepository.findById(draft.getId())).thenReturn(Optional.of(draft));
 
-        // Act
         Settlement result = service.confirm(draft.getId(), UUID.randomUUID());
 
-        // Assert
         assertEquals(SettlementStatus.CONFIRMED, result.getStatus());
         assertNotNull(result.getConfirmedAt());
         verify(settlementRepository).save(draft);
     }
 
-    private Trip makeSingleTrip(UUID operatorId, BigDecimal fareAmount) {
+    @Test
+    @DisplayName("confirm() - BusinessRuleException khi settlement không ở trạng thái DRAFT")
+    void confirm_nonDraft_throwsBusinessRule() {
+        Settlement draft = Settlement.create(
+                "2026-06", Money.of(BigDecimal.ZERO), BigDecimal.ZERO, ranBy);
+        draft.confirm(); // → CONFIRMED
+        when(settlementRepository.findById(draft.getId())).thenReturn(Optional.of(draft));
+
+        assertThrows(BusinessRuleException.class,
+                () -> service.confirm(draft.getId(), UUID.randomUUID()));
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    private Trip makeSingleTrip(BigDecimal fareAmount) {
         return Trip.from(
                 UUID.randomUUID(), null, null, operatorId, null, null, Instant.now(),
                 null, null, Instant.now(), new BigDecimal("10"), fareAmount,
-                FareMode.BUS, PaymentMethod.TICKET, TicketTypeUsed.SINGLE_TRIP, TripStatus.COMPLETED, null
+                FareMode.BUS, PaymentMethod.TICKET, TicketTypeUsed.SINGLE_TRIP,
+                TripStatus.COMPLETED, null
         );
     }
 }

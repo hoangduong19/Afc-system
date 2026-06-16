@@ -8,6 +8,7 @@ import com.metro.afc.settlement.domain.ReconciliationLog;
 import com.metro.afc.settlement.domain.Settlement;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
+import com.metro.afc.settlement.domain.settlementAllocation.AllocationStrategy;
 import com.metro.afc.settlement.domain.valueObject.SettlementPeriod;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
@@ -40,6 +41,8 @@ public class SettlementService implements SettlementUseCase {
     private final TripAnomalyRepository anomalyRepository;
     private final TicketRepository ticketRepository;
     private final FareRuleRepository fareRuleRepository;
+
+    private final AllocationStrategy allocationStrategy;
 
     private static final BigDecimal DEFAULT_TOLERANCE = new BigDecimal("100");
 
@@ -79,6 +82,7 @@ public class SettlementService implements SettlementUseCase {
                 allTrips,
                 usedTickets,
                 activeFareRules,
+                allocationStrategy,          // ← pass vào
                 DEFAULT_TOLERANCE,
                 ranBy
         );
