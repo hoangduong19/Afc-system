@@ -1,14 +1,11 @@
 package com.metro.afc.passenger.controller;
 
-import com.metro.afc.card.application.port.out.CardRepository;
-import com.metro.afc.card.domain.model.Card;
-import com.metro.afc.identity.infrastructure.config.SecurityUtils;
+import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.passenger.dto.PassengerCardResponse;
 import com.metro.afc.passenger.dto.PassengerTicketResponse;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
-import com.metro.afc.shared.infrastructure.exception.NotFoundException;
 import com.metro.afc.shared.infrastructure.exception.UnauthorizedException;
-import com.metro.afc.ticket.application.port.out.TicketRepository;
+import com.metro.afc.ticket.application.port.in.TicketUseCase;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import lombok.RequiredArgsConstructor;
@@ -26,50 +23,37 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PassengerController {
 
-    private final TicketRepository ticketRepository;
-    private final CardRepository cardRepository;
+    private final TicketUseCase ticketUseCase;
+    private final CardUseCase cardUseCase;
 
-    // ── GET /me/tickets ─────────────────────────────────────────
-    @GetMapping("/api/me/tickets")
+    @GetMapping("/api/passengers/{userId}/tickets")
     @PreAuthorize("hasAuthority('TICKET_READ_OWN')")
     public ResponseEntity<List<PassengerTicketResponse>> getMyTickets(
+            @PathVariable UUID userId,
             @RequestParam(required = false) TicketStatus status) {
-        UUID userId = SecurityUtils.getCurrentUserId();
-        List<Ticket> tickets = status != null
-                ? ticketRepository.findByUserIdAndStatus(userId, status)
-                : ticketRepository.findByUserId(userId);
-
         return ResponseEntity.ok(
-                tickets.stream()
+                ticketUseCase.findByUserId(userId, status).stream()
                         .map(PassengerTicketResponse::from).toList()
         );
     }
 
-    // ── GET /tickets/{id} ───────────────────────────────────────
-    @GetMapping("/api/tickets/{id}")
+    @GetMapping("/api/passengers/{userId}/tickets/{id}")
     @PreAuthorize("hasAuthority('TICKET_READ_OWN')")
     public ResponseEntity<PassengerTicketResponse> getTicket(
+            @PathVariable UUID userId,
             @PathVariable UUID id) {
-        UUID userId = SecurityUtils.getCurrentUserId();
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.TICKET_NOT_FOUND));
-
+        Ticket ticket = ticketUseCase.findById(id);
         if (!ticket.getUserId().equals(userId))
             throw new UnauthorizedException(ErrorCode.FORBIDDEN);
-
-
         return ResponseEntity.ok(PassengerTicketResponse.from(ticket));
     }
 
-    // ── GET /me/cards ───────────────────────────────────────────
-    @GetMapping("/api/me/cards")
+    @GetMapping("/api/passengers/{userId}/cards")
     @PreAuthorize("hasAuthority('CARD_READ')")
-    public ResponseEntity<List<PassengerCardResponse>> getMyCards() {
-        UUID userId = SecurityUtils.getCurrentUserId();
-        List<Card> cards = cardRepository.findByLinkedUserId(userId);
-
+    public ResponseEntity<List<PassengerCardResponse>> getMyCards(
+            @PathVariable UUID userId) {
         return ResponseEntity.ok(
-                cards.stream()
+                cardUseCase.findByLinkedUserId(userId).stream()
                         .map(PassengerCardResponse::from).toList()
         );
     }

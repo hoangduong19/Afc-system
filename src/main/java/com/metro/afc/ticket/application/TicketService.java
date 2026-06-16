@@ -21,12 +21,14 @@ import com.metro.afc.ticket.application.port.in.TicketUseCase;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.PassScope;
+import com.metro.afc.ticket.domain.enums.TicketStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -146,6 +148,19 @@ public class TicketService implements TicketUseCase {
     @Override
     public Optional<Ticket> findActiveTicketByCardId(UUID cardId) {
         return ticketRepository.findActiveTicketByCardId(cardId);
+    }
+
+    @Override
+    public List<Ticket> findByUserId(UUID userId, TicketStatus status) {
+        return status != null
+                ? ticketRepository.findByUserIdAndStatus(userId, status)
+                : ticketRepository.findByUserId(userId);
+    }
+
+    @Override
+    public Ticket findById(UUID id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.TICKET_NOT_FOUND));
     }
 
     private int toDays(PassDurationType type, Integer months) {

@@ -22,10 +22,9 @@ public class TicketFacade {
     private final TicketUseCase ticketUseCase;
     private final StationRepository stationRepository;
 
-    public TicketResponse createSingleTrip(CreateSingleTripTicketRequest req,
-                                           UUID userId) {
+    public TicketResponse createSingleTrip(CreateSingleTripTicketRequest req) {
         Ticket ticket = ticketUseCase.createSingleTrip(
-                userId, req.fromStationId(), req.toStationId(),
+                req.userId(), req.fromStationId(), req.toStationId(),
                 req.mode(), req.passengerType()
         );
         return TicketResponse.from(ticket,
@@ -34,10 +33,9 @@ public class TicketFacade {
         );
     }
 
-    public TicketResponse createMonthlyPass(CreatePassRequest req,
-                                            UUID userId) {
+    public TicketResponse createMonthlyPass(CreatePassRequest req) {
         Ticket ticket = ticketUseCase.createPass(
-                userId, req.mode(), req.scope(), req.passengerType(),
+                req.userId(), req.mode(), req.scope(), req.passengerType(),
                 req.validFrom(), req.durationType(), req.durationMonths()
         );
         return TicketResponse.from(ticket, null, null);

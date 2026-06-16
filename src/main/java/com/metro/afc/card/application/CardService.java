@@ -120,6 +120,11 @@ public class CardService implements CardUseCase {
     }
 
     @Override
+    public List<Card> findByLinkedUserId(UUID userId) {
+        return cardRepository.findByLinkedUserId(userId);
+    }
+
+    @Override
     public List<Card> findAll() {
         return cardRepository.findAll();
     }

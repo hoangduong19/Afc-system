@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CreateSingleTripTicketRequest(
+        @NotNull UUID userId,
+
         @NotNull(message = "From station is required")
         UUID fromStationId,
 

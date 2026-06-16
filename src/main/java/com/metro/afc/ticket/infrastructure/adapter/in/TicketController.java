@@ -1,6 +1,5 @@
 package com.metro.afc.ticket.infrastructure.adapter.in;
 
-import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import com.metro.afc.ticket.application.dto.CreatePassRequest;
 import com.metro.afc.ticket.application.dto.CreateSingleTripTicketRequest;
 import com.metro.afc.ticket.application.dto.TicketResponse;
@@ -27,7 +26,7 @@ public class TicketController {
             @Valid @RequestBody CreateSingleTripTicketRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createSingleTrip(
-                        request, SecurityUtils.getCurrentUserId()
+                        request
                 ));
     }
 
@@ -37,7 +36,7 @@ public class TicketController {
             @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createMonthlyPass(
-                        request, SecurityUtils.getCurrentUserId()
+                        request
                 ));
     }
 }

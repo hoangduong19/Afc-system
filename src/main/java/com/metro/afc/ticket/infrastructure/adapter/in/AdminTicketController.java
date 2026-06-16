@@ -1,6 +1,5 @@
 package com.metro.afc.ticket.infrastructure.adapter.in;
 
-import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import com.metro.afc.station.application.port.out.StationRepository;
 import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.ticket.application.dto.CreatePassRequest;
@@ -62,7 +61,7 @@ public class AdminTicketController {
             @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createMonthlyPass(
-                        request, SecurityUtils.getCurrentUserId()));
+                        request));
     }
 
     private String getStationCode(UUID stationId) {
