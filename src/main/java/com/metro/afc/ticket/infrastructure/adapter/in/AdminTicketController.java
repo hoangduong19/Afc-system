@@ -3,7 +3,7 @@ package com.metro.afc.ticket.infrastructure.adapter.in;
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import com.metro.afc.station.application.port.out.StationRepository;
 import com.metro.afc.station.domain.model.Station;
-import com.metro.afc.ticket.application.dto.CreateMonthlyPassRequest;
+import com.metro.afc.ticket.application.dto.CreatePassRequest;
 import com.metro.afc.ticket.application.dto.TicketResponse;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
@@ -59,7 +59,7 @@ public class AdminTicketController {
     @PostMapping("/issue")
     @PreAuthorize("hasAuthority('TICKET_PURCHASE')")
     public ResponseEntity<TicketResponse> issue(
-            @Valid @RequestBody CreateMonthlyPassRequest request) {
+            @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createMonthlyPass(
                         request, SecurityUtils.getCurrentUserId()));

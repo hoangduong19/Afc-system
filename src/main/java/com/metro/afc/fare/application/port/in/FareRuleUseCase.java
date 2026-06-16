@@ -1,5 +1,6 @@
 package com.metro.afc.fare.application.port.in;
 
+import com.metro.afc.fare.domain.model.FarePassPrice;
 import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 
@@ -12,13 +13,13 @@ public interface FareRuleUseCase {
     FareRule create(String code, FareMode mode,
                     BigDecimal baseFare, BigDecimal ratePerKm,
                     BigDecimal minPrice, BigDecimal maxPrice,
-                    BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
+                    List<FarePassPrice> passPrices,
                     LocalDate effectiveFrom, LocalDate effectiveTo,
                     UUID createdBy);
 
     FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                     BigDecimal minPrice, BigDecimal maxPrice,
-                    BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
+                    List<FarePassPrice> passPrices,
                     LocalDate effectiveFrom, LocalDate effectiveTo, String reason,
                     UUID updatedBy);
 

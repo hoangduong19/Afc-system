@@ -76,21 +76,19 @@ class FareCalculationServiceTest {
         when(toStation.getCode()).thenReturn("HN_2A_12");
         when(toStation.getKmMarker()).thenReturn(new BigDecimal("12.500"));
 
-        // baseFare=8000, rate=850, min=8000, max=30000
         metroFareRule = FareRule.create(
                 "HN_METRO_STANDARD", FareMode.METRO,
                 new BigDecimal("8000"), new BigDecimal("850"),
                 new BigDecimal("8000"), new BigDecimal("30000"),
-                null, null,
+                List.of(),
                 VALID_FROM, null, ACTOR
         );
 
-        // baseFare=3000, rate=450, min=3000, max=30000
         busFareRule = FareRule.create(
                 "HN_BUS_STANDARD", FareMode.BUS,
                 new BigDecimal("3000"), new BigDecimal("450"),
                 new BigDecimal("3000"), new BigDecimal("30000"),
-                null, null,
+                List.of(),
                 VALID_FROM, null, ACTOR
         );
     }

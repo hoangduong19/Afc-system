@@ -2,6 +2,7 @@ package com.metro.afc.fare.application;
 
 import com.metro.afc.fare.application.port.in.FareRuleUseCase;
 import com.metro.afc.fare.application.port.out.FareRuleRepository;
+import com.metro.afc.fare.domain.model.FarePassPrice;
 import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
@@ -29,7 +30,7 @@ public class FareRuleService implements FareRuleUseCase {
     public FareRule create(String code, FareMode mode,
                            BigDecimal baseFare, BigDecimal ratePerKm,
                            BigDecimal minPrice, BigDecimal maxPrice,
-                           BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
+                           List<FarePassPrice> passPrices,
                            LocalDate effectiveFrom, LocalDate effectiveTo,
                            UUID createdBy) {
         if (fareRuleRepository.existsByCodeAndStatus(
@@ -38,7 +39,7 @@ public class FareRuleService implements FareRuleUseCase {
         }
         return fareRuleRepository.save(
                 FareRule.create(code, mode, baseFare, ratePerKm,
-                        minPrice, maxPrice, monthlySinglePrice,monthlyMultiPrice, effectiveFrom, effectiveTo, createdBy)
+                        minPrice, maxPrice, passPrices, effectiveFrom, effectiveTo, createdBy)
         );
     }
 
@@ -46,7 +47,7 @@ public class FareRuleService implements FareRuleUseCase {
     @Transactional
     public FareRule update(UUID id, BigDecimal baseFare, BigDecimal ratePerKm,
                            BigDecimal minPrice, BigDecimal maxPrice,
-                           BigDecimal monthlySinglePrice, BigDecimal monthlyMultiPrice,
+                           List<FarePassPrice> passPrices,
                            LocalDate effectiveFrom, LocalDate effectiveTo,
                            String reason,
                            UUID updatedBy) {
@@ -57,7 +58,7 @@ public class FareRuleService implements FareRuleUseCase {
         current.closeVersion(effectiveFrom);
         fareRuleRepository.save(current);
         return fareRuleRepository.save(
-                current.newVersion(baseFare, ratePerKm, minPrice, maxPrice, monthlySinglePrice, monthlyMultiPrice,
+                current.newVersion(baseFare, ratePerKm, minPrice, maxPrice, passPrices,
                         effectiveFrom, effectiveTo, reason, updatedBy)
         );
     }

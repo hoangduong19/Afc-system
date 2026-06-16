@@ -8,6 +8,7 @@ import com.metro.afc.fare.application.port.out.FareRuleRepository;
 import com.metro.afc.fare.domain.model.FareDiscount;
 import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
+import com.metro.afc.fare.domain.model.enums.fareRule.PassDurationType;
 import com.metro.afc.fare.domain.model.enums.fareRuleDiscount.PassengerType;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
@@ -85,15 +86,16 @@ public class TicketService implements TicketUseCase {
 
     @Override
     @Transactional
-    public Ticket createMonthlyPass(UUID userId, FareMode mode, PassScope scope,
+    public Ticket createPass(UUID userId, FareMode mode, PassScope scope,
                                     PassengerType passengerType,
-                                    LocalDate validFrom, int durationDays) {
+                                    LocalDate validFrom,
+                                    PassDurationType durationType,
+                                    Integer durationMonths) {
 
         FareRule fareRule = fareRuleRepository.findActiveByMode(mode)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.FARE_RULE_NOT_FOUND));
 
-        // Domain tự validate scope + tính giá
-        Money price = fareRule.calculateMonthlyPassPrice(scope, durationDays);
+        Money price = fareRule.lookupPassPrice(durationType, durationMonths, scope);
 
         UUID discountId = null;
         if (passengerType != null) {
@@ -107,7 +109,7 @@ public class TicketService implements TicketUseCase {
 
         return ticketRepository.save(Ticket.createMonthlyPass(
                 userId, mode, scope, price, fareRule.getId(),
-                discountId, validFrom, durationDays
+                discountId, validFrom, toDays(durationType, durationMonths)
         ));
     }
 
@@ -146,4 +148,11 @@ public class TicketService implements TicketUseCase {
         return ticketRepository.findActiveTicketByCardId(cardId);
     }
 
+    private int toDays(PassDurationType type, Integer months) {
+        return switch (type) {
+            case DAILY   -> 1;
+            case WEEKLY  -> 7;
+            case MONTHLY -> months * 30;
+        };
+    }
 }

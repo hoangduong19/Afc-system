@@ -1,68 +1,59 @@
 package com.metro.afc.fare.application.dto.fareRule;
 
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.metro.afc.ticket.domain.enums.PassScope;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record CreateFareRuleRequest(
-        @NotBlank(message = "Code is required")
-        @Size(max = 50, message = "Code must be at most 50 characters")
+        @NotBlank @Size(max = 50)
         String code,
 
-        @NotNull(message = "Mode is required")
+        @NotNull
         FareMode mode,
 
-        @NotNull(message = "Base fare is required")
-        @DecimalMin(value = "0.0", message = "Base fare must be >= 0")
-        BigDecimal baseFare,
+        @NotNull @DecimalMin("0.0") BigDecimal baseFare,
+        @NotNull @DecimalMin("0.0") BigDecimal ratePerKm,
+        @NotNull @DecimalMin("0.0") BigDecimal minPrice,
+        @NotNull @DecimalMin("0.0") BigDecimal maxPrice,
 
-        @NotNull(message = "Rate per km is required")
-        @DecimalMin(value = "0.0", message = "Rate per km must be >= 0")
-        BigDecimal ratePerKm,
+        @NotNull @NotEmpty @Valid
+        List<PassPriceEntry> passPrices,
 
-        @NotNull(message = "Min price is required")
-        @DecimalMin(value = "0.0", message = "Min price must be >= 0")
-        BigDecimal minPrice,
-
-        @NotNull(message = "Max price is required")
-        @DecimalMin(value = "0.0", message = "Max price must be >= 0")
-        BigDecimal maxPrice,
-
-        @NotNull(message = "Monthly single price is required")
-        @DecimalMin(value = "0.0", message = "Monthly single price must be >= 0")
-        BigDecimal monthlySinglePrice,
-
-        // Chỉ bắt buộc khi mode = BUS, null cho METRO/ANY
-        @DecimalMin(value = "0.0", message = "Monthly multi price must be >= 0")
-        BigDecimal monthlyMultiPrice,
-
-        @NotNull(message = "Effective from is required")
-        LocalDate effectiveFrom,
-
+        @NotNull LocalDate effectiveFrom,
         LocalDate effectiveTo
 ) {
     public CreateFareRuleRequest {
-        if (minPrice != null && maxPrice != null
-                && minPrice.compareTo(maxPrice) > 0)
-            throw new IllegalArgumentException(
-                    "Min price must not be greater than max price");
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
+            throw new IllegalArgumentException("minPrice must not be greater than maxPrice");
 
-        if (effectiveTo != null && effectiveFrom != null
-                && effectiveTo.isBefore(effectiveFrom))
-            throw new IllegalArgumentException(
-                    "Effective to must not be before effective from");
+        if (effectiveTo != null && effectiveFrom != null && effectiveTo.isBefore(effectiveFrom))
+            throw new IllegalArgumentException("effectiveTo must not be before effectiveFrom");
 
-        if (mode == FareMode.BUS && monthlyMultiPrice == null)
-            throw new IllegalArgumentException(
-                    "Monthly multi price is required for BUS mode");
+        if (passPrices != null) {
+            // Không duplicate key (durationType, durationMonths, scope)
+            long distinctKeys = passPrices.stream()
+                    .map(p -> p.durationType() + "|" + p.durationMonths() + "|" + p.scope())
+                    .distinct().count();
+            if (distinctKeys != passPrices.size())
+                throw new IllegalArgumentException("Duplicate pass price entry");
 
-        if (mode != FareMode.BUS && monthlyMultiPrice != null)
-            throw new IllegalArgumentException(
-                    "Monthly multi price is only applicable for BUS mode");
+            // BUS phải có MULTI_ROUTE; METRO/ANY không được có MULTI_ROUTE
+            if (mode == FareMode.BUS) {
+                boolean hasMulti = passPrices.stream()
+                        .anyMatch(p -> p.scope() == PassScope.MULTI_ROUTE);
+                if (!hasMulti)
+                    throw new IllegalArgumentException("BUS mode requires MULTI_ROUTE pass price");
+            } else {
+                boolean hasScope = passPrices.stream()
+                        .anyMatch(p -> p.scope() != null);
+                if (hasScope)
+                    throw new IllegalArgumentException("Only BUS mode can have scope in pass prices");
+            }
+        }
     }
 }

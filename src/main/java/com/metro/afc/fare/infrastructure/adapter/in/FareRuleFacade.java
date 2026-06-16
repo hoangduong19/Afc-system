@@ -1,10 +1,8 @@
 package com.metro.afc.fare.infrastructure.adapter.in;
 
-import com.metro.afc.fare.application.dto.fareRule.CreateFareRuleRequest;
-import com.metro.afc.fare.application.dto.fareRule.DisableFareRuleRequest;
-import com.metro.afc.fare.application.dto.fareRule.FareRuleResponse;
-import com.metro.afc.fare.application.dto.fareRule.UpdateFareRuleRequest;
+import com.metro.afc.fare.application.dto.fareRule.*;
 import com.metro.afc.fare.application.port.in.FareRuleUseCase;
+import com.metro.afc.fare.domain.model.FarePassPrice;
 import com.metro.afc.fare.domain.model.FareRule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -26,8 +24,7 @@ public class FareRuleFacade {
                 request.ratePerKm(),
                 request.minPrice(),
                 request.maxPrice(),
-                request.monthlySinglePrice(),
-                request.monthlyMultiPrice(),
+                toPassPrices(request.passPrices()),
                 request.effectiveFrom(),
                 request.effectiveTo(),
                 createdBy
@@ -42,8 +39,7 @@ public class FareRuleFacade {
                 request.ratePerKm(),
                 request.minPrice(),
                 request.maxPrice(),
-                request.monthlySinglePrice(),
-                request.monthlyMultiPrice(),
+                toPassPrices(request.passPrices()),
                 request.effectiveFrom(),
                 request.effectiveTo(),
                 request.reason(),
@@ -71,6 +67,13 @@ public class FareRuleFacade {
         return fareRuleUseCase.findAll()
                 .stream()
                 .map(FareRuleResponse::from)
+                .toList();
+    }
+
+    private List<FarePassPrice> toPassPrices(List<PassPriceEntry> entries) {
+        return entries.stream()
+                .map(e -> FarePassPrice.of(e.durationType(), e.durationMonths(),
+                        e.scope(), e.amount()))
                 .toList();
     }
 }

@@ -5,6 +5,7 @@ import com.metro.afc.fare.domain.model.FareRule;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public record FareRuleResponse(
@@ -15,8 +16,7 @@ public record FareRuleResponse(
         BigDecimal ratePerKm,
         BigDecimal minPrice,
         BigDecimal maxPrice,
-        BigDecimal monthlySinglePrice,
-        BigDecimal monthlyMultiPrice,
+        List<PassPriceEntry> passPrices,
         LocalDate effectiveFrom,
         LocalDate effectiveTo,
         String status,
@@ -24,25 +24,28 @@ public record FareRuleResponse(
         UUID createdBy,
         Instant createdAt
 ) {
-    public static FareRuleResponse from(FareRule fareRule) {
+    public static FareRuleResponse from(FareRule r) {
         return new FareRuleResponse(
-                fareRule.getId(),
-                fareRule.getCode(),
-                fareRule.getMode().name(),
-                fareRule.getBaseFare().getAmount(),
-                fareRule.getRatePerKm().getAmount(),
-                fareRule.getMinPrice().getAmount(),
-                fareRule.getMaxPrice().getAmount(),
-                fareRule.getMonthlySinglePrice() != null
-                        ? fareRule.getMonthlySinglePrice().getAmount() : null,
-                fareRule.getMonthlyMultiPrice() != null
-                        ? fareRule.getMonthlyMultiPrice().getAmount() : null,
-                fareRule.getEffectiveFrom(),
-                fareRule.getEffectiveTo(),
-                fareRule.getStatus().name(),
-                fareRule.getVersion(),
-                fareRule.getCreatedBy(),
-                fareRule.getCreatedAt()
+                r.getId(),
+                r.getCode(),
+                r.getMode().name(),
+                r.getBaseFare().getAmount(),
+                r.getRatePerKm().getAmount(),
+                r.getMinPrice().getAmount(),
+                r.getMaxPrice().getAmount(),
+                r.getPassPrices().stream()
+                        .map(p -> new PassPriceEntry(
+                                p.getDurationType(),
+                                p.getDurationMonths(),
+                                p.getScope(),
+                                p.getPrice().getAmount()))
+                        .toList(),
+                r.getEffectiveFrom(),
+                r.getEffectiveTo(),
+                r.getStatus().name(),
+                r.getVersion(),
+                r.getCreatedBy(),
+                r.getCreatedAt()
         );
     }
 }

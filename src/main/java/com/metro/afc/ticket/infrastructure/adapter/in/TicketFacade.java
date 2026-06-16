@@ -4,7 +4,7 @@ import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;
 import com.metro.afc.station.application.port.out.StationRepository;
 import com.metro.afc.station.domain.model.Station;
-import com.metro.afc.ticket.application.dto.CreateMonthlyPassRequest;
+import com.metro.afc.ticket.application.dto.CreatePassRequest;
 import com.metro.afc.ticket.application.dto.CreateSingleTripTicketRequest;
 import com.metro.afc.ticket.application.dto.LinkTicketRequest;
 import com.metro.afc.ticket.application.dto.TicketResponse;
@@ -34,11 +34,11 @@ public class TicketFacade {
         );
     }
 
-    public TicketResponse createMonthlyPass(CreateMonthlyPassRequest req,
+    public TicketResponse createMonthlyPass(CreatePassRequest req,
                                             UUID userId) {
-        Ticket ticket = ticketUseCase.createMonthlyPass(
+        Ticket ticket = ticketUseCase.createPass(
                 userId, req.mode(), req.scope(), req.passengerType(),
-                req.validFrom(), req.durationDays()
+                req.validFrom(), req.durationType(), req.durationMonths()
         );
         return TicketResponse.from(ticket, null, null);
     }

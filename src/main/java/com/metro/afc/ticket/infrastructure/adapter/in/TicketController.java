@@ -1,7 +1,7 @@
 package com.metro.afc.ticket.infrastructure.adapter.in;
 
 import com.metro.afc.identity.infrastructure.config.SecurityUtils;
-import com.metro.afc.ticket.application.dto.CreateMonthlyPassRequest;
+import com.metro.afc.ticket.application.dto.CreatePassRequest;
 import com.metro.afc.ticket.application.dto.CreateSingleTripTicketRequest;
 import com.metro.afc.ticket.application.dto.TicketResponse;
 import jakarta.validation.Valid;
@@ -34,7 +34,7 @@ public class TicketController {
     @PostMapping("/monthly-pass")
     @PreAuthorize("hasAuthority('TICKET_PURCHASE')")
     public ResponseEntity<TicketResponse> createMonthlyPass(
-            @Valid @RequestBody CreateMonthlyPassRequest request) {
+            @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createMonthlyPass(
                         request, SecurityUtils.getCurrentUserId()

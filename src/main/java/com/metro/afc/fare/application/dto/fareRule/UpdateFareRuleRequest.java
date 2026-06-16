@@ -1,52 +1,40 @@
 package com.metro.afc.fare.application.dto.fareRule;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record UpdateFareRuleRequest(
-        @NotNull(message = "Base fare is required")
-        @DecimalMin(value = "0.0", message = "Base fare must be >= 0")
-        BigDecimal baseFare,
+        @NotNull @DecimalMin("0.0") BigDecimal baseFare,
+        @NotNull @DecimalMin("0.0") BigDecimal ratePerKm,
+        @NotNull @DecimalMin("0.0") BigDecimal minPrice,
+        @NotNull @DecimalMin("0.0") BigDecimal maxPrice,
 
-        @NotNull(message = "Rate per km is required")
-        @DecimalMin(value = "0.0", message = "Rate per km must be >= 0")
-        BigDecimal ratePerKm,
+        @NotNull @NotEmpty @Valid
+        List<PassPriceEntry> passPrices,
 
-        @NotNull(message = "Min price is required")
-        @DecimalMin(value = "0.0", message = "Min price must be >= 0")
-        BigDecimal minPrice,
-
-        @NotNull(message = "Max price is required")
-        @DecimalMin(value = "0.0", message = "Max price must be >= 0")
-        BigDecimal maxPrice,
-
-        @NotNull(message = "Monthly single price is required")
-        @DecimalMin(value = "0.0", message = "Monthly single price must be >= 0")
-        BigDecimal monthlySinglePrice,
-
-        // Null nếu mode không phải BUS — service validate dựa trên mode của FareRule hiện tại
-        @DecimalMin(value = "0.0", message = "Monthly multi price must be >= 0")
-        BigDecimal monthlyMultiPrice,
-
-        @NotNull(message = "Effective from is required")
-        LocalDate effectiveFrom,
-
+        @NotNull LocalDate effectiveFrom,
         LocalDate effectiveTo,
-
         String reason
 ) {
     public UpdateFareRuleRequest {
-        if (minPrice != null && maxPrice != null
-                && minPrice.compareTo(maxPrice) > 0)
-            throw new IllegalArgumentException(
-                    "Min price must not be greater than max price");
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
+            throw new IllegalArgumentException("minPrice must not be greater than maxPrice");
 
-        if (effectiveTo != null && effectiveFrom != null
-                && effectiveTo.isBefore(effectiveFrom))
-            throw new IllegalArgumentException(
-                    "Effective to must not be before effective from");
+        if (effectiveTo != null && effectiveFrom != null && effectiveTo.isBefore(effectiveFrom))
+            throw new IllegalArgumentException("effectiveTo must not be before effectiveFrom");
+
+        if (passPrices != null) {
+            long distinctKeys = passPrices.stream()
+                    .map(p -> p.durationType() + "|" + p.durationMonths() + "|" + p.scope())
+                    .distinct().count();
+            if (distinctKeys != passPrices.size())
+                throw new IllegalArgumentException("Duplicate pass price entry");
+        }
     }
 }

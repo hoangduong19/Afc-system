@@ -671,3 +671,17 @@ UPDATE fare_rules SET monthly_single_price = 140000,
 ALTER TABLE company_shares
     ADD COLUMN direct_share       NUMERIC(15, 2) NOT NULL DEFAULT 0,
     ADD COLUMN proportional_share NUMERIC(15, 2) NOT NULL DEFAULT 0;
+
+ALTER TABLE fare_rules DROP COLUMN IF EXISTS monthly_single_price;
+ALTER TABLE fare_rules DROP COLUMN IF EXISTS monthly_multi_price;
+
+-- Bảng con
+CREATE TABLE fare_pass_prices (
+                                  fare_rule_id    UUID        NOT NULL REFERENCES fare_rules(id),
+                                  duration_type   VARCHAR(10) NOT NULL,
+                                  duration_months SMALLINT,
+                                  scope           VARCHAR(20),
+                                  amount          NUMERIC(15,2) NOT NULL,
+                                  CONSTRAINT uq_fare_pass_price
+                                      UNIQUE (fare_rule_id, duration_type, duration_months, scope)
+);
