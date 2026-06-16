@@ -31,9 +31,9 @@ public class TicketController {
                 ));
     }
 
-    @PostMapping("/monthly-pass")
+    @PostMapping("/pass")
     @PreAuthorize("hasAuthority('TICKET_PURCHASE')")
-    public ResponseEntity<TicketResponse> createMonthlyPass(
+    public ResponseEntity<TicketResponse> createPass(
             @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketFacade.createMonthlyPass(
