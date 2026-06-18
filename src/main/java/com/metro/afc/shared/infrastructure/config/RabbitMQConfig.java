@@ -38,6 +38,12 @@ public class RabbitMQConfig {
     public static final String SETTLEMENT_CONFIRMED       = "settlement.confirmed";
     public static final String SETTLEMENT_CONFIRMED_QUEUE = "settlement.confirmed.queue";
 
+    // Station & Route
+    public static final String STATION_SYNCED = "station.synced";
+    public static final String ROUTE_SYNCED   = "route.synced";
+    public static final String STATION_SYNC_QUEUE = "station.sync.queue";
+    public static final String ROUTE_SYNC_QUEUE   = "route.sync.queue";
+
     // Dev Test
     public static final String SYNC_CARD_ALL     = "sync.card.all";
     public static final String SYNC_TICKET_ALL   = "sync.ticket.all";
@@ -117,6 +123,15 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(SETTLEMENT_CONFIRMED_QUEUE).build();
     }
 
+    @Bean public Queue stationSyncQueue() {
+        return QueueBuilder.durable(STATION_SYNC_QUEUE).build();
+    }
+
+    @Bean public Queue routeSyncQueue() {
+        return QueueBuilder.durable(ROUTE_SYNC_QUEUE).build();
+    }
+
+
     @Bean
     public Binding cardStatusBinding() {
         return BindingBuilder
@@ -160,6 +175,16 @@ public class RabbitMQConfig {
                 .bind(settlementConfirmedQueue())
                 .to(afcExchange())
                 .with(SETTLEMENT_CONFIRMED);
+    }
+
+    @Bean public Binding stationSyncBinding() {
+        return BindingBuilder.bind(stationSyncQueue())
+                .to(afcExchange()).with(STATION_SYNCED);
+    }
+
+    @Bean public Binding routeSyncBinding() {
+        return BindingBuilder.bind(routeSyncQueue())
+                .to(afcExchange()).with(ROUTE_SYNCED);
     }
 
     @Bean
