@@ -106,6 +106,14 @@ public class CardController {
         return ResponseEntity.ok(cardFacade.getMyCard(cardUid, userId));
     }
 
+    @PatchMapping("/me/{cardUid}/suspend")
+    @PreAuthorize("hasAuthority('PASSENGER')")
+    public ResponseEntity<CardResponse> suspendMyCard(
+            @PathVariable String cardUid,
+            @RequestParam UUID userId) {
+        return ResponseEntity.ok(cardFacade.suspendMyCard(cardUid, userId));
+    }
+
     @PostMapping("/{cardId}/link-ticket")
     @PreAuthorize("hasAuthority('CARD_LINK')")
     public ResponseEntity<TicketResponse> linkTicket(

@@ -57,6 +57,13 @@ public class CardFacade {
         return CardResponse.from(cardUseCase.findByCardUidForUser(cardUid, userId));
     }
 
+    public CardResponse suspendMyCard(String cardUid, UUID userId) {
+        Card card = cardUseCase.findByCardUidForUser(cardUid, userId);
+        return CardResponse.from(
+                cardUseCase.suspend(card.getId(), "Suspended by card owner", userId)
+        );
+    }
+
     public CardResponse findById(UUID id) {
         return CardResponse.from(cardUseCase.findById(id));
     }
