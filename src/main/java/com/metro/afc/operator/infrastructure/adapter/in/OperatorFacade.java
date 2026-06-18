@@ -18,7 +18,7 @@ public class OperatorFacade {
     private final OperatorUseCase operatorUseCase;
 
     public OperatorResponse create(CreateOperatorRequest request) {
-        Operator operator = operatorUseCase.create(request.code(), request.name());
+        Operator operator = operatorUseCase.create(request.code(), request.name(), request.mode());
         return OperatorResponse.from(operator);
     }
 

@@ -1,5 +1,6 @@
 package com.metro.afc.operator.application;
 
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.operator.application.port.in.OperatorUseCase;
 import com.metro.afc.operator.application.port.out.OperatorRepository;
 import com.metro.afc.operator.domain.model.Operator;
@@ -21,12 +22,12 @@ public class OperatorService implements OperatorUseCase {
 
     @Override
     @Transactional
-    public Operator create(String code, String name) {
+    public Operator create(String code, String name, FareMode fareMode) {
         if (operatorRepository.existsByCode(code.trim().toUpperCase())) {
             throw new ConflictException(ErrorCode.OPERATOR_ALREADY_EXISTS);
         }
 
-        return operatorRepository.save(Operator.create(code, name));
+        return operatorRepository.save(Operator.create(code, name, fareMode));
     }
 
     @Override

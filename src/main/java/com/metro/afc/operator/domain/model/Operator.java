@@ -42,11 +42,12 @@ public class Operator {
 
     // ── Factory method ───────────────────────────────────────────
 
-    public static Operator create(String code, String name) {
+    public static Operator create(String code, String name, FareMode mode) {
         Operator operator = new Operator();
         operator.code   = code.trim().toUpperCase();
         operator.name   = name.trim();
         operator.status = OperatorStatus.ACTIVE;
+        operator.mode   = mode;
         return operator;
     }
 

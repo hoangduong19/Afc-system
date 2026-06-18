@@ -10,6 +10,7 @@ public record OperatorResponse(
         String code,
         String name,
         String status,
+        String mode,
         Instant createdAt
 ) {
     public static OperatorResponse from(Operator operator) {
@@ -18,6 +19,7 @@ public record OperatorResponse(
                 operator.getCode(),
                 operator.getName(),
                 operator.getStatus().name(),
+                operator.getMode().name(),
                 operator.getCreatedAt()
         );
     }
