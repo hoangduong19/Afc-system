@@ -26,7 +26,7 @@ public class CardIssuanceService implements CardIssuanceUseCase {
     public IssueWithTicketResponse issue(IssueWithTicketRequest request, UUID performedBy) {
         CreateCardRequest c = request.card();
         Card card = cardUseCase.create(
-                c.cardUid(), c.type(), c.userId(),
+                c.cardUid(), c.userId(),
                 c.supportsMetro(), c.supportsBus(), performedBy
         );
 

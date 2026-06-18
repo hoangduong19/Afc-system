@@ -6,7 +6,6 @@ import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
 import com.metro.afc.card.application.port.out.CardUidGeneratorPort;
 import com.metro.afc.card.domain.model.Card;
 import com.metro.afc.card.domain.model.CardStatusHistory;
-import com.metro.afc.card.domain.model.enums.CardType;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;
@@ -29,7 +28,7 @@ public class CardService implements CardUseCase {
 
     @Override
     @Transactional
-    public Card create(String cardUid, CardType type, UUID userId,
+    public Card create(String cardUid, UUID userId,
                        Boolean supportsMetro, Boolean supportsBus, UUID createdBy) {
         String uid = (cardUid != null && !cardUid.isBlank())
                 ? cardUid.trim().toUpperCase()
@@ -39,7 +38,7 @@ public class CardService implements CardUseCase {
             throw new ConflictException(ErrorCode.CARD_ALREADY_EXISTS);
         }
         return cardRepository.save(
-                Card.create(uid, type, userId, supportsMetro, supportsBus, createdBy)
+                Card.create(uid, userId, supportsMetro, supportsBus, createdBy)
         );
     }
 

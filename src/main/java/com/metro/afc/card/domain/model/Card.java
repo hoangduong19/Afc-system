@@ -63,14 +63,14 @@ public class Card extends AbstractAggregateRoot<Card> {
 
     // ── Factory ──────────────────────────────────────────────────
 
-    public static Card create(String cardUid, CardType type, UUID userId,
+    public static Card create(String cardUid, UUID userId,
                               Boolean supportsMetro, Boolean supportsBus,
                               UUID createdBy) {
         Card card          = new Card();
         card.id            = UUID.randomUUID();
         card.cardUid       = cardUid.trim().toUpperCase();
         card.status        = CardStatus.CREATED;
-        card.type          = type;
+        card.type          = (userId != null) ? CardType.IDENTIFIED : CardType.ANON;
         card.linkedUserId  = userId;
         card.linkedAt      = userId != null ? Instant.now() : null;
         card.supportsMetro = supportsMetro;
@@ -79,7 +79,7 @@ public class Card extends AbstractAggregateRoot<Card> {
                 card.id, null, CardStatus.CREATED, "Card created", createdBy
         ));
 
-        if (type == CardType.IDENTIFIED) {
+        if (card.type == CardType.IDENTIFIED) {
             card.status      = CardStatus.ISSUED;
             card.registerEvent(new CardStatusChangedEvent(
                     card.id, CardStatus.CREATED, CardStatus.ISSUED,

@@ -19,7 +19,7 @@ public class CardFacade {
 
     public CardResponse create(CreateCardRequest request, UUID createdBy) {
         return CardResponse.from(cardUseCase.create(
-                request.cardUid(), request.type(), request.userId(),
+                request.cardUid(), request.userId(),
                 request.supportsMetro(), request.supportsBus(),
                 createdBy
         ));

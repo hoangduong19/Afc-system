@@ -2,13 +2,12 @@ package com.metro.afc.card.application.port.in;
 
 import com.metro.afc.card.domain.model.Card;
 import com.metro.afc.card.domain.model.CardStatusHistory;
-import com.metro.afc.card.domain.model.enums.CardType;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface CardUseCase {
-    Card create(String cardUid, CardType type, UUID userId,
+    Card create(String cardUid, UUID userId,
                 Boolean supportsMetro, Boolean supportsBus, UUID createdBy);
     Card issue(UUID id, UUID stationId, UUID changedBy);
     Card activate(UUID id, UUID changedBy);
