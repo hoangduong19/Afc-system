@@ -6,6 +6,7 @@ import com.metro.afc.card.application.port.out.CardStatusHistoryRepository;
 import com.metro.afc.card.application.port.out.CardUidGeneratorPort;
 import com.metro.afc.card.domain.model.Card;
 import com.metro.afc.card.domain.model.CardStatusHistory;
+import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;
@@ -110,6 +111,18 @@ public class CardService implements CardUseCase {
     public Card findByCardUid(String cardUid) {
         return cardRepository.findByCardUid(cardUid.trim().toUpperCase())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.CARD_NOT_FOUND));
+    }
+
+    @Override
+    public Card findByCardUidForUser(String cardUid, UUID userId) {
+        Card card = cardRepository.findByCardUid(cardUid)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.CARD_NOT_FOUND));
+        if (!userId.equals(card.getLinkedUserId())) {
+            throw new BusinessRuleException(
+                    ErrorCode.CARD_NOT_LINKED, "Card is not linked to this user"
+            );
+        }
+        return card;
     }
 
     @Override

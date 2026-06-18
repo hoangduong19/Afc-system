@@ -53,6 +53,10 @@ public class CardFacade {
         return CardResponse.from(cardUseCase.unlink(id, performedBy));
     }
 
+    public CardResponse getMyCard(String cardUid, UUID userId) {
+        return CardResponse.from(cardUseCase.findByCardUidForUser(cardUid, userId));
+    }
+
     public CardResponse findById(UUID id) {
         return CardResponse.from(cardUseCase.findById(id));
     }
@@ -60,6 +64,7 @@ public class CardFacade {
     public CardResponse findByCardUid(String cardUid) {
         return CardResponse.from(cardUseCase.findByCardUid(cardUid));
     }
+
 
     public CardDetailResponse findDetailById(UUID id) {
         Card card = cardUseCase.findById(id);

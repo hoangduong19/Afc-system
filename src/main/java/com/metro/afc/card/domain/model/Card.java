@@ -79,6 +79,10 @@ public class Card extends AbstractAggregateRoot<Card> {
                 card.id, null, CardStatus.CREATED, "Card created", createdBy
         ));
 
+        if (userId != null) {
+            card.registerEvent(new CardLinkedEvent(card.id, userId, createdBy));
+        }
+
         if (card.type == CardType.IDENTIFIED) {
             card.status      = CardStatus.ISSUED;
             card.registerEvent(new CardStatusChangedEvent(

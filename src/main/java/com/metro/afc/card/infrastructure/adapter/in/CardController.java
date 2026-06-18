@@ -98,6 +98,14 @@ public class CardController {
         );
     }
 
+    @GetMapping("/me/{cardUid}")
+    @PreAuthorize("hasAuthority('PASSENGER')")
+    public ResponseEntity<CardResponse> getMyCard(
+            @PathVariable String cardUid,
+            @RequestParam UUID userId) {
+        return ResponseEntity.ok(cardFacade.getMyCard(cardUid, userId));
+    }
+
     @PostMapping("/{cardId}/link-ticket")
     @PreAuthorize("hasAuthority('CARD_LINK')")
     public ResponseEntity<TicketResponse> linkTicket(

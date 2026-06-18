@@ -16,6 +16,7 @@ public interface CardUseCase {
     Card revoke(UUID id, String reason, UUID changedBy);
     Card findById(UUID id);
     Card findByCardUid(String cardUid);
+    Card findByCardUidForUser(String cardUid, UUID userId);
     List<CardStatusHistory> findStatusHistory(UUID cardId);
     List<Card> findByLinkedUserId(UUID userId);
     List<Card> findAll();
