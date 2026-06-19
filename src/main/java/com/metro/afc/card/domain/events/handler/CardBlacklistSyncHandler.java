@@ -2,6 +2,7 @@ package com.metro.afc.card.domain.events.handler;
 
 import com.metro.afc.blacklist.application.port.out.BlacklistRepository;
 import com.metro.afc.blacklist.domain.Blacklist;
+import com.metro.afc.blacklist.domain.events.BlacklistAddedEvent;
 import com.metro.afc.blacklist.domain.events.BlacklistRemovedEvent;
 import com.metro.afc.card.application.port.out.CardRepository;
 import com.metro.afc.card.domain.events.cardStatus.CardStatusChangedEvent;
@@ -44,6 +45,16 @@ public class CardBlacklistSyncHandler {
                 .filter(card -> card.getStatus() == CardStatus.SUSPENDED)
                 .ifPresent(card -> {
                     card.activate(event.removedBy());
+                    cardRepository.save(card);
+                });
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void on(BlacklistAddedEvent event) {
+        cardRepository.findById(event.cardId())
+                .filter(card -> card.getStatus() == CardStatus.ACTIVE)
+                .ifPresent(card -> {
+                    card.suspend(event.reason(), event.addedBy());
                     cardRepository.save(card);
                 });
     }
