@@ -3,13 +3,14 @@ package com.metro.afc.shared.infrastructure.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
+
 import java.util.List;
 
 @RestControllerAdvice
@@ -32,9 +33,20 @@ public class GlobalExceptionHandler {
                 .map(e -> new ErrorResponse.FieldError(e.getField(), e.getDefaultMessage()))
                 .toList();
 
+        String combinedMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(java.util.stream.Collectors.joining(", "));
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.withFields(ErrorCode.VALIDATION_ERROR, errors));
+                .body(new ErrorResponse(
+                        ErrorCode.VALIDATION_ERROR.name(),
+                        combinedMessage,
+                        java.time.Instant.now(),
+                        errors
+                ));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -64,6 +76,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS));
     }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Database constraint violation: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ErrorCode.INTERNAL_ERROR, "Dữ liệu đã tồn tại hoặc vi phạm ràng buộc dữ liệu hệ thống."));
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
