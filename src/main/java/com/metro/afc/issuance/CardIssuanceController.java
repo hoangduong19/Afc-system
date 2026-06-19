@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +18,6 @@ public class CardIssuanceController {
     private final CardIssuanceUseCase cardIssuanceUseCase;
 
     @PostMapping("/cards")
-    @PreAuthorize("hasAuthority('CARD_MANAGE')")
     public ResponseEntity<IssueWithTicketResponse> issue(
             @Valid @RequestBody IssueWithTicketRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
