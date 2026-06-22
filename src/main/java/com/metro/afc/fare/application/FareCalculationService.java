@@ -107,7 +107,6 @@ public class FareCalculationService implements FareCalculationUseCase {
         List<MultimodalLegResponse> legResponses = new ArrayList<>();
         Money totalFare = Money.of(BigDecimal.ZERO);
 
-        // 1. Tính từng leg
         for (MultimodalLegRequest leg : legs) {
             Station from = stationRepository.findById(leg.fromStationId())
                     .orElseThrow(() -> new NotFoundException(ErrorCode.STATION_NOT_FOUND));
@@ -131,31 +130,11 @@ public class FareCalculationService implements FareCalculationUseCase {
             ));
         }
 
-        // 2. Áp discount 1 lần trên tổng
-        boolean discountApplied  = false;
-        String discountType      = null;
-        BigDecimal discountValue = null;
-        Money finalPrice         = totalFare;
-
-        if (passengerType != null) {
-            Optional<FareDiscount> discount = fareDiscountRepository
-                    .findActiveByPassengerType(passengerType);
-
-            if (discount.isPresent()) {
-                finalPrice      = discount.get().applyTo(totalFare);
-                discountApplied = true;
-                discountType    = discount.get().getDiscountValue().getDiscountType().name();
-                discountValue   = discount.get().getDiscountValue().getValue();
-            }
-        }
-
         return new MultimodalFareResponse(
                 legResponses,
                 totalFare.getAmount(),
-                discountApplied,
-                discountType,
-                discountValue,
-                finalPrice.getAmount()
+                false, null, null,
+                totalFare.getAmount()
         );
     }
 
