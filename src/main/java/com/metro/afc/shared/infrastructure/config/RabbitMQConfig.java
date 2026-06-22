@@ -44,6 +44,11 @@ public class RabbitMQConfig {
     public static final String STATION_SYNC_QUEUE = "station.sync.queue";
     public static final String ROUTE_SYNC_QUEUE   = "route.sync.queue";
 
+    // Operator
+    public static final String OPERATOR_CREATED = "operator.created";
+    public static final String OPERATOR_UPDATED = "operator.updated";
+    public static final String OPERATOR_EVENT_QUEUE = "operator.event.queue";
+
     // Dev Test
     public static final String SYNC_CARD_ALL     = "sync.card.all";
     public static final String SYNC_TICKET_ALL   = "sync.ticket.all";
@@ -131,6 +136,11 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(ROUTE_SYNC_QUEUE).build();
     }
 
+    @Bean
+    public Queue operatorEventQueue() {
+        return QueueBuilder.durable(OPERATOR_EVENT_QUEUE).build();
+    }
+
 
     @Bean
     public Binding cardStatusBinding() {
@@ -185,6 +195,14 @@ public class RabbitMQConfig {
     @Bean public Binding routeSyncBinding() {
         return BindingBuilder.bind(routeSyncQueue())
                 .to(afcExchange()).with(ROUTE_SYNCED);
+    }
+
+    @Bean
+    public Binding operatorEventBinding() {
+        return BindingBuilder
+                .bind(operatorEventQueue())
+                .to(afcExchange())
+                .with("operator.*");
     }
 
     @Bean

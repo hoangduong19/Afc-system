@@ -1,6 +1,8 @@
 package com.metro.afc.operator.domain.model;
 
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
+import com.metro.afc.operator.domain.event.OperatorCreatedEvent;
+import com.metro.afc.operator.domain.event.OperatorUpdatedEvent;
 import com.metro.afc.operator.domain.model.enums.OperatorStatus;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
@@ -8,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,7 +19,7 @@ import java.util.UUID;
 @Table(name = "operators")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Operator {
+public class Operator extends AbstractAggregateRoot<Operator> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -48,6 +51,7 @@ public class Operator {
         operator.name   = name.trim();
         operator.status = OperatorStatus.ACTIVE;
         operator.mode   = mode;
+        operator.registerEvent(new OperatorCreatedEvent(operator));
         return operator;
     }
 
@@ -55,6 +59,7 @@ public class Operator {
 
     public void update(String name) {
         this.name = name.trim();
+        registerEvent(new OperatorUpdatedEvent(this));
     }
 
     public void deactivate() {
@@ -65,6 +70,7 @@ public class Operator {
             );
         }
         this.status = OperatorStatus.INACTIVE;
+        registerEvent(new OperatorUpdatedEvent(this));
     }
 
     public void activate() {
@@ -75,6 +81,7 @@ public class Operator {
             );
         }
         this.status = OperatorStatus.ACTIVE;
+        registerEvent(new OperatorUpdatedEvent(this));
     }
 
     public boolean isActive() {
