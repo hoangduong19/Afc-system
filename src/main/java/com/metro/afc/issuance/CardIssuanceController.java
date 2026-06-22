@@ -1,6 +1,5 @@
 package com.metro.afc.issuance;
 
-import com.metro.afc.identity.infrastructure.config.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,7 @@ public class CardIssuanceController {
             @Valid @RequestBody IssueWithTicketRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(cardIssuanceUseCase.issue(
-                        request, SecurityUtils.getCurrentUserId()
+                        request, request.card().userId()
                 ));
     }
 }
