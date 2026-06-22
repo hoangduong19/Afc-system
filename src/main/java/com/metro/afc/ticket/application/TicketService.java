@@ -47,8 +47,7 @@ public class TicketService implements TicketUseCase {
     @Override
     @Transactional
     public Ticket createSingleTrip(UUID userId, UUID fromStationId,
-                                   UUID toStationId, FareMode mode,
-                                   PassengerType passengerType) {
+                                   UUID toStationId, FareMode mode) {
         Station from = stationRepository.findById(fromStationId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.STATION_NOT_FOUND));
         Station to = stationRepository.findById(toStationId)
@@ -68,15 +67,6 @@ public class TicketService implements TicketUseCase {
 
         UUID discountId  = null;
         Money finalPrice = calculatedFare;
-
-        if (passengerType != null) {
-            Optional<FareDiscount> discount = fareDiscountRepository
-                    .findActiveByPassengerType(passengerType);
-            if (discount.isPresent()) {
-                finalPrice = discount.get().applyTo(calculatedFare);
-                discountId = discount.get().getId();
-            }
-        }
 
         return ticketRepository.save(Ticket.createSingleTrip(
                 userId, fromStationId, toStationId,
@@ -101,7 +91,7 @@ public class TicketService implements TicketUseCase {
         Money price = fareRule.lookupPassPrice(durationType, durationMonths, scope);
 
         UUID discountId = null;
-        if (passengerType != null) {
+        if (passengerType != null && durationType == PassDurationType.MONTHLY) {
             Optional<FareDiscount> discount = fareDiscountRepository
                     .findActiveByPassengerType(passengerType);
             if (discount.isPresent()) {

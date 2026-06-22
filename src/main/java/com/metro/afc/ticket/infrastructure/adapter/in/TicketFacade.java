@@ -25,7 +25,7 @@ public class TicketFacade {
     public TicketResponse createSingleTrip(CreateSingleTripTicketRequest req) {
         Ticket ticket = ticketUseCase.createSingleTrip(
                 req.userId(), req.fromStationId(), req.toStationId(),
-                req.mode(), req.passengerType()
+                req.mode()
         );
         return TicketResponse.from(ticket,
                 getStationCode(req.fromStationId()),

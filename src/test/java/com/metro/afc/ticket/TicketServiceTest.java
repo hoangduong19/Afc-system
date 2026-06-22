@@ -180,10 +180,10 @@ class TicketServiceTest {
     class CreateSingleTrip {
 
         @Test
-        @DisplayName("METRO 12.5 km, no discount → 18625, SINGLE_TRIP, ACTIVE")
-        void noDiscount_correctPriceAndStatus() {
+        @DisplayName("METRO 12.5 km → 18625, SINGLE_TRIP, ACTIVE")
+        void metro_correctPriceAndStatus() {
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, null);
+                    userId, fromId, toId, FareMode.METRO);
 
             assertThat(ticket.getType()).isEqualTo(TicketType.SINGLE_TRIP);
             assertThat(ticket.getStatus()).isEqualTo(TicketStatus.ACTIVE);
@@ -191,46 +191,10 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("METRO 12.5 km, STUDENT 50% → 9312.50")
-        void studentDiscount_halfPrice() {
-            stubStudentDiscount();
-
+        @DisplayName("BUS 12.5 km → 8625")
+        void bus_correctPrice() {
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT);
-
-            assertMoney("9312.50", ticket.getPrice());
-        }
-
-        @Test
-        @DisplayName("METRO 12.5 km, SENIOR 100% → 0")
-        void seniorDiscount_free() {
-            FareDiscount discount = FareDiscount.create(
-                    PassengerType.SENIOR, DiscountType.PERCENT,
-                    new BigDecimal("100"), VALID_FROM, null, ACTOR
-            );
-            when(fareDiscountRepository.findActiveByPassengerType(PassengerType.SENIOR))
-                    .thenReturn(Optional.of(discount));
-
-            Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.SENIOR);
-
-            assertMoney("0", ticket.getPrice());
-        }
-
-        @Test
-        @DisplayName("passengerType có nhưng không có discount active → full price")
-        void noActiveDiscount_fullPrice() {
-            Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT);
-
-            assertMoney("18625", ticket.getPrice());
-        }
-
-        @Test
-        @DisplayName("BUS 12.5 km, no discount → 8625")
-        void bus_noDiscount_correctPrice() {
-            Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.BUS, null);
+                    userId, fromId, toId, FareMode.BUS);
 
             assertMoney("8625", ticket.getPrice());
         }
@@ -241,7 +205,7 @@ class TicketServiceTest {
             when(stationRepository.findById(fromId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO, null))
+                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO))
                     .isInstanceOf(NotFoundException.class);
         }
 
@@ -251,7 +215,7 @@ class TicketServiceTest {
             when(stationRepository.findById(toId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO, null))
+                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO))
                     .isInstanceOf(NotFoundException.class);
         }
 
@@ -259,7 +223,7 @@ class TicketServiceTest {
         @DisplayName("same station → BusinessRuleException")
         void sameStation_throws() {
             assertThatThrownBy(() ->
-                    ticketService.createSingleTrip(userId, fromId, fromId, FareMode.METRO, null))
+                    ticketService.createSingleTrip(userId, fromId, fromId, FareMode.METRO))
                     .isInstanceOf(BusinessRuleException.class);
         }
 
@@ -269,7 +233,7 @@ class TicketServiceTest {
             when(fareRuleRepository.findActiveByMode(FareMode.METRO)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO, null))
+                    ticketService.createSingleTrip(userId, fromId, toId, FareMode.METRO))
                     .isInstanceOf(NotFoundException.class);
         }
     }
@@ -305,20 +269,24 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("METRO DAILY, no discount → 40000")
+        @DisplayName("METRO DAILY → 40000, không apply discount dù có passengerType")
         void metro_daily_noDiscount() {
+            stubStudentDiscount();
+
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null, null,
+                    userId, FareMode.METRO, null, null, PassengerType.STUDENT,
                     TODAY, PassDurationType.DAILY, null);
 
             assertMoney("40000", ticket.getPrice());
         }
 
         @Test
-        @DisplayName("METRO WEEKLY, no discount → 160000")
+        @DisplayName("METRO WEEKLY → 160000, không apply discount dù có passengerType")
         void metro_weekly_noDiscount() {
+            stubStudentDiscount();
+
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null, null,
+                    userId, FareMode.METRO, null, null, PassengerType.STUDENT,
                     TODAY, PassDurationType.WEEKLY, null);
 
             assertMoney("160000", ticket.getPrice());

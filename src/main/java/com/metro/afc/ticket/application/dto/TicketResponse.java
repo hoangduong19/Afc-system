@@ -12,6 +12,7 @@ public record TicketResponse(
         String type,
         String mode,
         String scope,
+        UUID routeId,
         String status,
         UUID cardId,
         UUID userId,
@@ -29,7 +30,9 @@ public record TicketResponse(
                                       String toCode) {
         return new TicketResponse(
                 t.getId(), t.getType().name(),
-                t.getMode().name(), t.getScope() != null ? t.getScope().name() : null,
+                t.getMode().name(),
+                t.getScope() != null ? t.getScope().name() : null,
+                t.getRouteId(),      // thêm
                 t.getStatus().name(),
                 t.getCardId(), t.getUserId(),
                 fromCode, toCode,

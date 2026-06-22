@@ -14,8 +14,7 @@ import java.util.UUID;
 
 public interface TicketUseCase {
     Ticket createSingleTrip(UUID userId, UUID fromStationId,
-                            UUID toStationId, FareMode mode,
-                            PassengerType passengerType);
+                            UUID toStationId, FareMode mode);
 
     Ticket createPass(UUID userId, FareMode mode, PassScope passScope, UUID routeId,
                              PassengerType passengerType,
