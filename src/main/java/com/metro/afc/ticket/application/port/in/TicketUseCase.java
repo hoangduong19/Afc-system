@@ -17,7 +17,7 @@ public interface TicketUseCase {
                             UUID toStationId, FareMode mode,
                             PassengerType passengerType);
 
-    Ticket createPass(UUID userId, FareMode mode, PassScope passScope,
+    Ticket createPass(UUID userId, FareMode mode, PassScope passScope, UUID routeId,
                              PassengerType passengerType,
                              LocalDate validFrom, PassDurationType durationType,
                              Integer durationMonths);

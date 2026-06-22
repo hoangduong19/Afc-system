@@ -19,6 +19,8 @@ public record CreatePassRequest(
 
         PassScope scope,
 
+        UUID routeId,
+
         PassengerType passengerType,
 
         @NotNull(message = "Valid from is required")
@@ -35,5 +37,9 @@ public record CreatePassRequest(
                         throw new IllegalArgumentException("durationMonths is required for MONTHLY pass");
                 if (durationType != PassDurationType.MONTHLY && durationMonths != null)
                         throw new IllegalArgumentException("durationMonths only applies to MONTHLY pass");
+                if (scope == PassScope.SINGLE_ROUTE && routeId == null)
+                        throw new IllegalArgumentException("routeId is required for SINGLE_ROUTE pass");
+                if (scope != PassScope.SINGLE_ROUTE && routeId != null)
+                        throw new IllegalArgumentException("routeId only applies to SINGLE_ROUTE pass");
         }
 }

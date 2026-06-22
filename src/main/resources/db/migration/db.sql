@@ -688,3 +688,4 @@ CREATE TABLE fare_pass_prices (
 
 ALTER TABLE settlements
     ADD COLUMN formula_code VARCHAR(30);
+ALTER TABLE tickets ADD COLUMN route_id UUID REFERENCES routes(id);

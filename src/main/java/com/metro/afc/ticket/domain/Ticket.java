@@ -65,6 +65,9 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
     @Column(length = 30)
     private PassScope scope;
 
+    @Column(name = "route_id", columnDefinition = "uuid")
+    private UUID routeId;
+
     @Column(name = "valid_from", nullable = false)
     private LocalDate validFrom;
 
@@ -111,13 +114,14 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
             UUID userId,
             FareMode mode,
             PassScope scope,
+            UUID routeId,
             Money price,
             UUID fareRuleId,
             UUID discountId,
             LocalDate validFrom,
             int durationDays
     ) {
-        validatePassScope(mode, scope);
+        validatePassScope(mode, scope, routeId);
 
         if (validFrom.isBefore(LocalDate.now()))
             throw new BusinessRuleException(ErrorCode.TICKET_INVALID_VALID_FROM,
@@ -135,6 +139,7 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
         t.type = TicketType.MONTHLY_PASS;
         t.mode = mode;
         t.scope = scope;
+        t.routeId = routeId;
         t.price = price;
         t.fareRuleId = fareRuleId;
         t.discountId = discountId;
@@ -187,7 +192,7 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
         this.registerEvent(new TicketUnlinkedFromCardEvent(this.id, previousCardId));
     }
 
-    private static void validatePassScope(FareMode mode, PassScope scope) {
+    private static void validatePassScope(FareMode mode, PassScope scope, UUID routeId) {
         if (mode == FareMode.BUS && scope == null) {
             throw new BusinessRuleException(
                     ErrorCode.INVALID_PASS_SCOPE,
@@ -201,6 +206,14 @@ public class Ticket extends AbstractAggregateRoot<Ticket> {
                     "Only BUS monthly pass can have pass scope"
             );
         }
+
+        if (scope == PassScope.SINGLE_ROUTE && routeId == null)
+            throw new BusinessRuleException(ErrorCode.INVALID_PASS_SCOPE,
+                    "SINGLE_ROUTE pass requires routeId");
+
+        if (scope != PassScope.SINGLE_ROUTE && routeId != null)
+            throw new BusinessRuleException(ErrorCode.INVALID_PASS_SCOPE,
+                    "routeId only applies to SINGLE_ROUTE pass");
     }
 
     @PrePersist

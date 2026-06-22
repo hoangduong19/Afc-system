@@ -23,6 +23,7 @@ class TicketTest {
     private final UUID fromId     = UUID.randomUUID();
     private final UUID toId       = UUID.randomUUID();
     private final UUID fareRuleId = UUID.randomUUID();
+    private final UUID routeId    = UUID.randomUUID();
     private final Money price     = Money.of(new BigDecimal("18625"));
 
     // ── createSingleTrip ─────────────────────────────────────────
@@ -56,48 +57,52 @@ class TicketTest {
     @DisplayName("createMonthlyPass METRO sets status ACTIVE and scope null")
     void createMonthlyPass_metro_setsActiveStatusAndNullScope() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
         assertEquals(TicketStatus.ACTIVE, ticket.getStatus());
         assertEquals(TicketType.MONTHLY_PASS, ticket.getType());
         assertNull(ticket.getScope());
+        assertNull(ticket.getRouteId());
     }
 
     @Test
-    @DisplayName("createMonthlyPass BUS SINGLE_ROUTE sets scope")
+    @DisplayName("createMonthlyPass BUS SINGLE_ROUTE sets scope and routeId")
     void createMonthlyPass_busSingleRoute_setsScope() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.BUS, PassScope.SINGLE_ROUTE, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.BUS, PassScope.SINGLE_ROUTE, routeId,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
         assertEquals(TicketStatus.ACTIVE, ticket.getStatus());
         assertEquals(TicketType.MONTHLY_PASS, ticket.getType());
         assertEquals(PassScope.SINGLE_ROUTE, ticket.getScope());
+        assertEquals(routeId, ticket.getRouteId());
     }
 
     @Test
-    @DisplayName("createMonthlyPass BUS MULTI_ROUTE sets scope")
+    @DisplayName("createMonthlyPass BUS MULTI_ROUTE sets scope, routeId null")
     void createMonthlyPass_busMultiRoute_setsScope() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.BUS, PassScope.MULTI_ROUTE, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.BUS, PassScope.MULTI_ROUTE, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
         assertEquals(TicketStatus.ACTIVE, ticket.getStatus());
         assertEquals(TicketType.MONTHLY_PASS, ticket.getType());
         assertEquals(PassScope.MULTI_ROUTE, ticket.getScope());
+        assertNull(ticket.getRouteId());
     }
 
     @Test
     @DisplayName("createMonthlyPass ANY sets scope null")
     void createMonthlyPass_any_setsNullScope() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.ANY, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.ANY, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
         assertEquals(TicketStatus.ACTIVE, ticket.getStatus());
         assertEquals(TicketType.MONTHLY_PASS, ticket.getType());
         assertNull(ticket.getScope());
+        assertNull(ticket.getRouteId());
     }
 
     @Test
@@ -106,8 +111,8 @@ class TicketTest {
         LocalDate validFrom = LocalDate.of(2026, 7, 1);
 
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, validFrom, 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, validFrom, 30);
 
         assertEquals(LocalDate.of(2026, 7, 31), ticket.getValidTo());
     }
@@ -119,8 +124,8 @@ class TicketTest {
     void createMonthlyPass_busWithoutScope_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.BUS, null, price, fareRuleId,
-                        null, LocalDate.now(), 30));
+                        userId, FareMode.BUS, null, null,
+                        price, fareRuleId, null, LocalDate.now(), 30));
     }
 
     @Test
@@ -128,8 +133,8 @@ class TicketTest {
     void createMonthlyPass_metroWithScope_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.METRO, PassScope.SINGLE_ROUTE, price, fareRuleId,
-                        null, LocalDate.now(), 30));
+                        userId, FareMode.METRO, PassScope.SINGLE_ROUTE, null,
+                        price, fareRuleId, null, LocalDate.now(), 30));
     }
 
     @Test
@@ -137,8 +142,26 @@ class TicketTest {
     void createMonthlyPass_anyWithScope_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.ANY, PassScope.MULTI_ROUTE, price, fareRuleId,
-                        null, LocalDate.now(), 30));
+                        userId, FareMode.ANY, PassScope.MULTI_ROUTE, null,
+                        price, fareRuleId, null, LocalDate.now(), 30));
+    }
+
+    @Test
+    @DisplayName("createMonthlyPass BUS SINGLE_ROUTE without routeId throws exception")
+    void createMonthlyPass_busSingleRoute_nullRouteId_throwsException() {
+        assertThrows(BusinessRuleException.class, () ->
+                Ticket.createMonthlyPass(
+                        userId, FareMode.BUS, PassScope.SINGLE_ROUTE, null,
+                        price, fareRuleId, null, LocalDate.now(), 30));
+    }
+
+    @Test
+    @DisplayName("createMonthlyPass BUS MULTI_ROUTE with routeId throws exception")
+    void createMonthlyPass_busMultiRoute_nonNullRouteId_throwsException() {
+        assertThrows(BusinessRuleException.class, () ->
+                Ticket.createMonthlyPass(
+                        userId, FareMode.BUS, PassScope.MULTI_ROUTE, routeId,
+                        price, fareRuleId, null, LocalDate.now(), 30));
     }
 
     // ── createMonthlyPass — validFrom / durationDays validation ──
@@ -148,8 +171,8 @@ class TicketTest {
     void createMonthlyPass_validFromInPast_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.METRO, null, price, fareRuleId,
-                        null, LocalDate.now().minusDays(1), 30));
+                        userId, FareMode.METRO, null, null,
+                        price, fareRuleId, null, LocalDate.now().minusDays(1), 30));
     }
 
     @Test
@@ -157,8 +180,8 @@ class TicketTest {
     void createMonthlyPass_zeroDuration_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.METRO, null, price, fareRuleId,
-                        null, LocalDate.now(), 0));
+                        userId, FareMode.METRO, null, null,
+                        price, fareRuleId, null, LocalDate.now(), 0));
     }
 
     @Test
@@ -166,8 +189,8 @@ class TicketTest {
     void createMonthlyPass_tooLongDuration_throwsException() {
         assertThrows(BusinessRuleException.class, () ->
                 Ticket.createMonthlyPass(
-                        userId, FareMode.METRO, null, price, fareRuleId,
-                        null, LocalDate.now(), 366));
+                        userId, FareMode.METRO, null, null,
+                        price, fareRuleId, null, LocalDate.now(), 366));
     }
 
     // ── markUsed ─────────────────────────────────────────────────
@@ -200,8 +223,8 @@ class TicketTest {
     @DisplayName("linkToCard sets cardId on MONTHLY_PASS")
     void linkToCard_monthlyPass_setsCardId() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
         UUID cardId = UUID.randomUUID();
 
         ticket.linkToCard(cardId);
@@ -224,8 +247,8 @@ class TicketTest {
     @DisplayName("linkToCard when already linked throws exception")
     void linkToCard_alreadyLinked_throwsException() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
         ticket.linkToCard(UUID.randomUUID());
 
         assertThrows(BusinessRuleException.class,
@@ -233,18 +256,12 @@ class TicketTest {
     }
 
     @Test
-    @DisplayName("linkToCard on expired ticket throws exception")
+    @DisplayName("linkToCard on valid ticket succeeds")
     void linkToCard_expiredTicket_throwsException() {
-        // Tạo ticket với validFrom trong tương lai để bypass validation,
-        // sau đó simulate expired bằng cách dùng ticket đã hết hạn
-        // → không thể tạo expired ticket qua factory (validFrom past bị block)
-        // → test qua reflection hoặc kiểm tra logic gián tiếp
-        // Thay vào đó, verify rằng ticket còn hạn thì link được
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
-        // validTo = today + 30 → chưa hết hạn → link được
         assertDoesNotThrow(() -> ticket.linkToCard(UUID.randomUUID()));
     }
 
@@ -254,8 +271,8 @@ class TicketTest {
     @DisplayName("unlinkFromCard clears cardId")
     void unlinkFromCard_linkedTicket_clearsCardId() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
         ticket.linkToCard(UUID.randomUUID());
 
         ticket.unlinkFromCard();
@@ -267,8 +284,8 @@ class TicketTest {
     @DisplayName("unlinkFromCard when not linked throws exception")
     void unlinkFromCard_notLinked_throwsException() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null, price, fareRuleId,
-                null, LocalDate.now(), 30);
+                userId, FareMode.METRO, null, null,
+                price, fareRuleId, null, LocalDate.now(), 30);
 
         assertThrows(BusinessRuleException.class, ticket::unlinkFromCard);
     }

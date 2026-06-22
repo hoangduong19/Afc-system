@@ -89,6 +89,7 @@ public class TicketService implements TicketUseCase {
     @Override
     @Transactional
     public Ticket createPass(UUID userId, FareMode mode, PassScope scope,
+                                    UUID routeId,
                                     PassengerType passengerType,
                                     LocalDate validFrom,
                                     PassDurationType durationType,
@@ -110,7 +111,7 @@ public class TicketService implements TicketUseCase {
         }
 
         return ticketRepository.save(Ticket.createMonthlyPass(
-                userId, mode, scope, price, fareRule.getId(),
+                userId, mode, scope, routeId, price, fareRule.getId(),
                 discountId, validFrom, toDays(durationType, durationMonths)
         ));
     }

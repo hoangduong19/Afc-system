@@ -45,26 +45,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Pass price fixtures:
- *
- * METRO  DAILY=40_000  WEEKLY=160_000  MONTHLY 1=200_000  MONTHLY 3=590_000
- * BUS    DAILY=30_000  WEEKLY=120_000
- *        MONTHLY 1 SINGLE=140_000   MONTHLY 1 MULTI=280_000
- *        MONTHLY 2 SINGLE=270_000   MONTHLY 2 MULTI=550_000
- * ANY    DAILY=50_000  WEEKLY=200_000  MONTHLY 1=500_000
- *
- * STUDENT 50% discount halves all prices.
- *
- * Single-trip (METRO, 12.5 km): 8000 + 12.5 × 850 = 18625
- * Single-trip (BUS,   12.5 km): 3000 + 12.5 × 450 = 8625
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("TicketService")
 class TicketServiceTest {
-
-    // ── Mocks ─────────────────────────────────────────────────────
 
     @Mock private TicketRepository       ticketRepository;
     @Mock private CardRepository         cardRepository;
@@ -75,8 +59,6 @@ class TicketServiceTest {
     @InjectMocks
     private TicketService ticketService;
 
-    // ── Shared fixtures ───────────────────────────────────────────
-
     private static final UUID      ACTOR      = UUID.randomUUID();
     private static final LocalDate VALID_FROM = LocalDate.of(2025, 7, 1);
     private static final LocalDate TODAY      = LocalDate.now();
@@ -85,6 +67,7 @@ class TicketServiceTest {
     private UUID    cardId;
     private UUID    fromId;
     private UUID    toId;
+    private UUID    routeId;
     private Card    activeCard;
     private Station fromStation;
     private Station toStation;
@@ -95,17 +78,16 @@ class TicketServiceTest {
 
     @BeforeEach
     void setUp() {
-        userId = UUID.randomUUID();
-        cardId = UUID.randomUUID();
-        fromId = UUID.randomUUID();
-        toId   = UUID.randomUUID();
+        userId  = UUID.randomUUID();
+        cardId  = UUID.randomUUID();
+        fromId  = UUID.randomUUID();
+        toId    = UUID.randomUUID();
+        routeId = UUID.randomUUID();
 
-        // ── Card ──────────────────────────────────────────────────
         activeCard = mock(Card.class);
         when(activeCard.getId()).thenReturn(cardId);
         when(activeCard.getStatus()).thenReturn(CardStatus.ACTIVE);
 
-        // ── Stations ──────────────────────────────────────────────
         fromStation = mock(Station.class);
         when(fromStation.getId()).thenReturn(fromId);
         when(fromStation.getCode()).thenReturn("HN_2A_01");
@@ -116,7 +98,6 @@ class TicketServiceTest {
         when(toStation.getCode()).thenReturn("HN_2A_12");
         when(toStation.getKmMarker()).thenReturn(new BigDecimal("12.500"));
 
-        // ── Fare rules ────────────────────────────────────────────
         metroFareRule = FareRule.create(
                 "HN_METRO_STANDARD", FareMode.METRO,
                 new BigDecimal("8000"), new BigDecimal("850"),
@@ -157,7 +138,6 @@ class TicketServiceTest {
                 VALID_FROM, null, ACTOR
         );
 
-        // ── Default stubs ─────────────────────────────────────────
         when(stationRepository.findById(fromId)).thenReturn(Optional.of(fromStation));
         when(stationRepository.findById(toId)).thenReturn(Optional.of(toStation));
         when(cardRepository.findById(cardId)).thenReturn(Optional.of(activeCard));
@@ -167,8 +147,6 @@ class TicketServiceTest {
         when(fareDiscountRepository.findActiveByPassengerType(any())).thenReturn(Optional.empty());
         when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
-
-    // ── Helpers ───────────────────────────────────────────────────
 
     private void stubStudentDiscount() {
         FareDiscount discount = FareDiscount.create(
@@ -186,7 +164,7 @@ class TicketServiceTest {
 
     private Ticket buildLinkedMonthlyPass() {
         Ticket ticket = Ticket.createMonthlyPass(
-                userId, FareMode.METRO, null,
+                userId, FareMode.METRO, null, null,
                 Money.of(new BigDecimal("200000")),
                 metroFareRule.getId(), null,
                 TODAY, 30
@@ -205,8 +183,7 @@ class TicketServiceTest {
         @DisplayName("METRO 12.5 km, no discount → 18625, SINGLE_TRIP, ACTIVE")
         void noDiscount_correctPriceAndStatus() {
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, null
-            );
+                    userId, fromId, toId, FareMode.METRO, null);
 
             assertThat(ticket.getType()).isEqualTo(TicketType.SINGLE_TRIP);
             assertThat(ticket.getStatus()).isEqualTo(TicketStatus.ACTIVE);
@@ -219,8 +196,7 @@ class TicketServiceTest {
             stubStudentDiscount();
 
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT
-            );
+                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT);
 
             assertMoney("9312.50", ticket.getPrice());
         }
@@ -236,8 +212,7 @@ class TicketServiceTest {
                     .thenReturn(Optional.of(discount));
 
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.SENIOR
-            );
+                    userId, fromId, toId, FareMode.METRO, PassengerType.SENIOR);
 
             assertMoney("0", ticket.getPrice());
         }
@@ -246,8 +221,7 @@ class TicketServiceTest {
         @DisplayName("passengerType có nhưng không có discount active → full price")
         void noActiveDiscount_fullPrice() {
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT
-            );
+                    userId, fromId, toId, FareMode.METRO, PassengerType.STUDENT);
 
             assertMoney("18625", ticket.getPrice());
         }
@@ -256,8 +230,7 @@ class TicketServiceTest {
         @DisplayName("BUS 12.5 km, no discount → 8625")
         void bus_noDiscount_correctPrice() {
             Ticket ticket = ticketService.createSingleTrip(
-                    userId, fromId, toId, FareMode.BUS, null
-            );
+                    userId, fromId, toId, FareMode.BUS, null);
 
             assertMoney("8625", ticket.getPrice());
         }
@@ -308,16 +281,16 @@ class TicketServiceTest {
     class CreatePass {
 
         @Test
-        @DisplayName("METRO MONTHLY 1 tháng, no discount → 200000, MONTHLY_PASS, ACTIVE, scope null")
+        @DisplayName("METRO MONTHLY 1 tháng, no discount → 200000")
         void metro_monthly1_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.METRO, null, null, null,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertThat(ticket.getType()).isEqualTo(TicketType.MONTHLY_PASS);
             assertThat(ticket.getStatus()).isEqualTo(TicketStatus.ACTIVE);
             assertThat(ticket.getScope()).isNull();
+            assertThat(ticket.getRouteId()).isNull();
             assertMoney("200000", ticket.getPrice());
         }
 
@@ -325,9 +298,8 @@ class TicketServiceTest {
         @DisplayName("METRO MONTHLY 3 tháng, no discount → 590000")
         void metro_monthly3_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null,
-                    TODAY, PassDurationType.MONTHLY, 3
-            );
+                    userId, FareMode.METRO, null, null, null,
+                    TODAY, PassDurationType.MONTHLY, 3);
 
             assertMoney("590000", ticket.getPrice());
         }
@@ -336,9 +308,8 @@ class TicketServiceTest {
         @DisplayName("METRO DAILY, no discount → 40000")
         void metro_daily_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null,
-                    TODAY, PassDurationType.DAILY, null
-            );
+                    userId, FareMode.METRO, null, null, null,
+                    TODAY, PassDurationType.DAILY, null);
 
             assertMoney("40000", ticket.getPrice());
         }
@@ -347,9 +318,8 @@ class TicketServiceTest {
         @DisplayName("METRO WEEKLY, no discount → 160000")
         void metro_weekly_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, null,
-                    TODAY, PassDurationType.WEEKLY, null
-            );
+                    userId, FareMode.METRO, null, null, null,
+                    TODAY, PassDurationType.WEEKLY, null);
 
             assertMoney("160000", ticket.getPrice());
         }
@@ -360,9 +330,8 @@ class TicketServiceTest {
             stubStudentDiscount();
 
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.METRO, null, PassengerType.STUDENT,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.METRO, null, null, PassengerType.STUDENT,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertMoney("100000", ticket.getPrice());
         }
@@ -371,11 +340,11 @@ class TicketServiceTest {
         @DisplayName("BUS SINGLE_ROUTE MONTHLY 1 tháng, no discount → 140000")
         void busSingleRoute_monthly1_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, null,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, routeId, null,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertThat(ticket.getScope()).isEqualTo(PassScope.SINGLE_ROUTE);
+            assertThat(ticket.getRouteId()).isEqualTo(routeId);
             assertMoney("140000", ticket.getPrice());
         }
 
@@ -383,11 +352,11 @@ class TicketServiceTest {
         @DisplayName("BUS MULTI_ROUTE MONTHLY 1 tháng, no discount → 280000")
         void busMultiRoute_monthly1_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.BUS, PassScope.MULTI_ROUTE, null,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.BUS, PassScope.MULTI_ROUTE, null, null,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertThat(ticket.getScope()).isEqualTo(PassScope.MULTI_ROUTE);
+            assertThat(ticket.getRouteId()).isNull();
             assertMoney("280000", ticket.getPrice());
         }
 
@@ -395,9 +364,8 @@ class TicketServiceTest {
         @DisplayName("BUS SINGLE_ROUTE MONTHLY 2 tháng, no discount → 270000")
         void busSingleRoute_monthly2_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, null,
-                    TODAY, PassDurationType.MONTHLY, 2
-            );
+                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, routeId, null,
+                    TODAY, PassDurationType.MONTHLY, 2);
 
             assertMoney("270000", ticket.getPrice());
         }
@@ -408,9 +376,8 @@ class TicketServiceTest {
             stubStudentDiscount();
 
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, PassengerType.STUDENT,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.BUS, PassScope.SINGLE_ROUTE, routeId, PassengerType.STUDENT,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertMoney("70000", ticket.getPrice());
         }
@@ -421,9 +388,8 @@ class TicketServiceTest {
             stubStudentDiscount();
 
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.BUS, PassScope.MULTI_ROUTE, PassengerType.STUDENT,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.BUS, PassScope.MULTI_ROUTE, null, PassengerType.STUDENT,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertMoney("140000", ticket.getPrice());
         }
@@ -432,9 +398,8 @@ class TicketServiceTest {
         @DisplayName("ANY MONTHLY 1 tháng, no discount → 500000")
         void any_monthly1_noDiscount() {
             Ticket ticket = ticketService.createPass(
-                    userId, FareMode.ANY, null, null,
-                    TODAY, PassDurationType.MONTHLY, 1
-            );
+                    userId, FareMode.ANY, null, null, null,
+                    TODAY, PassDurationType.MONTHLY, 1);
 
             assertThat(ticket.getScope()).isNull();
             assertMoney("500000", ticket.getPrice());
@@ -446,25 +411,34 @@ class TicketServiceTest {
             when(fareRuleRepository.findActiveByMode(FareMode.METRO)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    ticketService.createPass(userId, FareMode.METRO, null, null,
+                    ticketService.createPass(userId, FareMode.METRO, null, null, null,
                             TODAY, PassDurationType.MONTHLY, 1))
                     .isInstanceOf(NotFoundException.class);
         }
 
         @Test
-        @DisplayName("BUS không có scope → BusinessRuleException (key không tồn tại)")
+        @DisplayName("BUS không có scope → BusinessRuleException")
         void busWithoutScope_throws() {
             assertThatThrownBy(() ->
-                    ticketService.createPass(userId, FareMode.BUS, null, null,
+                    ticketService.createPass(userId, FareMode.BUS, null, null, null,
                             TODAY, PassDurationType.MONTHLY, 1))
                     .isInstanceOf(BusinessRuleException.class);
         }
 
         @Test
-        @DisplayName("METRO có scope → BusinessRuleException (key không tồn tại)")
+        @DisplayName("METRO có scope → BusinessRuleException")
         void metroWithScope_throws() {
             assertThatThrownBy(() ->
-                    ticketService.createPass(userId, FareMode.METRO, PassScope.SINGLE_ROUTE, null,
+                    ticketService.createPass(userId, FareMode.METRO, PassScope.SINGLE_ROUTE, null, null,
+                            TODAY, PassDurationType.MONTHLY, 1))
+                    .isInstanceOf(BusinessRuleException.class);
+        }
+
+        @Test
+        @DisplayName("BUS SINGLE_ROUTE không có routeId → BusinessRuleException")
+        void busSingleRoute_nullRouteId_throws() {
+            assertThatThrownBy(() ->
+                    ticketService.createPass(userId, FareMode.BUS, PassScope.SINGLE_ROUTE, null, null,
                             TODAY, PassDurationType.MONTHLY, 1))
                     .isInstanceOf(BusinessRuleException.class);
         }
@@ -472,9 +446,8 @@ class TicketServiceTest {
         @Test
         @DisplayName("duration không có trong bảng giá → BusinessRuleException")
         void missingDuration_throws() {
-            // metroRule không có MONTHLY 6
             assertThatThrownBy(() ->
-                    ticketService.createPass(userId, FareMode.METRO, null, null,
+                    ticketService.createPass(userId, FareMode.METRO, null, null, null,
                             TODAY, PassDurationType.MONTHLY, 6))
                     .isInstanceOf(BusinessRuleException.class);
         }
@@ -491,7 +464,7 @@ class TicketServiceTest {
         @BeforeEach
         void setUpTicket() {
             unlinkedTicket = Ticket.createMonthlyPass(
-                    userId, FareMode.METRO, null,
+                    userId, FareMode.METRO, null, null,
                     Money.of(new BigDecimal("200000")),
                     metroFareRule.getId(), null,
                     TODAY, 30

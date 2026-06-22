@@ -3,7 +3,6 @@ package com.metro.afc.issuance;
 import com.metro.afc.card.application.dto.card.CreateCardRequest;
 import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.card.domain.model.Card;
-import com.metro.afc.card.domain.model.enums.CardType;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.fare.domain.model.enums.fareRule.PassDurationType;
 import com.metro.afc.shared.domain.valueobject.Money;
@@ -30,23 +29,22 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CardIssuanceServiceTest {
 
-    @Mock
-    private CardUseCase cardUseCase;
+    @Mock private CardUseCase   cardUseCase;
     @Mock private TicketUseCase ticketUseCase;
 
     @InjectMocks
     private CardIssuanceService cardIssuanceService;
 
-    private final UUID ADMIN_ID  = UUID.randomUUID();
-    private final UUID USER_ID   = UUID.randomUUID();
+    private final UUID ADMIN_ID = UUID.randomUUID();
+    private final UUID USER_ID  = UUID.randomUUID();
 
     private Card mockCard() {
-        return Card.create("VMS-TEST", CardType.IDENTIFIED, USER_ID, true, false, ADMIN_ID);
+        return Card.create("VMS-TEST", USER_ID, true, false, ADMIN_ID);
     }
 
     private Ticket mockTicket(UUID cardId) {
         Ticket t = Ticket.createMonthlyPass(
-                USER_ID, FareMode.METRO, null,
+                USER_ID, FareMode.METRO, null, null,
                 Money.of(BigDecimal.valueOf(200000)),
                 UUID.randomUUID(), null,
                 LocalDate.now().plusDays(1), 30
@@ -60,11 +58,11 @@ class CardIssuanceServiceTest {
     @Test
     void issue_cardOnly_returnsCardWithNullTicket() {
         Card card = mockCard();
-        when(cardUseCase.create(any(), any(), any(), any(), any(), any()))
+        when(cardUseCase.create(any(), any(), any(), any(), any()))
                 .thenReturn(card);
 
         IssueWithTicketRequest request = new IssueWithTicketRequest(
-                new CreateCardRequest(null, CardType.IDENTIFIED, USER_ID, true, false),
+                new CreateCardRequest(null, USER_ID, true, false),
                 null
         );
 
@@ -72,7 +70,7 @@ class CardIssuanceServiceTest {
 
         assertThat(result.card()).isNotNull();
         assertThat(result.ticket()).isNull();
-        verify(ticketUseCase, never()).createPass(any(), any(), any(), any(), any(), any(), any());
+        verify(ticketUseCase, never()).createPass(any(), any(), any(), any(), any(), any(), any(), any());
         verify(ticketUseCase, never()).linkToCard(any(), any());
     }
 
@@ -80,22 +78,22 @@ class CardIssuanceServiceTest {
 
     @Test
     void issue_cardWithTicket_returnsLinkedCardAndTicket() {
-        Card card    = mockCard();
+        Card card     = mockCard();
         Ticket ticket = mockTicket(card.getId());
 
-        when(cardUseCase.create(any(), any(), any(), any(), any(), any()))
+        when(cardUseCase.create(any(), any(), any(), any(), any()))
                 .thenReturn(card);
-        when(ticketUseCase.createPass(any(), any(), any(), any(), any(), any(), any()))
+        when(ticketUseCase.createPass(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(ticket);
         when(ticketUseCase.linkToCard(ticket.getId(), card.getId()))
                 .thenReturn(ticket);
 
         CreatePassRequest passRequest = new CreatePassRequest(
-                USER_ID, FareMode.METRO, null, null,
+                USER_ID, FareMode.METRO, null, null, null,
                 LocalDate.now().plusDays(1), PassDurationType.MONTHLY, 1
         );
         IssueWithTicketRequest request = new IssueWithTicketRequest(
-                new CreateCardRequest(null, CardType.IDENTIFIED, USER_ID, true, false),
+                new CreateCardRequest(null, USER_ID, true, false),
                 passRequest
         );
 
@@ -104,7 +102,7 @@ class CardIssuanceServiceTest {
         assertThat(result.card()).isNotNull();
         assertThat(result.ticket()).isNotNull();
         verify(ticketUseCase).createPass(
-                eq(USER_ID), eq(FareMode.METRO), isNull(), isNull(),
+                eq(USER_ID), eq(FareMode.METRO), isNull(), isNull(), isNull(),
                 any(), eq(PassDurationType.MONTHLY), eq(1)
         );
         verify(ticketUseCase).linkToCard(ticket.getId(), card.getId());
@@ -115,14 +113,14 @@ class CardIssuanceServiceTest {
     @Test
     void issue_ticketCreationFails_rollsBack() {
         Card card = mockCard();
-        when(cardUseCase.create(any(), any(), any(), any(), any(), any()))
+        when(cardUseCase.create(any(), any(), any(), any(), any()))
                 .thenReturn(card);
-        when(ticketUseCase.createPass(any(), any(), any(), any(), any(), any(), any()))
+        when(ticketUseCase.createPass(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenThrow(new NotFoundException(ErrorCode.FARE_RULE_NOT_FOUND));
 
         IssueWithTicketRequest request = new IssueWithTicketRequest(
-                new CreateCardRequest(null, CardType.IDENTIFIED, USER_ID, true, false),
-                new CreatePassRequest(USER_ID, FareMode.METRO, null, null,
+                new CreateCardRequest(null, USER_ID, true, false),
+                new CreatePassRequest(USER_ID, FareMode.METRO, null, null, null,
                         LocalDate.now().plusDays(1), PassDurationType.MONTHLY, 1)
         );
 

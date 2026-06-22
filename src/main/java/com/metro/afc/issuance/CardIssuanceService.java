@@ -36,7 +36,7 @@ public class CardIssuanceService implements CardIssuanceUseCase {
 
         CreatePassRequest t = request.ticket();
         Ticket ticket = ticketUseCase.createPass(
-                t.userId(), t.mode(), t.scope(), t.passengerType(),
+                t.userId(), t.mode(), t.scope(), t.routeId(), t.passengerType(),
                 t.validFrom(), t.durationType(), t.durationMonths()
         );
         Ticket linked = ticketUseCase.linkToCard(ticket.getId(), card.getId());
