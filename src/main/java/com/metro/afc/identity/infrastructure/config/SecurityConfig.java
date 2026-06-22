@@ -5,6 +5,7 @@ import com.metro.afc.identity.infrastructure.adapter.out.security.UserDetailsSer
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -47,6 +48,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/afc/**").permitAll()
+                        .requestMatchers("/api/passenger/fare/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/tickets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cards/*/active-ticket").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

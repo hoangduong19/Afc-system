@@ -129,7 +129,6 @@ public class CardController {
     }
 
     @GetMapping("/{cardId}/active-ticket")
-    @PreAuthorize("hasAuthority('CARD_READ')")
     public ResponseEntity<TicketResponse> getActiveTicket(
             @PathVariable UUID cardId) {
         return ResponseEntity.ok(ticketFacade.findActiveTicketByCardId(cardId));

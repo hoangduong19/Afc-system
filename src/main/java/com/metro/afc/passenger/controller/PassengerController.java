@@ -10,7 +10,6 @@ import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,7 +26,6 @@ public class PassengerController {
     private final CardUseCase cardUseCase;
 
     @GetMapping("/api/passengers/{userId}/tickets")
-    @PreAuthorize("hasAuthority('TICKET_READ_OWN')")
     public ResponseEntity<List<PassengerTicketResponse>> getMyTickets(
             @PathVariable UUID userId,
             @RequestParam(required = false) TicketStatus status) {
@@ -38,7 +36,6 @@ public class PassengerController {
     }
 
     @GetMapping("/api/passengers/{userId}/tickets/{id}")
-    @PreAuthorize("hasAuthority('TICKET_READ_OWN')")
     public ResponseEntity<PassengerTicketResponse> getTicket(
             @PathVariable UUID userId,
             @PathVariable UUID id) {
@@ -49,7 +46,6 @@ public class PassengerController {
     }
 
     @GetMapping("/api/passengers/{userId}/cards")
-    @PreAuthorize("hasAuthority('CARD_READ')")
     public ResponseEntity<List<PassengerCardResponse>> getMyCards(
             @PathVariable UUID userId) {
         return ResponseEntity.ok(

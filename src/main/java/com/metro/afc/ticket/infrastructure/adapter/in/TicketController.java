@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +20,6 @@ public class TicketController {
     private final TicketFacade ticketFacade;
 
     @PostMapping("/single-trip")
-    @PreAuthorize("hasAuthority('TICKET_PURCHASE')")
     public ResponseEntity<TicketResponse> createSingleTrip(
             @Valid @RequestBody CreateSingleTripTicketRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -31,7 +29,6 @@ public class TicketController {
     }
 
     @PostMapping("/pass")
-    @PreAuthorize("hasAuthority('TICKET_PURCHASE')")
     public ResponseEntity<TicketResponse> createPass(
             @Valid @RequestBody CreatePassRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
