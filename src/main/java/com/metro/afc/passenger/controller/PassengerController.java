@@ -3,11 +3,13 @@ package com.metro.afc.passenger.controller;
 import com.metro.afc.card.application.port.in.CardUseCase;
 import com.metro.afc.passenger.dto.PassengerCardResponse;
 import com.metro.afc.passenger.dto.PassengerTicketResponse;
+import com.metro.afc.passenger.dto.PassengerTripResponse;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.UnauthorizedException;
 import com.metro.afc.ticket.application.port.in.TicketUseCase;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
+import com.metro.afc.trip.application.port.in.TripUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,7 @@ public class PassengerController {
 
     private final TicketUseCase ticketUseCase;
     private final CardUseCase cardUseCase;
+    private final TripUseCase tripUseCase;
 
     @GetMapping("/api/passengers/{userId}/tickets")
     public ResponseEntity<List<PassengerTicketResponse>> getMyTickets(
@@ -52,5 +55,11 @@ public class PassengerController {
                 cardUseCase.findByLinkedUserId(userId).stream()
                         .map(PassengerCardResponse::from).toList()
         );
+    }
+
+    @GetMapping("/api/passengers/{userId}/trips")
+    public ResponseEntity<List<PassengerTripResponse>> getMyTrips(
+            @PathVariable UUID userId) {
+        return ResponseEntity.ok(tripUseCase.findByUserId(userId));
     }
 }

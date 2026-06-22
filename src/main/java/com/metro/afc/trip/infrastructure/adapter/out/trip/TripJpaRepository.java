@@ -30,4 +30,6 @@ public interface TripJpaRepository
             "AND t.tapInAt < :threshold")
     List<Trip> findInProgressBefore(
             @Param("threshold") Instant threshold);
+
+    List<Trip> findByTicketIdIn(List<UUID> ticketIds);
 }

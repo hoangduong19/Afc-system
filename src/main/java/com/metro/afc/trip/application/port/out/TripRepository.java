@@ -15,6 +15,7 @@ public interface TripRepository {
     boolean existsByExternalTransactionId(UUID externalTransactionId);
     List<Trip> findByOperatorIdAndTapInAtBetween(
             UUID operatorId, Instant from, Instant to);
+    List<Trip> findByTicketIdIn(List<UUID> ticketIds);
     List<Trip> findCompletedTripsInPeriod(Instant from, Instant to);
     Page<Trip> findWithFilters(UUID cardId, UUID operatorId,
                                TripStatus status, Instant from, Instant to, Pageable pageable);
