@@ -14,4 +14,5 @@ public interface RouteRepository {
     boolean existsById(UUID id);
     Route save(Route route);
     void deleteById(UUID id);
+    Optional<Route> findByCode(String code);
 }

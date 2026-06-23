@@ -31,6 +31,11 @@ public class RouteRepositoryImpl implements RouteRepository {
     }
 
     @Override
+    public Optional<Route> findByCode(String code) {
+        return jpa.findByCode(code);
+    }
+
+    @Override
     public boolean existsByCode(String code) {
         return jpa.existsByCode(code);
     }

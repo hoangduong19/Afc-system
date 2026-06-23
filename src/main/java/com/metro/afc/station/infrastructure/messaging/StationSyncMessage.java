@@ -1,6 +1,12 @@
 package com.metro.afc.station.infrastructure.messaging;
 
-public record StationSyncMessage (
-        // To-do
-){
-}
+import java.math.BigDecimal;
+
+public record StationSyncMessage(
+        String stationCode,
+        String stationName,
+        Integer stationOrder,
+        String routeCode,
+        String status,
+        BigDecimal distance
+) {}
