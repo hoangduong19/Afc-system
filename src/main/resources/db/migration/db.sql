@@ -689,3 +689,8 @@ CREATE TABLE fare_pass_prices (
 ALTER TABLE settlements
     ADD COLUMN formula_code VARCHAR(30);
 ALTER TABLE tickets ADD COLUMN route_id UUID REFERENCES routes(id);
+ALTER TABLE trips DROP COLUMN payment_method;
+ALTER TABLE trips DROP COLUMN debt_amount;
+ALTER TABLE trips DROP COLUMN status;
+ALTER TABLE trips DROP COLUMN tap_in_gate_id;
+ALTER TABLE trips DROP COLUMN tap_out_gate_id;

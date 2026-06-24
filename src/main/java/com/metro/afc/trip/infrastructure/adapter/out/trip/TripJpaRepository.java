@@ -15,19 +15,18 @@ import java.util.UUID;
 public interface TripJpaRepository
         extends JpaRepository<Trip, UUID>,
         JpaSpecificationExecutor<Trip> {
+
     boolean existsByExternalTransactionId(UUID externalTransactionId);
 
     List<Trip> findByOperatorIdAndTapInAtBetween(
             UUID operatorId, Instant from, Instant to);
 
-    @Query("SELECT t FROM Trip t WHERE t.status = 'COMPLETED' " +
-            "AND t.tapInAt >= :from AND t.tapInAt < :to")
+    @Query("SELECT t FROM Trip t WHERE t.tapInAt >= :from AND t.tapInAt < :to")
     List<Trip> findCompletedTripsInPeriod(
             @Param("from") Instant from,
             @Param("to")   Instant to);
 
-    @Query("SELECT t FROM Trip t WHERE t.status = 'IN_PROGRESS' " +
-            "AND t.tapInAt < :threshold")
+    @Query("SELECT t FROM Trip t WHERE t.tapOutAt IS NULL AND t.tapInAt < :threshold")
     List<Trip> findInProgressBefore(
             @Param("threshold") Instant threshold);
 

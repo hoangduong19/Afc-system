@@ -2,7 +2,6 @@ package com.metro.afc.passenger.dto;
 
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.trip.domain.Trip;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,8 +16,7 @@ public record PassengerTripResponse(
         Instant tapInAt,
         Instant tapOutAt,
         BigDecimal distanceKm,
-        BigDecimal fareAmount,
-        TripStatus status
+        BigDecimal fareAmount
 ) {
     public static PassengerTripResponse from(Trip t,
                                              String tapInCode,
@@ -32,8 +30,7 @@ public record PassengerTripResponse(
                 t.getTapInAt(),
                 t.getTapOutAt(),
                 t.getDistanceKm(),
-                t.getFareAmount(),
-                t.getStatus()
+                t.getFareAmount()
         );
     }
 }

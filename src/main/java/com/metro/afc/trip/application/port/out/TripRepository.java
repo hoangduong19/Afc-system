@@ -1,7 +1,6 @@
 package com.metro.afc.trip.application.port.out;
 
 import com.metro.afc.trip.domain.Trip;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,7 +17,7 @@ public interface TripRepository {
     List<Trip> findByTicketIdIn(List<UUID> ticketIds);
     List<Trip> findCompletedTripsInPeriod(Instant from, Instant to);
     Page<Trip> findWithFilters(UUID cardId, UUID operatorId,
-                               TripStatus status, Instant from, Instant to, Pageable pageable);
+                               Instant from, Instant to, Pageable pageable);
     Optional<Trip> findById(UUID id);
     List<Trip> findInProgressBefore(Instant threshold);
 }

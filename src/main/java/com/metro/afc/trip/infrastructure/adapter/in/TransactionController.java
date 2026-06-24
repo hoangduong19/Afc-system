@@ -11,7 +11,6 @@ import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.trip.application.dto.TripResponse;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,7 +39,6 @@ public class TransactionController {
     public ResponseEntity<Page<TripResponse>> findAll(
             @RequestParam(required = false) String cardUid,
             @RequestParam(required = false) String operatorCode,
-            @RequestParam(required = false) TripStatus tripStatus,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             Instant fromDate,
@@ -63,8 +61,8 @@ public class TransactionController {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by("tapInAt").descending());
 
-        Page<TripResponse> result = tripRepository.findWithFilters(
-                        cardId, operatorId, tripStatus, fromDate, toDate, pageable)
+        Page<TripResponse> result = tripRepository
+                .findWithFilters(cardId, operatorId, fromDate, toDate, pageable)
                 .map(this::toResponse);
 
         return ResponseEntity.ok(result);
@@ -98,19 +96,16 @@ public class TransactionController {
                 : null;
 
         return new TripResponse(
-                trip.getId(), trip.getExternalTransactionId(),
+                trip.getId(),
+                trip.getExternalTransactionId(),
                 trip.getCardId(), cardUid,
                 trip.getOperatorId(), operatorCode,
-                tapInCode, trip.getTapInGateId(), trip.getTapInAt(),
-                tapOutCode, trip.getTapOutGateId(), trip.getTapOutAt(),
+                tapInCode, trip.getTapInAt(),
+                tapOutCode, trip.getTapOutAt(),
                 trip.getDistanceKm(), trip.getFareAmount(),
-                trip.getPaymentMethod() != null
-                        ? trip.getPaymentMethod().name() : null,
                 trip.getTicketTypeUsed() != null
                         ? trip.getTicketTypeUsed().name() : null,
-                trip.getStatus() != null
-                        ? trip.getStatus().name() : null,
-                trip.getDebtAmount(), trip.getCreatedAt()
+                trip.getCreatedAt()
         );
     }
 }

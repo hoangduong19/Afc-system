@@ -12,16 +12,11 @@ public record TripResponse(
         UUID operatorId,
         String operatorCode,
         String tapInStationCode,
-        String tapInDeviceId,
         Instant tapInAt,
         String tapOutStationCode,
-        String tapOutDeviceId,
         Instant tapOutAt,
         BigDecimal distanceKm,
         BigDecimal fareAmount,
-        String paymentMethod,
         String ticketType,
-        String status,
-        BigDecimal debtAmount,
         Instant createdAt
 ) {}

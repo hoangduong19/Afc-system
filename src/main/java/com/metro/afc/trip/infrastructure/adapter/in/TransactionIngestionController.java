@@ -26,8 +26,7 @@ public class TransactionIngestionController {
 
     @PostMapping("/batch")
     public ResponseEntity<BatchIngestResponse> ingest(
-            @Valid @RequestBody
-            ExternalTransactionBatchRequest request) {
+            @Valid @RequestBody ExternalTransactionBatchRequest request) {
 
         List<TransactionItemRequest> mapped = request.transactions()
                 .stream()
@@ -36,26 +35,18 @@ public class TransactionIngestionController {
                         item.cardUid(),
                         item.ticketId(),
                         item.operatorCode(),
-                        item.lineCode(),                              // ← thêm
-                        externalIdMapper.toStationCode(
-                                item.tapInStationId()),
+                        item.lineCode(),
+                        externalIdMapper.toStationCode(item.tapInStationId()),
                         item.tapInAt(),
-                        item.tapInDeviceId(),
-                        externalIdMapper.toStationCode(
-                                item.tapOutStationId()),
+                        externalIdMapper.toStationCode(item.tapOutStationId()),
                         item.tapOutAt(),
-                        item.tapOutDeviceId(),
                         item.distanceKm(),
                         item.fareAmount(),
                         item.mode(),
-                        item.paymentMethod(),
-                        item.ticketType(),
-                        item.tripStatus(),
-                        item.debtAmount()
+                        item.ticketType()
                 )).toList();
 
         return ResponseEntity.ok(
-                ingestionService.ingest(
-                        new TransactionBatchRequest(mapped)));
+                ingestionService.ingest(new TransactionBatchRequest(mapped)));
     }
 }

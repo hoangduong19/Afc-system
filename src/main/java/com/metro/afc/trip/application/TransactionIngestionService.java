@@ -17,7 +17,6 @@ import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
 import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import com.metro.afc.trip.domain.service.FareMismatchDetector;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -66,8 +65,7 @@ public class TransactionIngestionService {
 
             } catch (Exception e) {
                 failed++;
-                errors.add(item.transactionId()
-                        + ": " + e.getMessage());
+                errors.add(item.transactionId() + ": " + e.getMessage());
                 log.error("Failed to ingest {}: {}",
                         item.transactionId(), e.getMessage());
             }
@@ -84,8 +82,7 @@ public class TransactionIngestionService {
                 .map(Station::getId).orElse(null);
 
         UUID tapOutStationId = item.tapOutStationCode() != null
-                ? stationRepository
-                .findByCode(item.tapOutStationCode())
+                ? stationRepository.findByCode(item.tapOutStationCode())
                 .map(Station::getId).orElse(null)
                 : null;
 
@@ -104,25 +101,18 @@ public class TransactionIngestionService {
                 item.ticketId(),
                 operatorId,
                 tapInStationId,
-                item.tapInDeviceId(),
                 item.tapInAt(),
                 tapOutStationId,
-                item.tapOutDeviceId(),
-                item.tapOutAt() != null
-                        ? item.tapOutAt() : null,
+                item.tapOutAt(),
                 item.distanceKm(),
                 item.fareAmount(),
                 item.mode(),
-                item.paymentMethod(),
-                item.ticketType(),
-                item.tripStatus(),
-                item.debtAmount()
+                item.ticketType()
         );
     }
 
     private void markTicketUsedIfApplicable(Trip trip,
                                             TransactionItemRequest item) {
-        if (item.tripStatus() != TripStatus.COMPLETED) return;
         if (item.ticketId() == null) return;
         if (item.ticketType() != TicketTypeUsed.SINGLE_TRIP) return;
 
@@ -135,28 +125,21 @@ public class TransactionIngestionService {
 
     private void checkFareMismatch(Trip trip,
                                    TransactionItemRequest item) {
-        if (item.tripStatus() != TripStatus.COMPLETED) return;
         if (item.fareAmount() == null) return;
         if (item.tapOutStationCode() == null) return;
 
         Station tapInStation = stationRepository
-                .findByCode(item.tapInStationCode())
-                .orElse(null);
+                .findByCode(item.tapInStationCode()).orElse(null);
         Station tapOutStation = stationRepository
-                .findByCode(item.tapOutStationCode())
-                .orElse(null);
+                .findByCode(item.tapOutStationCode()).orElse(null);
         FareRule fareRule = fareRuleRepository
-                .findActiveByMode(item.mode())
-                .orElse(null);
+                .findActiveByMode(item.mode()).orElse(null);
 
-        if (tapInStation == null
-                || tapOutStation == null
+        if (tapInStation == null || tapOutStation == null
                 || fareRule == null) return;
 
         BigDecimal expected = fareCalculationService.calculateRaw(
-                tapInStation, tapOutStation,
-                fareRule, item.distanceKm()
-        );
+                tapInStation, tapOutStation, fareRule, item.distanceKm());
 
         FareMismatchDetector.detect(trip, expected)
                 .ifPresent(anomaly -> {
