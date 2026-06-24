@@ -537,3 +537,114 @@ INSERT INTO trips (
 --   TRANSERCO =          140,000 + 153,517  = 293,517đ
 --   totalActual = 635,000đ  →  reconciliationStatus = MATCH
 -- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════════
+-- DEMO: SETTLEMENT MISMATCH — tháng 5/2026
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO settlements (
+    period, status, formula_code,
+    total_expected, total_actual,
+    diff_amount, reconciliation_status,
+    tolerance_threshold, ran_by, ran_at
+) VALUES (
+             '2026-05',
+             'DRAFT',
+             'QD3316_2025',
+             500000.00,
+             450000.00,
+             50000.00,
+             'MISMATCH',
+             10000.00,
+             (SELECT id FROM users WHERE username = 'admin'),
+             CURRENT_TIMESTAMP - INTERVAL '25 days'
+         );
+
+INSERT INTO company_shares (
+    settlement_id, operator_id,
+    total_km, total_trips,
+    expected_revenue, share_amount,
+    direct_share, proportional_share,
+    rounding_adjustment
+) VALUES
+      (
+          (SELECT id FROM settlements WHERE period = '2026-05'),
+          (SELECT id FROM operators WHERE code = 'HURC'),
+          125.5, 850,
+          325000.00, 290000.00,
+          200000.00, 90000.00,
+          0.00
+      ),
+      (
+          (SELECT id FROM settlements WHERE period = '2026-05'),
+          (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+          98.3, 620,
+          175000.00, 160000.00,
+          140000.00, 20000.00,
+          0.00
+      );
+
+-- ═══════════════════════════════════════════════════════════════
+-- DEMO: SETTLEMENT WARNING — tháng 4/2026
+-- ═══════════════════════════════════════════════════════════════
+
+INSERT INTO settlements (
+    period, status, formula_code,
+    total_expected, total_actual,
+    diff_amount, reconciliation_status,
+    tolerance_threshold, ran_by, ran_at
+) VALUES (
+             '2026-04',
+             'DRAFT',          -- đổi thành DRAFT
+             'QD3316_2025',
+             635000.00,
+             634998.50,
+             1.50,
+             'WARNING',
+             10000.00,
+             (SELECT id FROM users WHERE username = 'admin'),
+             CURRENT_TIMESTAMP - INTERVAL '55 days'
+         );
+
+INSERT INTO company_shares (
+    settlement_id, operator_id,
+    total_km, total_trips,
+    expected_revenue, share_amount,
+    direct_share, proportional_share,
+    rounding_adjustment
+) VALUES
+      (
+          (SELECT id FROM settlements WHERE period = '2026-04'),
+          (SELECT id FROM operators WHERE code = 'HURC'),
+          210.3, 1250,
+          341483.00, 341482.25,
+          215000.00, 126482.25,
+          0.00
+      ),
+      (
+          (SELECT id FROM settlements WHERE period = '2026-04'),
+          (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+          185.7, 980,
+          293517.00, 293516.25,
+          140000.00, 153516.25,
+          0.00
+      );
+
+INSERT INTO reconciliation_logs (
+    settlement_id, category,
+    discrepancy_amount, trip_count, note, detail
+) VALUES (
+             (SELECT id FROM settlements WHERE period = '2026-05'),
+             'MISMATCH',
+             50000.00,
+             1470,
+             'Chênh lệch 50,000đ vượt ngưỡng dung sai 10,000đ — dữ liệu chuyến đi từ Cấp 4 có thể bị thiếu',
+             '{"diffAmount": "50000.00"}'
+         ),
+         (
+             (SELECT id FROM settlements WHERE period = '2026-04'),
+             'WARNING',
+             1.50,
+             2230,
+             'Chênh lệch 1.5đ do làm tròn số trong công thức phân bổ tỷ lệ Pool 3 — nằm trong ngưỡng cho phép',
+             '{"diffAmount": "1.50"}'
+         );
