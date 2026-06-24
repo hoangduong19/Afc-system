@@ -49,6 +49,10 @@ public class RabbitMQConfig {
     public static final String OPERATOR_UPDATED = "operator.updated";
     public static final String OPERATOR_EVENT_QUEUE = "operator.event.queue";
 
+    // Transaction
+    public static final String TRANSACTION_BATCH_QUEUE = "transaction.batch.queue";
+    public static final String TRANSACTION_BATCH_KEY   = "transaction.batch";
+
     // Dev Test
     public static final String SYNC_CARD_ALL     = "sync.card.all";
     public static final String SYNC_TICKET_ALL   = "sync.ticket.all";
@@ -141,6 +145,10 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(OPERATOR_EVENT_QUEUE).build();
     }
 
+    @Bean
+    public Queue transactionBatchQueue() {
+        return QueueBuilder.durable(TRANSACTION_BATCH_QUEUE).build();
+    }
 
     @Bean
     public Binding cardStatusBinding() {
@@ -203,6 +211,13 @@ public class RabbitMQConfig {
                 .bind(operatorEventQueue())
                 .to(afcExchange())
                 .with("operator.*");
+    }
+
+    @Bean
+    public Binding transactionBatchBinding() {
+        return BindingBuilder.bind(transactionBatchQueue())
+                .to(afcExchange())
+                .with(TRANSACTION_BATCH_KEY);
     }
 
     @Bean
