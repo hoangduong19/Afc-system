@@ -12,9 +12,7 @@ import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.PassScope;
 import com.metro.afc.trip.domain.Trip;
-import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
 import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,10 +36,7 @@ class SettlementTest {
     private final UUID ranBy      = UUID.randomUUID();
     private final BigDecimal tolerance = new BigDecimal("100");
 
-    // Dùng real implementation — unit test domain logic, không mock công thức
     private final AllocationStrategy strategy = new Qd3316AllocationStrategy();
-
-    // ── Pool 1 ───────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("1. Pool 1: Phân bổ Vé Lượt (Single Trip)")
@@ -53,8 +48,12 @@ class SettlementTest {
             Trip tripA = makeTrip(operatorA, TicketTypeUsed.SINGLE_TRIP, null, "125000", "10", FareMode.BUS);
             Trip tripB = makeTrip(operatorB, TicketTypeUsed.SINGLE_TRIP, null, "50000",  "5",  FareMode.BUS);
 
+            Ticket tA = mockTicket(UUID.randomUUID(), "125000", FareMode.BUS, null);
+            Ticket tB = mockTicket(UUID.randomUUID(), "50000",  FareMode.BUS, null);
+
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(tripA, tripB), Map.of(), List.of(),
+                    "2026-06", List.of(tripA, tripB), Map.of(),
+                    List.of(tA, tB), List.of(),              // ← soldTickets
                     strategy, tolerance, ranBy);
 
             assertEquals("175000.00", result.settlement().getTotalExpected().getAmount().toPlainString());
@@ -69,16 +68,18 @@ class SettlementTest {
             Trip trip1 = makeTrip(operatorA, TicketTypeUsed.SINGLE_TRIP, null, "50000", "5", FareMode.BUS);
             Trip trip2 = makeTrip(operatorA, TicketTypeUsed.SINGLE_TRIP, null, "75000", "8", FareMode.BUS);
 
+            Ticket t1 = mockTicket(UUID.randomUUID(), "50000", FareMode.BUS, null);
+            Ticket t2 = mockTicket(UUID.randomUUID(), "75000", FareMode.BUS, null);
+
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(trip1, trip2), Map.of(), List.of(),
+                    "2026-06", List.of(trip1, trip2), Map.of(),
+                    List.of(t1, t2), List.of(),
                     strategy, tolerance, ranBy);
 
             assertEquals(1, result.shares().size());
             assertEquals("125000.00", findShare(result.shares(), operatorA).getShareAmount().getAmount().toPlainString());
         }
     }
-
-    // ── Pool 2 ───────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("2. Pool 2: Phân bổ trực tiếp (METRO / SINGLE_ROUTE)")
@@ -94,7 +95,8 @@ class SettlementTest {
             Trip trip2 = makeTrip(operatorA, TicketTypeUsed.MONTHLY_PASS, ticketId, null, "15", FareMode.METRO);
 
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(trip1, trip2), Map.of(ticketId, ticket), List.of(),
+                    "2026-06", List.of(trip1, trip2), Map.of(ticketId, ticket),
+                    List.of(ticket), List.of(),              // ← soldTickets
                     strategy, tolerance, ranBy);
 
             assertEquals("200000.00", result.settlement().getTotalExpected().getAmount().toPlainString());
@@ -111,14 +113,13 @@ class SettlementTest {
             Trip trip = makeTrip(operatorA, TicketTypeUsed.MONTHLY_PASS, ticketId, null, "20", FareMode.BUS);
 
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(trip), Map.of(ticketId, ticket), List.of(),
+                    "2026-06", List.of(trip), Map.of(ticketId, ticket),
+                    List.of(ticket), List.of(),
                     strategy, tolerance, ranBy);
 
             assertEquals("150000.00", findShare(result.shares(), operatorA).getShareAmount().getAmount().toPlainString());
         }
     }
-
-    // ── Pool 3 ───────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("3. Pool 3: Phân bổ theo Tỷ lệ (MULTI_ROUTE)")
@@ -130,23 +131,20 @@ class SettlementTest {
             UUID ticketId = UUID.randomUUID();
             Ticket ticket = mockTicket(ticketId, "280000", FareMode.BUS, PassScope.MULTI_ROUTE);
 
-            // A: 1 chuyến, 50 km → weight = (1×3000) + (50×450) = 25500
-            // B: 1 chuyến, 15 km → weight = (1×3000) + (15×450) = 9750
             Trip tripA = makeTrip(operatorA, TicketTypeUsed.MONTHLY_PASS, ticketId, null, "50", FareMode.BUS);
             Trip tripB = makeTrip(operatorB, TicketTypeUsed.MONTHLY_PASS, ticketId, null, "15", FareMode.BUS);
 
             FareRule rule = mockFareRule(FareMode.BUS, "3000", "450");
 
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(tripA, tripB), Map.of(ticketId, ticket), List.of(rule),
+                    "2026-06", List.of(tripA, tripB), Map.of(ticketId, ticket),
+                    List.of(ticket), List.of(rule),
                     strategy, tolerance, ranBy);
 
             BigDecimal shareA = findShare(result.shares(), operatorA).getShareAmount().getAmount();
             BigDecimal shareB = findShare(result.shares(), operatorB).getShareAmount().getAmount();
 
-            // Tổng bảo toàn
             assertEquals(0, new BigDecimal("280000").compareTo(shareA.add(shareB)));
-            // A đi xa hơn → hưởng nhiều hơn
             assertTrue(shareA.compareTo(shareB) > 0);
         }
 
@@ -162,7 +160,8 @@ class SettlementTest {
             FareRule rule = mockFareRule(FareMode.BUS, "3000", "450");
 
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(tripA, tripB), Map.of(ticketId, ticket), List.of(rule),
+                    "2026-06", List.of(tripA, tripB), Map.of(ticketId, ticket),
+                    List.of(ticket), List.of(rule),
                     strategy, tolerance, ranBy);
 
             BigDecimal total = result.shares().stream()
@@ -173,8 +172,6 @@ class SettlementTest {
         }
     }
 
-    // ── Reconciliation ────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("4. Đối soát (Reconciliation Status)")
     class ReconciliationStatus {
@@ -183,9 +180,11 @@ class SettlementTest {
         @DisplayName("MATCH khi tổng share bằng đúng totalExpected")
         void match_whenShareEqualsExpected() {
             Trip trip = makeTrip(operatorA, TicketTypeUsed.SINGLE_TRIP, null, "100000", "10", FareMode.BUS);
+            Ticket ticket = mockTicket(UUID.randomUUID(), "100000", FareMode.BUS, null);
 
             SettlementResult result = Settlement.calculateAndSettle(
-                    "2026-06", List.of(trip), Map.of(), List.of(),
+                    "2026-06", List.of(trip), Map.of(),
+                    List.of(ticket), List.of(),
                     strategy, tolerance, ranBy);
 
             assertEquals(ReconcileStatus.MATCH, result.settlement().getReconciliationStatus());
@@ -197,7 +196,6 @@ class SettlementTest {
             Settlement s = Settlement.create(
                     "2026-06", Money.of(new BigDecimal("200000")), new BigDecimal("100"), ranBy);
 
-            // diff = 200000 - 199000 = 1000 > tolerance 100 → MISMATCH
             List<CompanyShare> shares = List.of(
                     CompanyShare.of(s.getId(), operatorA,
                             BigDecimal.ZERO, 0,
@@ -209,7 +207,6 @@ class SettlementTest {
             );
 
             s.reconcile(shares);
-
             assertEquals(ReconcileStatus.MISMATCH, s.getReconciliationStatus());
         }
 
@@ -219,7 +216,6 @@ class SettlementTest {
             Settlement s = Settlement.create(
                     "2026-06", Money.of(new BigDecimal("200000")), new BigDecimal("100"), ranBy);
 
-            // diff = 200000 - 199950 = 50 ≤ tolerance 100 → WARNING
             List<CompanyShare> shares = List.of(
                     CompanyShare.of(s.getId(), operatorA,
                             BigDecimal.ZERO, 0,
@@ -231,12 +227,9 @@ class SettlementTest {
             );
 
             s.reconcile(shares);
-
             assertEquals(ReconcileStatus.WARNING, s.getReconciliationStatus());
         }
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private CompanyShare findShare(List<CompanyShare> shares, UUID operatorId) {
         return shares.stream()
@@ -248,11 +241,12 @@ class SettlementTest {
     private Trip makeTrip(UUID operatorId, TicketTypeUsed type, UUID ticketId,
                           String fare, String distance, FareMode mode) {
         return Trip.from(
-                UUID.randomUUID(), null, ticketId, operatorId, null, null, Instant.now(),
-                null, null, Instant.now(),
+                UUID.randomUUID(), null, ticketId, operatorId,
+                null, Instant.now(),
+                null, Instant.now(),
                 new BigDecimal(distance),
                 fare != null ? new BigDecimal(fare) : null,
-                mode, PaymentMethod.TICKET, type, TripStatus.COMPLETED, null
+                mode, type
         );
     }
 

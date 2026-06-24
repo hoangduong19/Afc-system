@@ -18,6 +18,14 @@ public class SettlementPeriod {
         this.year  = year;
     }
 
+    public LocalDate fromLocalDate() {
+        return LocalDate.of(year, month, 1);
+    }
+
+    public LocalDate toLocalDate() {
+        return fromLocalDate().plusMonths(1).minusDays(1);
+    }
+
     public String format() {
         return String.format("%d-%02d", year, month);
     }

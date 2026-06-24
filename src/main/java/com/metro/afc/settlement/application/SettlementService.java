@@ -76,11 +76,19 @@ public class SettlementService implements SettlementUseCase {
 
         List<FareRule> activeFareRules = fareRuleRepository.findAllActive();
 
+        // Sau
+        List<Ticket> soldTickets = ticketRepository
+                .findActiveInPeriod(
+                        period.fromLocalDate(),
+                        period.toLocalDate()
+                );
+
         // 3. Delegate to Domain Aggregate (Rich Domain Model)
         Settlement.SettlementResult result = Settlement.calculateAndSettle(
                 period.format(),
                 allTrips,
                 usedTickets,
+                soldTickets,
                 activeFareRules,
                 allocationStrategy,          // ← pass vào
                 DEFAULT_TOLERANCE,
@@ -136,4 +144,5 @@ public class SettlementService implements SettlementUseCase {
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.SETTLEMENT_NOT_FOUND));
     }
+
 }

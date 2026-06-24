@@ -97,6 +97,7 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
             String period,
             List<Trip> trips,
             Map<UUID, Ticket> ticketMap,
+            List<Ticket> soldTickets,
             List<FareRule> activeRules,
             AllocationStrategy strategy,
             BigDecimal toleranceThreshold,
@@ -114,12 +115,9 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
         Map<UUID, Money> singleTripShares  = s.calculateSingleTripShares(trips);
         List<TicketRevenueData> monthlyData = s.aggregateMonthlyTicketData(trips, ticketMap);
 
-        Money singleTripTotal = singleTripShares.values().stream()
+        s.totalExpected = soldTickets.stream()
+                .map(Ticket::getPrice)
                 .reduce(Money.of(BigDecimal.ZERO), Money::add);
-        Money monthlyTotal = monthlyData.stream()
-                .map(TicketRevenueData::ticketPrice)
-                .reduce(Money.of(BigDecimal.ZERO), Money::add);
-        s.totalExpected = singleTripTotal.add(monthlyTotal);
 
         Map<UUID, BigDecimal> operatorTotalKm   = s.calculateOperatorTotalKm(trips);
         Map<UUID, Integer>    operatorTripCount  = s.calculateOperatorTripCount(trips);

@@ -11,12 +11,11 @@ import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
+import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.trip.application.port.out.TripAnomalyRepository;
 import com.metro.afc.trip.application.port.out.TripRepository;
 import com.metro.afc.trip.domain.Trip;
-import com.metro.afc.trip.domain.enums.trip.PaymentMethod;
 import com.metro.afc.trip.domain.enums.trip.TicketTypeUsed;
-import com.metro.afc.trip.domain.enums.trip.TripStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,10 +44,8 @@ class SettlementServiceTest {
     @Mock TripAnomalyRepository anomalyRepository;
     @Mock TicketRepository      ticketRepository;
     @Mock FareRuleRepository    fareRuleRepository;
-    @Mock
-    AllocationStrategy allocationStrategy;
+    @Mock AllocationStrategy    allocationStrategy;
 
-    // Construct thủ công để kiểm soát injection rõ ràng
     private SettlementService service;
 
     private final UUID operatorId = UUID.randomUUID();
@@ -64,21 +61,25 @@ class SettlementServiceTest {
         lenient().when(anomalyRepository.countUnresolvedInPeriod(any(), any())).thenReturn(0L);
         lenient().when(settlementRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         lenient().when(allocationStrategy.formulaCode()).thenReturn("QD3316_2025");
+        lenient().when(ticketRepository.findActiveInPeriod(any(), any())).thenReturn(List.of());
     }
-
-    // ── Happy Path ────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("run() - Happy Path: Gom đủ dữ liệu, delegate domain, lưu kết quả")
     void run_validData_delegatesToDomainAndSaves() {
-        Trip trip = makeSingleTrip(new BigDecimal("15000"));
+        BigDecimal amount = new BigDecimal("15000.00");
+        Trip trip = makeSingleTrip(amount);
+
+        // Mock 1 Ticket tương ứng bán ra trong kỳ để tổng Expected khớp với Actual (15,000)
+        Ticket mockTicket = mock(Ticket.class);
+        when(mockTicket.getPrice()).thenReturn(Money.of(amount));
 
         when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
+        when(ticketRepository.findActiveInPeriod(any(), any())).thenReturn(List.of(mockTicket)); // <-- Sửa ở đây
         when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
         when(fareRuleRepository.findAllActive()).thenReturn(List.of());
-        // Strategy trả về share khớp với fare của trip → MATCH
         when(allocationStrategy.allocate(any(), any(), any()))
-                .thenReturn(Map.of(operatorId, Money.of(new BigDecimal("15000"))));
+                .thenReturn(Map.of(operatorId, Money.of(amount)));
 
         Settlement result = service.run(6, 2026, ranBy);
 
@@ -89,8 +90,7 @@ class SettlementServiceTest {
 
         verify(settlementRepository).save(result);
         verify(settlementRepository, atLeastOnce()).saveShare(any());
-        // MATCH → không lưu ReconciliationLog
-        verify(settlementRepository, never()).saveLog(any());
+        verify(settlementRepository, never()).saveLog(any()); // Vượt qua an toàn vì trạng thái giờ là MATCH!
     }
 
     @Test
@@ -101,7 +101,6 @@ class SettlementServiceTest {
         when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
         when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
         when(fareRuleRepository.findAllActive()).thenReturn(List.of());
-        // Strategy trả về ít hơn → diff = 14500 > tolerance → MISMATCH / WARNING
         when(allocationStrategy.allocate(any(), any(), any()))
                 .thenReturn(Map.of(operatorId, Money.of(new BigDecimal("14950"))));
 
@@ -109,8 +108,6 @@ class SettlementServiceTest {
 
         verify(settlementRepository).saveLog(any());
     }
-
-    // ── Business Rule Guards ──────────────────────────────────────────────────
 
     @Test
     @DisplayName("run() - ConflictException khi period đã tồn tại")
@@ -139,8 +136,6 @@ class SettlementServiceTest {
         verify(allocationStrategy, never()).allocate(any(), any(), any());
     }
 
-    // ── Confirm ───────────────────────────────────────────────────────────────
-
     @Test
     @DisplayName("confirm() - Chuyển DRAFT → CONFIRMED thành công")
     void confirm_draft_confirmsSuccessfully() {
@@ -160,21 +155,20 @@ class SettlementServiceTest {
     void confirm_nonDraft_throwsBusinessRule() {
         Settlement draft = Settlement.create(
                 "2026-06", Money.of(BigDecimal.ZERO), BigDecimal.ZERO, ranBy);
-        draft.confirm(); // → CONFIRMED
+        draft.confirm();
         when(settlementRepository.findById(draft.getId())).thenReturn(Optional.of(draft));
 
         assertThrows(BusinessRuleException.class,
                 () -> service.confirm(draft.getId(), UUID.randomUUID()));
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
-
     private Trip makeSingleTrip(BigDecimal fareAmount) {
         return Trip.from(
-                UUID.randomUUID(), null, null, operatorId, null, null, Instant.now(),
-                null, null, Instant.now(), new BigDecimal("10"), fareAmount,
-                FareMode.BUS, PaymentMethod.TICKET, TicketTypeUsed.SINGLE_TRIP,
-                TripStatus.COMPLETED, null
+                UUID.randomUUID(), null, null, operatorId,
+                null, Instant.now(),
+                null, Instant.now(),
+                new BigDecimal("10"), fareAmount,
+                FareMode.BUS, TicketTypeUsed.SINGLE_TRIP
         );
     }
 }

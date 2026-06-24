@@ -69,4 +69,9 @@ public class TicketRepositoryImpl implements TicketRepository {
     public List<Ticket> findAllByIds(Collection<UUID> ids) {
         return jpa.findAllByIdIn(ids);
     }
+
+    @Override
+    public List<Ticket> findActiveInPeriod(LocalDate from, LocalDate to) {
+        return jpa.findActiveInPeriod(from, to);
+    }
 }

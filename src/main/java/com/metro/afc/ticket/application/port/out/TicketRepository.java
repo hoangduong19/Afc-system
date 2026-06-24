@@ -24,4 +24,5 @@ public interface TicketRepository {
     Page<Ticket> findAllWithFilters(TicketType type, TicketStatus status,
                                     LocalDate fromDate, LocalDate toDate, Pageable pageable);
     List<Ticket> findAllByIds(Collection<UUID> ids);
+    List<Ticket> findActiveInPeriod(LocalDate from, LocalDate to);
 }

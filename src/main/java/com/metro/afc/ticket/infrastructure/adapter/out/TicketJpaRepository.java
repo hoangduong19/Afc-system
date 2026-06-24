@@ -46,4 +46,9 @@ public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
             Pageable pageable);
 
     List<Ticket> findAllByIdIn(Collection<UUID> ids);
+
+    @Query("SELECT t FROM Ticket t WHERE t.validFrom <= :to AND t.validTo >= :from")
+    List<Ticket> findActiveInPeriod(
+            @Param("from") LocalDate from,
+            @Param("to")   LocalDate to);
 }
