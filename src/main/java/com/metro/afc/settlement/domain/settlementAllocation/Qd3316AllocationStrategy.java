@@ -23,7 +23,7 @@ public class Qd3316AllocationStrategy implements AllocationStrategy {
     public String formulaCode() { return "QD3316_2025"; }
 
     @Override
-    public Map<UUID, Money> allocate(
+    public AllocationResult allocate(
             Map<UUID, Money> singleTripShares,
             List<TicketRevenueData> monthlyTickets,
             List<FareRule> activeRules) {
@@ -37,9 +37,7 @@ public class Qd3316AllocationStrategy implements AllocationStrategy {
             else                       allocateProportional(ticket, fareParams, proportionalMap);
         }
 
-        Map<UUID, Money> totalMap = new HashMap<>(directMap);
-        proportionalMap.forEach((k, v) -> totalMap.merge(k, v, Money::add));
-        return totalMap;
+        return new AllocationResult(directMap, proportionalMap);
     }
 
     private Map<FareMode, FareParams> extractFareParams(List<FareRule> rules) {

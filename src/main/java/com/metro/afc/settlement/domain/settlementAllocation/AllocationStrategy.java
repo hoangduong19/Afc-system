@@ -10,9 +10,7 @@ import java.util.UUID;
 
 public interface AllocationStrategy {
     String formulaCode();
-    Map<UUID, Money> allocate(
-            Map<UUID, Money> singleTripShares,
-            List<TicketRevenueData> monthlyTickets,
-            List<FareRule> activeRules
-    );
+    AllocationResult allocate(Map<UUID, Money> singleTripShares,
+                              List<TicketRevenueData> monthlyData,
+                              List<FareRule> activeRules);
 }

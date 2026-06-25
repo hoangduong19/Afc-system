@@ -6,6 +6,7 @@ import com.metro.afc.settlement.application.dto.settlement.v2.TripContribution;
 import com.metro.afc.settlement.domain.enums.settlement.ReconcileStatus;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
 import com.metro.afc.settlement.domain.events.settlement.SettlementConfirmedDomainEvent;
+import com.metro.afc.settlement.domain.settlementAllocation.AllocationResult;
 import com.metro.afc.settlement.domain.settlementAllocation.AllocationStrategy;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.ticket.domain.Ticket;
@@ -123,7 +124,8 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
         Map<UUID, Integer>    operatorTripCount  = s.calculateOperatorTripCount(trips);
 
         // 2. Delegate allocation — aggregate không biết công thức
-        Map<UUID, Money> totalMap = strategy.allocate(singleTripShares, monthlyData, activeRules);
+        AllocationResult allocationResult = strategy.allocate(singleTripShares, monthlyData, activeRules);
+        Map<UUID, Money> totalMap = allocationResult.totalShares();
 
         // 3. Build CompanyShare
         List<CompanyShare> shares = totalMap.entrySet().stream()
@@ -134,8 +136,10 @@ public class Settlement extends AbstractAggregateRoot<Settlement> {
                         operatorTripCount.getOrDefault(e.getKey(), 0),
                         e.getValue(),
                         e.getValue(),
-                        Money.of(BigDecimal.ZERO),
-                        Money.of(BigDecimal.ZERO),
+                        allocationResult.directShares()
+                                .getOrDefault(e.getKey(), Money.of(BigDecimal.ZERO)),
+                        allocationResult.proportionalShares()
+                                .getOrDefault(e.getKey(), Money.of(BigDecimal.ZERO)),
                         Money.of(BigDecimal.ZERO)
                 ))
                 .toList();
