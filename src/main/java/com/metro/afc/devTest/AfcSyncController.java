@@ -36,4 +36,10 @@ public class AfcSyncController {
         syncService.syncOperators();
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/sync/blacklists")
+    public ResponseEntity<Void> syncBlacklists() {
+        syncService.syncBlacklists();
+        return ResponseEntity.ok().build();
+    }
 }

@@ -2,6 +2,7 @@ package com.metro.afc.devTest;
 
 import com.metro.afc.blacklist.infrastructure.adapter.out.BlacklistJpaRepository;
 import com.metro.afc.card.infrastructure.adapter.out.persistence.card.CardJpaRepository;
+import com.metro.afc.devTest.message.BlacklistSyncMessage;
 import com.metro.afc.devTest.message.CardSyncMessage;
 import com.metro.afc.devTest.message.OperatorSyncMessage;
 import com.metro.afc.devTest.message.TicketSyncMessage;
@@ -53,11 +54,19 @@ public class SyncService {
                         RabbitMQConfig.AFC_EXCHANGE,
                         RabbitMQConfig.SYNC_OPERATOR_ALL, msg));
     }
-
+    public void syncBlacklists() {
+        blacklistJpaRepository.findAll().stream()
+                .filter(b -> Boolean.TRUE.equals(b.getIsActive()))
+                .map(BlacklistSyncMessage::from)
+                .forEach(msg -> amqpTemplate.convertAndSend(
+                        RabbitMQConfig.AFC_EXCHANGE,
+                        RabbitMQConfig.SYNC_BLACKLIST_ALL, msg));
+    }
 
     public void syncAll() {
         syncCards();
         syncTickets();
         syncOperators();
+        syncBlacklists(); // thêm
     }
 }

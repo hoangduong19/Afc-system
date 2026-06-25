@@ -61,6 +61,19 @@ public class RabbitMQConfig {
     public static final String SYNC_CARD_QUEUE     = "sync.card.queue";
     public static final String SYNC_TICKET_QUEUE   = "sync.ticket.queue";
     public static final String SYNC_OPERATOR_QUEUE = "sync.operator.queue";
+    public static final String SYNC_BLACKLIST_ALL   = "sync.blacklist.all";
+    public static final String SYNC_BLACKLIST_QUEUE = "sync.blacklist.queue";
+
+    @Bean
+    public Queue syncBlacklistQueue() {
+        return QueueBuilder.durable(SYNC_BLACKLIST_QUEUE).build();
+    }
+
+    @Bean
+    public Binding syncBlacklistBinding() {
+        return BindingBuilder.bind(syncBlacklistQueue())
+                .to(afcExchange()).with(SYNC_BLACKLIST_ALL);
+    }
 
     @Bean
     public Queue syncCardQueue() {
