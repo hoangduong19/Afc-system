@@ -964,23 +964,6 @@ VALUES (
     7.5, 12000.00, 'SINGLE_TRIP', 'METRO'
     );
 
--- DUPLICATE_TRANSACTION — giao dịch bị gửi trùng
-INSERT INTO trips (operator_id, ticket_id,
-                   tap_in_station_id, tap_in_at,
-                   tap_out_station_id, tap_out_at,
-                   distance_km, fare_amount, ticket_type_used, transport_mode,
-                   external_transaction_id)
-VALUES (
-           (SELECT id FROM operators WHERE code = 'TRANSERCO' LIMIT 1),
-       (SELECT id FROM tickets WHERE valid_from = '2026-03-19'
-           AND from_station_id = (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1) LIMIT 1),
-       (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1),
-    TIMESTAMP '2026-03-19 07:00:00',
-       (SELECT id FROM stations WHERE code = 'BUS32_04' LIMIT 1),
-    TIMESTAMP '2026-03-19 07:20:00',
-    7.5, 6375.00, 'SINGLE_TRIP', 'BUS',
-    'a1b2c3d4-0000-0000-0000-000000000001'
-    );
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: TRIP ANOMALIES
@@ -1003,13 +986,4 @@ VALUES (
     TIMESTAMP '2026-03-21 09:15:00',
     false,
     14375.00
-    );
-
-INSERT INTO trip_anomalies (trip_id, anomaly_type, severity, description, detected_at, is_resolved)
-VALUES (
-           (SELECT id FROM trips WHERE external_transaction_id = 'a1b2c3d4-0000-0000-0000-000000000001' LIMIT 1),
-    'DUPLICATE_TRANSACTION', 'ERROR',
-    'Giao dịch a1b2c3d4-0000-0000-0000-000000000001 bị gửi trùng lặp từ Cấp 4 — đã bỏ qua lần thứ 2',
-    TIMESTAMP '2026-03-19 07:00:01',
-    false
     );
