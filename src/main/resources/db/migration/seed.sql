@@ -850,53 +850,6 @@ INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      from_station_id, to_station_id,
                      mode, valid_from, valid_to, status)
 VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'SINGLE_TRIP', 14375.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_03'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
-           'METRO', '2026-03-20', '2026-03-21', 'ACTIVE'
-       );
-
--- FARE_MISMATCH ticket
-INSERT INTO tickets (user_id, type, price, fare_rule_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'SINGLE_TRIP', 14375.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
-           'METRO', '2026-03-21', '2026-03-22', 'ACTIVE'
-       );
-
--- DUPLICATE_TRANSACTION ticket
-INSERT INTO tickets (user_id, type, price, fare_rule_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'SINGLE_TRIP', 6375.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
-           (SELECT id FROM stations WHERE code = 'BUS32_01'),
-           (SELECT id FROM stations WHERE code = 'BUS32_04'),
-           'BUS', '2026-03-19', '2026-03-20', 'ACTIVE'
-       );
-
--- ═══════════════════════════════════════════════════════════════
--- SEED: ANOMALY TRIPS — tháng 3/2026
--- ═══════════════════════════════════════════════════════════════
-
--- ═══════════════════════════════════════════════════════════════
--- SEED: ANOMALY TICKETS — tháng 3/2026, không ảnh hưởng settlement
--- ═══════════════════════════════════════════════════════════════
-
--- INCOMPLETE_TRIP ticket
-INSERT INTO tickets (user_id, type, price, fare_rule_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
            (SELECT id FROM users WHERE username = 'admin' LIMIT 1),
     'SINGLE_TRIP', 14375.00,
        (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD' LIMIT 1),
@@ -916,19 +869,6 @@ VALUES (
        (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_08' LIMIT 1),
     'METRO', '2026-03-21', '2026-03-22', 'ACTIVE'
-    );
-
--- DUPLICATE_TRANSACTION ticket
-INSERT INTO tickets (user_id, type, price, fare_rule_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin' LIMIT 1),
-    'SINGLE_TRIP', 6375.00,
-       (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD' LIMIT 1),
-       (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1),
-       (SELECT id FROM stations WHERE code = 'BUS32_04' LIMIT 1),
-    'BUS', '2026-03-19', '2026-03-20', 'ACTIVE'
     );
 
 -- ═══════════════════════════════════════════════════════════════
@@ -963,7 +903,6 @@ VALUES (
     TIMESTAMP '2026-03-21 09:15:00',
     7.5, 12000.00, 'SINGLE_TRIP', 'METRO'
     );
-
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: TRIP ANOMALIES
