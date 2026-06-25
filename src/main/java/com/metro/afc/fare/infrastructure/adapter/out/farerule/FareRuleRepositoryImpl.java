@@ -7,6 +7,7 @@ import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +46,11 @@ public class FareRuleRepositoryImpl implements FareRuleRepository {
     @Override
     public boolean existsByCodeAndStatus(String code, FareStatus status) {
         return jpa.existsByCodeAndStatus(code, status);
+    }
+
+    @Override
+    public List<FareRule> findActiveAtDate(LocalDate date) {
+        return jpa.findActiveAtDate(date);
     }
 
     @Override

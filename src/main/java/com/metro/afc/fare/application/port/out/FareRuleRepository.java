@@ -4,6 +4,7 @@ import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +14,7 @@ public interface FareRuleRepository {
     Optional<FareRule> findActiveByCode(String code);
     Optional<FareRule> findActiveByMode(FareMode mode);
     List<FareRule> findAllActive();
+    List<FareRule> findActiveAtDate(LocalDate date);
     List<FareRule> findAll();
     boolean existsByCodeAndStatus(String code, FareStatus status);
     FareRule save(FareRule fareRule);

@@ -74,7 +74,8 @@ public class SettlementService implements SettlementUseCase {
         Map<UUID, Ticket> usedTickets = ticketRepository.findAllByIds(usedTicketIds).stream()
                 .collect(Collectors.toMap(Ticket::getId, t -> t));
 
-        List<FareRule> activeFareRules = fareRuleRepository.findAllActive();
+        List<FareRule> activeFareRules = fareRuleRepository
+                .findActiveAtDate(period.fromLocalDate());
 
         // Sau
         List<Ticket> soldTickets = ticketRepository
