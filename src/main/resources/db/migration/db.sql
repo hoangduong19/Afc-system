@@ -694,3 +694,18 @@ ALTER TABLE trips DROP COLUMN debt_amount;
 ALTER TABLE trips DROP COLUMN status;
 ALTER TABLE trips DROP COLUMN tap_in_gate_id;
 ALTER TABLE trips DROP COLUMN tap_out_gate_id;
+ALTER TABLE trips DROP COLUMN wallet_transaction_id;
+
+DROP TABLE IF EXISTS wallet_transactions CASCADE;
+DROP TABLE IF EXISTS wallets            CASCADE;
+DROP TABLE IF EXISTS interop_configs    CASCADE;
+DROP TABLE IF EXISTS staff_assignments  CASCADE;
+DROP TABLE IF EXISTS shifts             CASCADE;
+
+ALTER TABLE tickets DROP CONSTRAINT chk_ticket_mode_scope;
+
+ALTER TABLE tickets ADD CONSTRAINT chk_ticket_mode_scope CHECK (
+    type = 'SINGLE_TRIP'
+        OR (type = 'MONTHLY_PASS' AND mode = 'BUS' AND scope IS NOT NULL)
+        OR (type = 'MONTHLY_PASS' AND mode <> 'BUS' AND scope IS NULL)
+    );

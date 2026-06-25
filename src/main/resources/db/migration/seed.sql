@@ -1,10 +1,115 @@
+TRUNCATE TABLE
+    reconciliation_logs,
+    company_shares,
+    settlements,
+    trip_anomalies,
+    tap_events,
+    trips,
+    tickets,
+    blacklist,
+    card_link_history,
+    card_status_history,
+    cards,
+    fare_discount_audit_log,
+    fare_discounts,
+    fare_rule_audit_log,
+    fare_pass_prices,
+    fare_rules,
+    revenue_share_rule_audit_log,
+    revenue_share_rules,
+    stations,
+    routes,
+    operators,
+    refresh_tokens,
+    user_roles,
+    users,
+    role_permissions,
+    roles,
+    permissions
+CASCADE;
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: PERMISSIONS
+-- ═══════════════════════════════════════════════════════════════
+INSERT INTO permissions (code, name, resource_group) VALUES
+                                                         ('USER_READ',          'Xem danh sách người dùng',          'USER'),
+                                                         ('USER_CREATE',        'Tạo người dùng mới',                'USER'),
+                                                         ('USER_UPDATE',        'Cập nhật thông tin người dùng',     'USER'),
+                                                         ('USER_DEACTIVATE',    'Vô hiệu hóa người dùng',            'USER'),
+                                                         ('CARD_READ',          'Xem thông tin thẻ',                 'CARD'),
+                                                         ('CARD_ISSUE',         'Phát thẻ tại trạm',                 'CARD'),
+                                                         ('CARD_ACTIVATE',      'Kích hoạt thẻ',                     'CARD'),
+                                                         ('CARD_SUSPEND',       'Tạm khóa thẻ',                      'CARD'),
+                                                         ('CARD_REVOKE',        'Thu hồi thẻ',                       'CARD'),
+                                                         ('CARD_BLACKLIST',     'Thêm thẻ vào blacklist',            'CARD'),
+                                                         ('CARD_LINK',          'Liên kết thẻ với tài khoản',        'CARD'),
+                                                         ('FARE_READ',          'Xem cấu hình giá vé',               'FARE'),
+                                                         ('FARE_CREATE',        'Tạo quy tắc giá vé',                'FARE'),
+                                                         ('FARE_UPDATE',        'Cập nhật quy tắc giá vé',           'FARE'),
+                                                         ('FARE_DISABLE',       'Vô hiệu hóa quy tắc giá vé',        'FARE'),
+                                                         ('DISCOUNT_READ',      'Xem cấu hình giảm giá',             'DISCOUNT'),
+                                                         ('DISCOUNT_CREATE',    'Tạo chính sách giảm giá',           'DISCOUNT'),
+                                                         ('DISCOUNT_UPDATE',    'Cập nhật chính sách giảm giá',      'DISCOUNT'),
+                                                         ('TRIP_READ',          'Xem tất cả chuyến đi',              'TRIP'),
+                                                         ('TRIP_READ_OWN',      'Xem chuyến đi của bản thân',        'TRIP'),
+                                                         ('TAP_PROCESS',        'Xử lý tap in / tap out',            'TRIP'),
+                                                         ('WALLET_READ',        'Xem tất cả ví',                     'WALLET'),
+                                                         ('WALLET_READ_OWN',    'Xem ví của bản thân',               'WALLET'),
+                                                         ('WALLET_DEPOSIT',     'Nạp tiền vào ví',                   'WALLET'),
+                                                         ('TICKET_READ',        'Xem tất cả vé',                     'TICKET'),
+                                                         ('TICKET_READ_OWN',    'Xem vé của bản thân',               'TICKET'),
+                                                         ('TICKET_PURCHASE',    'Mua vé',                            'TICKET'),
+                                                         ('SHIFT_READ',         'Xem ca làm việc',                   'SHIFT'),
+                                                         ('SHIFT_CREATE',       'Tạo ca làm việc',                   'SHIFT'),
+                                                         ('SHIFT_UPDATE',       'Cập nhật ca làm việc',              'SHIFT'),
+                                                         ('SETTLEMENT_READ',    'Xem báo cáo quyết toán',            'SETTLEMENT'),
+                                                         ('SETTLEMENT_RUN',     'Chạy quyết toán',                   'SETTLEMENT'),
+                                                         ('SETTLEMENT_CONFIRM', 'Xác nhận quyết toán',               'SETTLEMENT'),
+                                                         ('OPERATOR_READ',      'Xem thông tin đơn vị vận hành',     'OPERATOR'),
+                                                         ('OPERATOR_CREATE',    'Tạo đơn vị vận hành',               'OPERATOR'),
+                                                         ('OPERATOR_UPDATE',    'Cập nhật đơn vị vận hành',          'OPERATOR'),
+                                                         ('REPORT_READ',        'Xem báo cáo tổng hợp',              'REPORT');
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: ROLES
+-- ═══════════════════════════════════════════════════════════════
+INSERT INTO roles (code, name, description) VALUES
+                                                ('ACC_ADMIN',     'Account Admin', 'Quản trị toàn bộ hệ thống'),
+                                                ('STATION_STAFF', 'Station Staff', 'Nhân viên tại trạm'),
+                                                ('PASSENGER',     'Passenger',     'Hành khách');
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: ROLE_PERMISSIONS
+-- ═══════════════════════════════════════════════════════════════
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.code = 'ACC_ADMIN';
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.code = 'STATION_STAFF'
+  AND p.code IN (
+                 'CARD_READ','CARD_ISSUE','CARD_ACTIVATE','CARD_SUSPEND','CARD_BLACKLIST','CARD_LINK',
+                 'TAP_PROCESS','TRIP_READ','WALLET_READ','TICKET_READ',
+                 'SHIFT_READ','SHIFT_UPDATE','OPERATOR_READ'
+    );
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.code = 'PASSENGER'
+  AND p.code IN (
+                 'TRIP_READ_OWN','WALLET_READ_OWN','WALLET_DEPOSIT',
+                 'TICKET_READ_OWN','TICKET_PURCHASE','CARD_READ'
+    );
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: USERS
+-- ═══════════════════════════════════════════════════════════════
 INSERT INTO users (username, email, password_hash, full_name, status)
 VALUES (
-           'admin',
-           'admin@afc.vn',
+           'admin', 'admin@afc.vn',
            '$2a$10$PDjj6hQ88hOiA7YvrNSOQeinFqz4ghkipd3pTdQcYJaXWk1OOe3Mu',
-           'System Admin',
-           'ACTIVE'
+           'System Admin', 'ACTIVE'
        );
 
 INSERT INTO user_roles (user_id, role_id)
@@ -14,7 +119,6 @@ WHERE u.username = 'admin' AND r.code = 'ACC_ADMIN';
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: OPERATORS
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO operators (code, name, status) VALUES
                                                ('HURC',      'Hanoi Urban Railway Company',  'ACTIVE'),
                                                ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội', 'ACTIVE');
@@ -22,21 +126,15 @@ INSERT INTO operators (code, name, status) VALUES
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: ROUTES
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO routes (operator_id, code, name, type) VALUES
-                                                       ((SELECT id FROM operators WHERE code = 'HURC'),
-                                                        'HN_2A',     'Cát Linh - Hà Đông',         'METRO'),
-                                                       ((SELECT id FROM operators WHERE code = 'HURC'),
-                                                        'HN_3_1',    'Nhổn - Ga Hà Nội',            'METRO'),
-                                                       ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
-                                                        'HN_BRT_01', 'BRT 01: Yên Nghĩa - Kim Mã',  'BUS'),
-                                                       ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
-                                                        'HN_BUS_32', 'Buýt 32: Giáp Bát - Nhổn',    'BUS');
+                                                       ((SELECT id FROM operators WHERE code = 'HURC'),      'HN_2A',     'Cát Linh - Hà Đông',         'METRO'),
+                                                       ((SELECT id FROM operators WHERE code = 'HURC'),      'HN_3_1',    'Nhổn - Ga Hà Nội',            'METRO'),
+                                                       ((SELECT id FROM operators WHERE code = 'TRANSERCO'), 'HN_BRT_01', 'BRT 01: Yên Nghĩa - Kim Mã',  'BUS'),
+                                                       ((SELECT id FROM operators WHERE code = 'TRANSERCO'), 'HN_BUS_32', 'Buýt 32: Giáp Bát - Nhổn',    'BUS');
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: STATIONS — Tuyến 2A
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_01', 'Cát Linh',     0.000,  1),
                                                                           ((SELECT id FROM routes WHERE code = 'HN_2A'), 'HN_2A_02', 'La Thành',     0.700,  2),
@@ -54,7 +152,6 @@ INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: STATIONS — Tuyến 3.1
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_01', 'Nhổn',             0.000, 1),
                                                                           ((SELECT id FROM routes WHERE code = 'HN_3_1'), 'HN_3_02', 'Minh Khai',        1.100, 2),
@@ -68,7 +165,6 @@ INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: STATIONS — BRT 01
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BRT_01'), 'BRT01_01', 'Bến xe Yên Nghĩa', 0.000,  1),
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BRT_01'), 'BRT01_02', 'Văn Khê',           1.200,  2),
@@ -84,7 +180,6 @@ INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: STATIONS — Buýt 32
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_01', 'Bến xe Giáp Bát',   0.000,  1),
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_02', 'Ngã tư Giải Phóng', 1.800,  2),
@@ -96,32 +191,22 @@ INSERT INTO stations (route_id, code, name, km_marker, station_order) VALUES
                                                                           ((SELECT id FROM routes WHERE code = 'HN_BUS_32'), 'BUS32_08', 'Nhổn',               18.200, 8);
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: FARE RULES (QĐ 3316/2025)
+-- SEED: FARE RULES
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO fare_rules (code, mode, base_fare, rate_per_km,
                         min_price, max_price,
                         effective_from, status, version, created_by)
 VALUES
-    ('HN_METRO_STANDARD', 'METRO',
-     8000, 850, 8000, 30000,
-     '2025-07-01', 'ACTIVE', 1,
-     (SELECT id FROM users WHERE username = 'admin')),
-
-    ('HN_BUS_STANDARD', 'BUS',
-     3000, 450, 3000, 30000,
-     '2025-07-01', 'ACTIVE', 1,
-     (SELECT id FROM users WHERE username = 'admin'));
+    ('HN_METRO_STANDARD', 'METRO', 8000, 850, 8000, 30000,
+     '2025-07-01', 'ACTIVE', 1, (SELECT id FROM users WHERE username = 'admin')),
+    ('HN_BUS_STANDARD',   'BUS',   3000, 450, 3000, 30000,
+     '2025-07-01', 'ACTIVE', 1, (SELECT id FROM users WHERE username = 'admin'));
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: FARE PASS PRICES (QĐ 3316/2025)
--- Giá cơ sở = đối tượng không ưu tiên
--- Ưu tiên áp dụng qua fare_discounts (STUDENT/SENIOR/PRIORITY)
+-- SEED: FARE PASS PRICES
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO fare_pass_prices (fare_rule_id, duration_type, duration_months, scope, amount)
 VALUES
-    -- ── METRO ──────────────────────────────────────────────────
     ((SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'), 'DAILY',   NULL, NULL, 40000),
     ((SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'), 'WEEKLY',  NULL, NULL, 160000),
     ((SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'), 'MONTHLY', 1,    NULL, 200000),
@@ -137,7 +222,6 @@ VALUES
     ((SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'), 'MONTHLY', 11,   NULL, 2070000),
     ((SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'), 'MONTHLY', 12,   NULL, 2255000),
 
-    -- ── BUS ────────────────────────────────────────────────────
     ((SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'), 'DAILY',   NULL, NULL,           30000),
     ((SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'), 'WEEKLY',  NULL, NULL,           120000),
     ((SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'), 'MONTHLY', 1,    'SINGLE_ROUTE', 140000),
@@ -166,72 +250,50 @@ VALUES
     ((SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'), 'MONTHLY', 12,   'MULTI_ROUTE',  3158000);
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: FARE DISCOUNTS (QĐ 3316/2025)
+-- SEED: FARE DISCOUNTS
 -- ═══════════════════════════════════════════════════════════════
-
-INSERT INTO fare_discounts (passenger_type, discount_type,
-                            discount_value, effective_from, status)
+INSERT INTO fare_discounts (passenger_type, discount_type, discount_value, effective_from, status)
 VALUES
-    ('STUDENT',  'PERCENT', 50,  '2025-07-01', 'ACTIVE'),
-    ('SENIOR',   'PERCENT', 100, '2025-07-01', 'ACTIVE'),
-    ('PRIORITY', 'PERCENT', 100, '2025-07-01', 'ACTIVE');
+    ('STUDENT',  'PERCENT', 50, '2025-07-01', 'ACTIVE'),
+    ('PRIORITY', 'PERCENT', 50, '2025-07-01', 'ACTIVE');
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: REVENUE SHARE RULES
 -- ═══════════════════════════════════════════════════════════════
-
 INSERT INTO revenue_share_rules (operator_id, share_model, share_percentage,
                                  effective_from, status, version, created_by)
 VALUES
     ((SELECT id FROM operators WHERE code = 'HURC'),
      'KM_BASED', 65.00, '2025-07-01', 'ACTIVE', 1,
      (SELECT id FROM users WHERE username = 'admin')),
-
     ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
      'KM_BASED', 35.00, '2025-07-01', 'ACTIVE', 1,
      (SELECT id FROM users WHERE username = 'admin'));
 
 -- ═══════════════════════════════════════════════════════════════
--- SEED: INTEROP CONFIGS
--- ═══════════════════════════════════════════════════════════════
-
-INSERT INTO interop_configs (from_operator_id, to_operator_id,
-                             transfer_discount, enabled)
-VALUES
-    ((SELECT id FROM operators WHERE code = 'HURC'),
-     (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-     0, true),
-
-    ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
-     (SELECT id FROM operators WHERE code = 'HURC'),
-     0, true);
-
--- ═══════════════════════════════════════════════════════════════
 -- SEED: CARDS
 -- ═══════════════════════════════════════════════════════════════
-
-INSERT INTO cards (card_uid, status, type, supports_metro,
-                   supports_bus, activated_at)
+INSERT INTO cards (card_uid, status, type, supports_metro, supports_bus, activated_at)
 VALUES
-    ('CARD-ANON-001', 'ACTIVE',    'ANON',       true, true,  CURRENT_TIMESTAMP),
-    ('CARD-ANON-002', 'ACTIVE',    'ANON',       true, false, CURRENT_TIMESTAMP),
-    ('CARD-ANON-003', 'SUSPENDED', 'ANON',       true, true,  CURRENT_TIMESTAMP),
-    ('CARD-ID-001',   'ACTIVE',    'IDENTIFIED', true, true,  CURRENT_TIMESTAMP);
+    ('CARD-ID-001',  'ACTIVE',    'IDENTIFIED', true, true,  CURRENT_TIMESTAMP),
+    ('VMS-A3F20C91', 'ACTIVE',    'IDENTIFIED', true, true,  CURRENT_TIMESTAMP - INTERVAL '10 days'),
+    ('VMS-B7E4D2F0', 'SUSPENDED', 'IDENTIFIED', true, true,  CURRENT_TIMESTAMP - INTERVAL '5 days'),
+    ('VMS-C1A9E830', 'REVOKED',   'IDENTIFIED', true, false, CURRENT_TIMESTAMP - INTERVAL '20 days');
 
 UPDATE cards
 SET linked_user_id = (SELECT id FROM users WHERE username = 'admin'),
     linked_at      = CURRENT_TIMESTAMP
-WHERE card_uid = 'CARD-ID-001';
+WHERE card_uid IN ('CARD-ID-001', 'VMS-A3F20C91', 'VMS-B7E4D2F0');
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: BLACKLIST
 -- ═══════════════════════════════════════════════════════════════
-
-INSERT INTO blacklist (card_id, reason, added_by, is_active)
+INSERT INTO blacklist (card_id, reason, added_by, added_at, is_active)
 VALUES (
-           (SELECT id FROM cards WHERE card_uid = 'CARD-ANON-003'),
-           'Seed: thẻ tạm khóa để test blacklist',
+           (SELECT id FROM cards WHERE card_uid = 'VMS-B7E4D2F0'),
+           'Báo cáo mất thẻ từ chủ thẻ',
            (SELECT id FROM users WHERE username = 'admin'),
+           CURRENT_TIMESTAMP - INTERVAL '2 days',
            true
        );
 
@@ -239,17 +301,17 @@ VALUES (
 -- SEED: TICKETS
 -- ═══════════════════════════════════════════════════════════════
 
--- Single trip (Cát Linh → Văn Quán, METRO) — 7.5 km → 8000 + 7.5×850 = 14375
-INSERT INTO tickets (card_id, user_id, type, price,
-                     fare_rule_id, discount_id,
+-- ── JUNE 2026 SETTLEMENT — 4 tickets có trip ───────────────────
+-- totalExpected = 14375 + 200000 + 140000 + 280000 = 634375đ → MATCH
+
+-- Pool 1: SINGLE_TRIP 14375đ
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      from_station_id, to_station_id,
                      mode, valid_from, valid_to, status)
 VALUES (
-           NULL,
            (SELECT id FROM users WHERE username = 'admin'),
            'SINGLE_TRIP', 14375.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           NULL,
            (SELECT id FROM stations WHERE code = 'HN_2A_01'),
            (SELECT id FROM stations WHERE code = 'HN_2A_08'),
            'METRO',
@@ -257,45 +319,8 @@ VALUES (
            'ACTIVE'
        );
 
--- Single trip STUDENT 50% → 7187.5đ
-INSERT INTO tickets (card_id, user_id, type, price,
-                     fare_rule_id, discount_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           NULL,
-           (SELECT id FROM users WHERE username = 'admin'),
-           'SINGLE_TRIP', 7187.50,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
-           'METRO',
-           CURRENT_DATE, CURRENT_DATE + INTERVAL '1 day',
-           'ACTIVE'
-       );
-
--- Single trip đã USED
-INSERT INTO tickets (card_id, user_id, type, price,
-                     fare_rule_id,
-                     from_station_id, to_station_id,
-                     mode, valid_from, valid_to, status, used_at)
-VALUES (
-           NULL,
-           (SELECT id FROM users WHERE username = 'admin'),
-           'SINGLE_TRIP', 14375.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
-           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
-           'METRO',
-           CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE,
-           'USED',
-           CURRENT_TIMESTAMP - INTERVAL '2 hours'
-       );
-
--- METRO MONTHLY 1 tháng → 200k (link vào CARD-ID-001)
-INSERT INTO tickets (card_id, user_id, type, price,
-                     fare_rule_id,
+-- Pool 2a: METRO MONTHLY 200k → CARD-ID-001
+INSERT INTO tickets (card_id, user_id, type, price, fare_rule_id,
                      mode, valid_from, valid_to, status)
 VALUES (
            (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001'),
@@ -308,48 +333,7 @@ VALUES (
            'ACTIVE'
        );
 
--- METRO MONTHLY 1 tháng STUDENT 50% → 100k
-INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'MONTHLY_PASS', 100000.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
-           'METRO',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE'
-       );
-
--- METRO MONTHLY 1 tháng SENIOR 100% → 0đ
-INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'MONTHLY_PASS', 0.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           (SELECT id FROM fare_discounts WHERE passenger_type = 'SENIOR'),
-           'METRO',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE'
-       );
-
--- METRO WEEKLY → 160k
-INSERT INTO tickets (user_id, type, price, fare_rule_id,
-                     mode, valid_from, valid_to, status)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'MONTHLY_PASS', 160000.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
-           'METRO',
-           CURRENT_DATE,
-           CURRENT_DATE + INTERVAL '7 days',
-           'ACTIVE'
-       );
-
--- BUS SINGLE_ROUTE MONTHLY 1 tháng → 140k
+-- Pool 2b: BUS SINGLE_ROUTE 140k
 INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      mode, valid_from, valid_to, status, scope)
 VALUES (
@@ -359,26 +343,10 @@ VALUES (
            'BUS',
            DATE_TRUNC('month', CURRENT_DATE),
            DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE',
-           'SINGLE_ROUTE'
+           'ACTIVE', 'SINGLE_ROUTE'
        );
 
--- BUS SINGLE_ROUTE MONTHLY 1 tháng STUDENT 50% → 70k
-INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
-                     mode, valid_from, valid_to, status, scope)
-VALUES (
-           (SELECT id FROM users WHERE username = 'admin'),
-           'MONTHLY_PASS', 70000.00,
-           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
-           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
-           'BUS',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE',
-           'SINGLE_ROUTE'
-       );
-
--- BUS MULTI_ROUTE MONTHLY 1 tháng → 280k
+-- Pool 3: BUS MULTI_ROUTE 280k
 INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      mode, valid_from, valid_to, status, scope)
 VALUES (
@@ -388,11 +356,100 @@ VALUES (
            'BUS',
            DATE_TRUNC('month', CURRENT_DATE),
            DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE',
-           'MULTI_ROUTE'
+           'ACTIVE', 'MULTI_ROUTE'
        );
 
--- BUS MULTI_ROUTE MONTHLY 1 tháng STUDENT 50% → 140k
+-- ── DISPLAY TICKETS — tháng 7, không có trip, không ảnh hưởng settlement ──
+
+-- VMS-A3F20C91 METRO MONTHLY 200k
+INSERT INTO tickets (card_id, user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM cards WHERE card_uid = 'VMS-A3F20C91'),
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           'ACTIVE'
+       );
+
+-- SINGLE_TRIP STUDENT 7187.5đ
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 7187.50,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO',
+           CURRENT_DATE + INTERVAL '32 days',
+           CURRENT_DATE + INTERVAL '33 days',
+           'ACTIVE'
+       );
+
+-- SINGLE_TRIP USED — đặt trong tháng 5 tránh bị đếm vào June
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status, used_at)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 14375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO',
+           '2026-05-20', '2026-05-21',
+           'USED',
+           CURRENT_TIMESTAMP - INTERVAL '35 days'
+       );
+
+-- METRO MONTHLY STUDENT 100k
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 100000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'METRO',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           'ACTIVE'
+       );
+
+-- METRO WEEKLY 160k
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 160000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO',
+           CURRENT_DATE + INTERVAL '32 days',
+           CURRENT_DATE + INTERVAL '39 days',
+           'ACTIVE'
+       );
+
+-- BUS SINGLE_ROUTE STUDENT 70k
+INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 70000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
+           'BUS',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           'ACTIVE', 'SINGLE_ROUTE'
+       );
+
+-- BUS MULTI_ROUTE STUDENT 140k
 INSERT INTO tickets (user_id, type, price, fare_rule_id, discount_id,
                      mode, valid_from, valid_to, status, scope)
 VALUES (
@@ -401,13 +458,12 @@ VALUES (
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
-           'ACTIVE',
-           'MULTI_ROUTE'
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           'ACTIVE', 'MULTI_ROUTE'
        );
 
--- METRO EXPIRED (tháng trước)
+-- METRO EXPIRED tháng trước
 INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      mode, valid_from, valid_to, status)
 VALUES (
@@ -420,7 +476,7 @@ VALUES (
            'EXPIRED'
        );
 
--- BUS SINGLE_ROUTE tháng sau (chưa có hiệu lực)
+-- BUS SINGLE_ROUTE tháng 8 (chưa hiệu lực)
 INSERT INTO tickets (user_id, type, price, fare_rule_id,
                      mode, valid_from, valid_to, status, scope)
 VALUES (
@@ -428,223 +484,532 @@ VALUES (
            'MONTHLY_PASS', 140000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '2 month' - INTERVAL '1 day',
-           'ACTIVE',
-           'SINGLE_ROUTE'
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '2 months',
+           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '3 months' - INTERVAL '1 day',
+           'ACTIVE', 'SINGLE_ROUTE'
+       );
+
+-- ── MAY 2026 — MISMATCH ─────────────────────────────────────────
+-- totalExpected = 200000 + 15000 + 140000 + 280000 = 635000đ
+-- METRO MONTHLY operator_id=NULL → 200000đ không allocate
+-- totalActual = 435000đ, diff = 200000đ → MISMATCH
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO', '2026-05-01', '2026-05-31', 'ACTIVE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 15000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_09'),
+           'METRO', '2026-05-15', '2026-05-16', 'ACTIVE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 140000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS', '2026-05-01', '2026-05-31', 'ACTIVE', 'SINGLE_ROUTE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 280000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS', '2026-05-01', '2026-05-31', 'ACTIVE', 'MULTI_ROUTE'
+       );
+
+-- ── APRIL 2026 — WARNING ────────────────────────────────────────
+-- totalExpected = 14376 + 200000 + 140000 + 280000 = 634376đ
+-- Pool 1 fare_amount=14375 (lệch 1đ)
+-- totalActual = 634375đ, diff = 1đ < 10000đ → WARNING
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 14376.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO', '2026-04-15', '2026-04-16', 'ACTIVE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 200000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           'METRO', '2026-04-01', '2026-04-30', 'ACTIVE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 140000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS', '2026-04-01', '2026-04-30', 'ACTIVE', 'SINGLE_ROUTE'
+       );
+
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     mode, valid_from, valid_to, status, scope)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'MONTHLY_PASS', 280000.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           'BUS', '2026-04-01', '2026-04-30', 'ACTIVE', 'MULTI_ROUTE'
        );
 
 -- ═══════════════════════════════════════════════════════════════
--- SETTLEMENT TEST SEED — June 2026
--- Expected: totalExpected = 15,000 + 200,000 + 140,000 + 280,000 = 635,000đ
+-- SEED: TRIPS
 -- ═══════════════════════════════════════════════════════════════
 
--- ── POOL 1: Vé lượt WALLET → direct 100% HURC ─────────────────
-INSERT INTO trips (
-    card_id, operator_id,
-    tap_in_station_id, tap_in_gate_id, tap_in_at,
-    distance_km, fare_amount,
-    payment_method, ticket_type_used, transport_mode, status
-) VALUES (
-             (SELECT id FROM cards    WHERE card_uid = 'CARD-ANON-001'),
-             (SELECT id FROM operators WHERE code    = 'HURC'),
-             (SELECT id FROM stations  WHERE code    = 'HN_2A_01'),
-             'GATE_IN_01', CURRENT_TIMESTAMP - INTERVAL '5 days',
-             8.5, 15000.00,
-             'WALLET', 'SINGLE_TRIP', 'METRO', 'COMPLETED'
-         );
+-- ── JUNE 2026 — MATCH ──────────────────────────────────────────
 
--- ── POOL 2a: Vé tháng METRO → direct 100% HURC ────────────────
-INSERT INTO trips (
-    card_id, operator_id, ticket_id,
-    tap_in_station_id, tap_in_gate_id, tap_in_at,
-    distance_km,
-    payment_method, ticket_type_used, transport_mode, status
-) VALUES (
-             (SELECT id FROM cards    WHERE card_uid = 'CARD-ID-001'),
-             (SELECT id FROM operators WHERE code    = 'HURC'),
-             (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
-                                         AND price = 200000 LIMIT 1),
-         (SELECT id FROM stations  WHERE code = 'HN_3_01'),
-    'GATE_IN_02', CURRENT_TIMESTAMP - INTERVAL '4 days',
-    5.0,
-    'TICKET', 'MONTHLY_PASS', 'METRO', 'COMPLETED'
+-- Pool 1
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 14375
+                                     AND status = 'ACTIVE' AND valid_from = CURRENT_DATE LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-06-20 08:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+    TIMESTAMP '2026-06-20 08:15:00',
+    7.5, 14375.00, 'SINGLE_TRIP', 'METRO'
     );
 
--- ── POOL 2b: Vé tháng BUS SINGLE_ROUTE → direct 100% TRANSERCO ─
-INSERT INTO trips (
-    operator_id, ticket_id,
-    tap_in_station_id, tap_in_gate_id, tap_in_at,
-    distance_km,
-    payment_method, ticket_type_used, transport_mode, status
-) VALUES (
-             (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-             (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
-                                         AND price = 140000 LIMIT 1),
-         (SELECT id FROM stations  WHERE code = 'BUS32_01'),
-    'GATE_IN_03', CURRENT_TIMESTAMP - INTERVAL '3 days',
-    10.2,
-    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
+-- Pool 2a
+INSERT INTO trips (card_id, operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001'),
+           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
+                                     AND card_id = (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001') LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_3_01'),
+    TIMESTAMP '2026-06-18 09:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_3_06'),
+    TIMESTAMP '2026-06-18 09:10:00',
+    5.0, 'MONTHLY_PASS', 'METRO'
     );
 
--- ── POOL 3: Vé tháng BUS MULTI_ROUTE → allocateProportional ────
--- weight(TRANSERCO) = 3000×2 + 450×22.0 = 15,900
--- weight(HURC)      = 8000×1 + 850×6.0  = 13,100
--- totalWeight = 29,000
--- TRANSERCO → 15900/29000 × 280,000 ≈ 153,517đ
--- HURC      → 13100/29000 × 280,000 ≈ 126,483đ
+-- Pool 2b
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
+                                     AND price = 140000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_01'),
+    TIMESTAMP '2026-06-15 07:30:00',
+       (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-06-15 07:55:00',
+    10.2, 'MONTHLY_PASS', 'BUS'
+    );
 
-INSERT INTO trips (
-    operator_id, ticket_id,
-    tap_in_station_id, tap_in_gate_id, tap_in_at,
-    distance_km,
-    payment_method, ticket_type_used, transport_mode, status
-) VALUES
--- Trip 3-A: TRANSERCO, BUS, 14 km
+-- Pool 3
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES
+    (
+        (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+        (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+                                  AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BRT01_01'),
+    TIMESTAMP '2026-06-10 08:00:00',
+    (SELECT id FROM stations WHERE code = 'BRT01_10'),
+    TIMESTAMP '2026-06-10 08:30:00',
+    14.0, 'MONTHLY_PASS', 'BUS'
+    ),
 (
     (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-                                AND price = 280000 LIMIT 1),
-(SELECT id FROM stations  WHERE code = 'BRT01_01'),
-    'GATE_IN_04', CURRENT_TIMESTAMP - INTERVAL '2 days',
-    14.0,
-    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
-    ),
--- Trip 3-B: TRANSERCO, BUS, 8 km
-    (
-    (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-    AND price = 280000 LIMIT 1),
-    (SELECT id FROM stations  WHERE code = 'BUS32_05'),
-    'GATE_IN_05', CURRENT_TIMESTAMP - INTERVAL '1 days',
-    8.0,
-    'TICKET', 'MONTHLY_PASS', 'BUS', 'COMPLETED'
-    ),
--- Trip 3-C: HURC, METRO, 6 km
-    (
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-06-12 17:00:00',
+    (SELECT id FROM stations WHERE code = 'BUS32_08'),
+    TIMESTAMP '2026-06-12 17:15:00',
+    8.0, 'MONTHLY_PASS', 'BUS'
+),
+(
     (SELECT id FROM operators WHERE code = 'HURC'),
-    (SELECT id FROM tickets   WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-    AND price = 280000 LIMIT 1),
-    (SELECT id FROM stations  WHERE code = 'HN_2A_01'),
-    'GATE_IN_06', CURRENT_TIMESTAMP - INTERVAL '2 days 12 hours',
-    6.0,
-    'TICKET', 'MONTHLY_PASS', 'METRO', 'COMPLETED'
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-06-11 09:00:00',
+    (SELECT id FROM stations WHERE code = 'HN_2A_07'),
+    TIMESTAMP '2026-06-11 09:12:00',
+    6.0, 'MONTHLY_PASS', 'METRO'
+);
+
+-- ── MAY 2026 — MISMATCH ─────────────────────────────────────────
+
+-- Pool 2a METRO MONTHLY — operator_id NULL
+INSERT INTO trips (ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
+                                     AND valid_from = '2026-05-01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_3_01'),
+    TIMESTAMP '2026-05-15 08:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_3_06'),
+    TIMESTAMP '2026-05-15 08:10:00',
+    5.0, 'MONTHLY_PASS', 'METRO'
+    );
+
+-- Pool 1
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 15000
+                                     AND valid_from = '2026-05-15' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-05-15 09:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_2A_09'),
+    TIMESTAMP '2026-05-15 09:18:00',
+    8.8, 15000.00, 'SINGLE_TRIP', 'METRO'
+    );
+
+-- Pool 2b
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
+                                     AND valid_from = '2026-05-01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_01'),
+    TIMESTAMP '2026-05-16 07:30:00',
+       (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-05-16 07:55:00',
+    10.2, 'MONTHLY_PASS', 'BUS'
+    );
+
+-- Pool 3
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES
+    (
+        (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+        (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+                                  AND valid_from = '2026-05-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BRT01_01'),
+    TIMESTAMP '2026-05-10 08:00:00',
+    (SELECT id FROM stations WHERE code = 'BRT01_10'),
+    TIMESTAMP '2026-05-10 08:30:00',
+    14.0, 'MONTHLY_PASS', 'BUS'
+    ),
+(
+    (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND valid_from = '2026-05-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-05-12 17:00:00',
+    (SELECT id FROM stations WHERE code = 'BUS32_08'),
+    TIMESTAMP '2026-05-12 17:15:00',
+    8.0, 'MONTHLY_PASS', 'BUS'
+),
+(
+    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND valid_from = '2026-05-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-05-11 09:00:00',
+    (SELECT id FROM stations WHERE code = 'HN_2A_07'),
+    TIMESTAMP '2026-05-11 09:12:00',
+    6.0, 'MONTHLY_PASS', 'METRO'
+);
+
+-- ── APRIL 2026 — WARNING ─────────────────────────────────────────
+
+-- Pool 1: fare_amount lệch 1đ
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 14376
+                                     AND valid_from = '2026-04-15' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-04-15 08:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+    TIMESTAMP '2026-04-15 08:15:00',
+    7.5, 14375.00, 'SINGLE_TRIP', 'METRO'
+    );
+
+-- Pool 2a
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
+                                     AND valid_from = '2026-04-01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_3_05'),
+    TIMESTAMP '2026-04-15 09:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_3_08'),
+    TIMESTAMP '2026-04-15 09:08:00',
+    4.1, 'MONTHLY_PASS', 'METRO'
+    );
+
+-- Pool 2b
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+           (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
+                                     AND valid_from = '2026-04-01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_01'),
+    TIMESTAMP '2026-04-16 07:30:00',
+       (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-04-16 07:55:00',
+    10.2, 'MONTHLY_PASS', 'BUS'
+    );
+
+-- Pool 3
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, ticket_type_used, transport_mode)
+VALUES
+    (
+        (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+        (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+                                  AND valid_from = '2026-04-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BRT01_01'),
+    TIMESTAMP '2026-04-10 08:00:00',
+    (SELECT id FROM stations WHERE code = 'BRT01_10'),
+    TIMESTAMP '2026-04-10 08:30:00',
+    14.0, 'MONTHLY_PASS', 'BUS'
+    ),
+(
+    (SELECT id FROM operators WHERE code = 'TRANSERCO'),
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND valid_from = '2026-04-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'BUS32_05'),
+    TIMESTAMP '2026-04-12 17:00:00',
+    (SELECT id FROM stations WHERE code = 'BUS32_08'),
+    TIMESTAMP '2026-04-12 17:15:00',
+    8.0, 'MONTHLY_PASS', 'BUS'
+),
+(
+    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
+        AND valid_from = '2026-04-01' LIMIT 1),
+    (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+    TIMESTAMP '2026-04-11 09:00:00',
+    (SELECT id FROM stations WHERE code = 'HN_2A_07'),
+    TIMESTAMP '2026-04-11 09:12:00',
+    6.0, 'MONTHLY_PASS', 'METRO'
+);
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: ANOMALY TICKETS — tháng 3/2026, không ảnh hưởng settlement
+-- ═══════════════════════════════════════════════════════════════
+
+-- INCOMPLETE_TRIP ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 14375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_03'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO', '2026-03-20', '2026-03-21', 'ACTIVE'
+       );
+
+-- FARE_MISMATCH ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 14375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_01'),
+           (SELECT id FROM stations WHERE code = 'HN_2A_08'),
+           'METRO', '2026-03-21', '2026-03-22', 'ACTIVE'
+       );
+
+-- DUPLICATE_TRANSACTION ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin'),
+           'SINGLE_TRIP', 6375.00,
+           (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
+           (SELECT id FROM stations WHERE code = 'BUS32_01'),
+           (SELECT id FROM stations WHERE code = 'BUS32_04'),
+           'BUS', '2026-03-19', '2026-03-20', 'ACTIVE'
+       );
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: ANOMALY TRIPS — tháng 3/2026
+-- ═══════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED: ANOMALY TICKETS — tháng 3/2026, không ảnh hưởng settlement
+-- ═══════════════════════════════════════════════════════════════
+
+-- INCOMPLETE_TRIP ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin' LIMIT 1),
+    'SINGLE_TRIP', 14375.00,
+       (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_03' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_08' LIMIT 1),
+    'METRO', '2026-03-20', '2026-03-21', 'ACTIVE'
+    );
+
+-- FARE_MISMATCH ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin' LIMIT 1),
+    'SINGLE_TRIP', 14375.00,
+       (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_08' LIMIT 1),
+    'METRO', '2026-03-21', '2026-03-22', 'ACTIVE'
+    );
+
+-- DUPLICATE_TRANSACTION ticket
+INSERT INTO tickets (user_id, type, price, fare_rule_id,
+                     from_station_id, to_station_id,
+                     mode, valid_from, valid_to, status)
+VALUES (
+           (SELECT id FROM users WHERE username = 'admin' LIMIT 1),
+    'SINGLE_TRIP', 6375.00,
+       (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_04' LIMIT 1),
+    'BUS', '2026-03-19', '2026-03-20', 'ACTIVE'
     );
 
 -- ═══════════════════════════════════════════════════════════════
--- EXPECTED CompanyShare sau settlement:
---   HURC      = 15,000 + 200,000 + 126,483 = 341,483đ
---   TRANSERCO =          140,000 + 153,517  = 293,517đ
---   totalActual = 635,000đ  →  reconciliationStatus = MATCH
--- ═══════════════════════════════════════════════════════════════
--- ═══════════════════════════════════════════════════════════════
--- DEMO: SETTLEMENT MISMATCH — tháng 5/2026
+-- SEED: ANOMALY TRIPS — tháng 3/2026
 -- ═══════════════════════════════════════════════════════════════
 
-INSERT INTO settlements (
-    period, status, formula_code,
-    total_expected, total_actual,
-    diff_amount, reconciliation_status,
-    tolerance_threshold, ran_by, ran_at
-) VALUES (
-             '2026-05',
-             'DRAFT',
-             'QD3316_2025',
-             500000.00,
-             450000.00,
-             50000.00,
-             'MISMATCH',
-             10000.00,
-             (SELECT id FROM users WHERE username = 'admin'),
-             CURRENT_TIMESTAMP - INTERVAL '25 days'
-         );
+-- INCOMPLETE_TRIP — không có tap_out
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC' LIMIT 1),
+       (SELECT id FROM tickets WHERE valid_from = '2026-03-20'
+           AND from_station_id = (SELECT id FROM stations WHERE code = 'HN_2A_03' LIMIT 1) LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_03' LIMIT 1),
+    TIMESTAMP '2026-03-20 07:45:00',
+    0, 0, 'SINGLE_TRIP', 'METRO'
+    );
 
-INSERT INTO company_shares (
-    settlement_id, operator_id,
-    total_km, total_trips,
-    expected_revenue, share_amount,
-    direct_share, proportional_share,
-    rounding_adjustment
-) VALUES
-      (
-          (SELECT id FROM settlements WHERE period = '2026-05'),
-          (SELECT id FROM operators WHERE code = 'HURC'),
-          125.5, 850,
-          325000.00, 290000.00,
-          200000.00, 90000.00,
-          0.00
-      ),
-      (
-          (SELECT id FROM settlements WHERE period = '2026-05'),
-          (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-          98.3, 620,
-          175000.00, 160000.00,
-          140000.00, 20000.00,
-          0.00
-      );
+-- FARE_MISMATCH — Cấp 4 gửi 12000đ, đúng phải là 14375đ (lệch 16.5%)
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'HURC' LIMIT 1),
+       (SELECT id FROM tickets WHERE valid_from = '2026-03-21'
+           AND from_station_id = (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1) LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1),
+    TIMESTAMP '2026-03-21 09:00:00',
+       (SELECT id FROM stations WHERE code = 'HN_2A_08' LIMIT 1),
+    TIMESTAMP '2026-03-21 09:15:00',
+    7.5, 12000.00, 'SINGLE_TRIP', 'METRO'
+    );
+
+-- DUPLICATE_TRANSACTION — giao dịch bị gửi trùng
+INSERT INTO trips (operator_id, ticket_id,
+                   tap_in_station_id, tap_in_at,
+                   tap_out_station_id, tap_out_at,
+                   distance_km, fare_amount, ticket_type_used, transport_mode,
+                   external_transaction_id)
+VALUES (
+           (SELECT id FROM operators WHERE code = 'TRANSERCO' LIMIT 1),
+       (SELECT id FROM tickets WHERE valid_from = '2026-03-19'
+           AND from_station_id = (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1) LIMIT 1),
+       (SELECT id FROM stations WHERE code = 'BUS32_01' LIMIT 1),
+    TIMESTAMP '2026-03-19 07:00:00',
+       (SELECT id FROM stations WHERE code = 'BUS32_04' LIMIT 1),
+    TIMESTAMP '2026-03-19 07:20:00',
+    7.5, 6375.00, 'SINGLE_TRIP', 'BUS',
+    'a1b2c3d4-0000-0000-0000-000000000001'
+    );
 
 -- ═══════════════════════════════════════════════════════════════
--- DEMO: SETTLEMENT WARNING — tháng 4/2026
+-- SEED: TRIP ANOMALIES
 -- ═══════════════════════════════════════════════════════════════
 
-INSERT INTO settlements (
-    period, status, formula_code,
-    total_expected, total_actual,
-    diff_amount, reconciliation_status,
-    tolerance_threshold, ran_by, ran_at
-) VALUES (
-             '2026-04',
-             'DRAFT',          -- đổi thành DRAFT
-             'QD3316_2025',
-             635000.00,
-             634998.50,
-             1.50,
-             'WARNING',
-             10000.00,
-             (SELECT id FROM users WHERE username = 'admin'),
-             CURRENT_TIMESTAMP - INTERVAL '55 days'
-         );
+INSERT INTO trip_anomalies (trip_id, anomaly_type, severity, description, detected_at, is_resolved)
+VALUES (
+           (SELECT id FROM trips WHERE tap_in_at = TIMESTAMP '2026-03-20 07:45:00' LIMIT 1),
+    'INCOMPLETE_TRIP', 'WARNING',
+    'Hành khách quẹt vào tại HN_2A_03 lúc 07:45 nhưng không quẹt ra — chuyến đi không hoàn thành',
+    TIMESTAMP '2026-03-20 09:45:00',
+    false
+    );
 
-INSERT INTO company_shares (
-    settlement_id, operator_id,
-    total_km, total_trips,
-    expected_revenue, share_amount,
-    direct_share, proportional_share,
-    rounding_adjustment
-) VALUES
-      (
-          (SELECT id FROM settlements WHERE period = '2026-04'),
-          (SELECT id FROM operators WHERE code = 'HURC'),
-          210.3, 1250,
-          341483.00, 341482.25,
-          215000.00, 126482.25,
-          0.00
-      ),
-      (
-          (SELECT id FROM settlements WHERE period = '2026-04'),
-          (SELECT id FROM operators WHERE code = 'TRANSERCO'),
-          185.7, 980,
-          293517.00, 293516.25,
-          140000.00, 153516.25,
-          0.00
-      );
+INSERT INTO trip_anomalies (trip_id, anomaly_type, severity, description, detected_at, is_resolved, corrected_fare)
+VALUES (
+           (SELECT id FROM trips WHERE tap_in_at = TIMESTAMP '2026-03-21 09:00:00' LIMIT 1),
+    'FARE_MISMATCH', 'WARNING',
+    'Giá vé Cấp 4 gửi 12,000đ lệch so với Cấp 5 tính 14,375đ (lệch 16.5% vượt ngưỡng 5%)',
+    TIMESTAMP '2026-03-21 09:15:00',
+    false,
+    14375.00
+    );
 
-INSERT INTO reconciliation_logs (
-    settlement_id, category,
-    discrepancy_amount, trip_count, note, detail
-) VALUES (
-             (SELECT id FROM settlements WHERE period = '2026-05'),
-             'MISMATCH',
-             50000.00,
-             1470,
-             'Chênh lệch 50,000đ vượt ngưỡng dung sai 10,000đ — dữ liệu chuyến đi từ Cấp 4 có thể bị thiếu',
-             '{"diffAmount": "50000.00"}'
-         ),
-         (
-             (SELECT id FROM settlements WHERE period = '2026-04'),
-             'WARNING',
-             1.50,
-             2230,
-             'Chênh lệch 1.5đ do làm tròn số trong công thức phân bổ tỷ lệ Pool 3 — nằm trong ngưỡng cho phép',
-             '{"diffAmount": "1.50"}'
-         );
+INSERT INTO trip_anomalies (trip_id, anomaly_type, severity, description, detected_at, is_resolved)
+VALUES (
+           (SELECT id FROM trips WHERE external_transaction_id = 'a1b2c3d4-0000-0000-0000-000000000001' LIMIT 1),
+    'DUPLICATE_TRANSACTION', 'ERROR',
+    'Giao dịch a1b2c3d4-0000-0000-0000-000000000001 bị gửi trùng lặp từ Cấp 4 — đã bỏ qua lần thứ 2',
+    TIMESTAMP '2026-03-19 07:00:01',
+    false
+    );
