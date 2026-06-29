@@ -1,12 +1,11 @@
 package com.metro.afc.trip.infrastructure.messaging;
 
-import com.metro.afc.trip.application.ExternalIdMapper;
+import com.metro.afc.shared.infrastructure.config.RabbitMQConfig;
 import com.metro.afc.trip.application.TransactionIngestionService;
 import com.metro.afc.trip.application.dto.BatchIngestResponse;
 import com.metro.afc.trip.application.dto.ExternalTransactionBatchRequest;
 import com.metro.afc.trip.application.dto.TransactionBatchRequest;
 import com.metro.afc.trip.application.dto.TransactionItemRequest;
-import com.metro.afc.shared.infrastructure.config.RabbitMQConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -20,7 +19,6 @@ import java.util.List;
 public class TransactionBatchListener {
 
     private final TransactionIngestionService ingestionService;
-    private final ExternalIdMapper externalIdMapper;
 
     @RabbitListener(queues = RabbitMQConfig.TRANSACTION_BATCH_QUEUE)
     public void handle(ExternalTransactionBatchRequest request) {
@@ -35,9 +33,9 @@ public class TransactionBatchListener {
                         item.ticketId(),
                         item.operatorCode(),
                         item.lineCode(),
-                        externalIdMapper.toStationCode(item.tapInStationId()),
+                        item.tapInStationCode(),
                         item.tapInAt(),
-                        externalIdMapper.toStationCode(item.tapOutStationId()),
+                        item.tapOutStationCode(),
                         item.tapOutAt(),
                         item.distanceKm(),
                         item.fareAmount(),
