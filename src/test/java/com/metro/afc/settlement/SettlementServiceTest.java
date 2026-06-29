@@ -6,6 +6,7 @@ import com.metro.afc.settlement.application.SettlementService;
 import com.metro.afc.settlement.application.port.out.SettlementRepository;
 import com.metro.afc.settlement.domain.Settlement;
 import com.metro.afc.settlement.domain.enums.settlement.SettlementStatus;
+import com.metro.afc.settlement.domain.settlementAllocation.AllocationResult;
 import com.metro.afc.settlement.domain.settlementAllocation.AllocationStrategy;
 import com.metro.afc.shared.domain.valueobject.Money;
 import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
@@ -70,16 +71,23 @@ class SettlementServiceTest {
         BigDecimal amount = new BigDecimal("15000.00");
         Trip trip = makeSingleTrip(amount);
 
-        // Mock 1 Ticket tương ứng bán ra trong kỳ để tổng Expected khớp với Actual (15,000)
         Ticket mockTicket = mock(Ticket.class);
         when(mockTicket.getPrice()).thenReturn(Money.of(amount));
 
-        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
-        when(ticketRepository.findActiveInPeriod(any(), any())).thenReturn(List.of(mockTicket)); // <-- Sửa ở đây
-        when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
-        when(fareRuleRepository.findAllActive()).thenReturn(List.of());
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(trip));
+        when(ticketRepository.findActiveInPeriod(any(), any()))
+                .thenReturn(List.of(mockTicket));
+        when(ticketRepository.findAllByIds(any()))
+                .thenReturn(List.of());
+        when(fareRuleRepository.findActiveAtDate(any()))
+                .thenReturn(List.of());
+
         when(allocationStrategy.allocate(any(), any(), any()))
-                .thenReturn(Map.of(operatorId, Money.of(amount)));
+                .thenReturn(new AllocationResult(
+                        Map.of(operatorId, Money.of(amount)),
+                        Map.of()                    // <-- chỉ Direct
+                ));
 
         Settlement result = service.run(6, 2026, ranBy);
 
@@ -90,7 +98,7 @@ class SettlementServiceTest {
 
         verify(settlementRepository).save(result);
         verify(settlementRepository, atLeastOnce()).saveShare(any());
-        verify(settlementRepository, never()).saveLog(any()); // Vượt qua an toàn vì trạng thái giờ là MATCH!
+        verify(settlementRepository, never()).saveLog(any());
     }
 
     @Test
@@ -98,11 +106,23 @@ class SettlementServiceTest {
     void run_mismatch_savesReconciliationLog() {
         Trip trip = makeSingleTrip(new BigDecimal("15000"));
 
-        when(tripRepository.findCompletedTripsInPeriod(any(), any())).thenReturn(List.of(trip));
-        when(ticketRepository.findAllByIds(any())).thenReturn(List.of());
-        when(fareRuleRepository.findAllActive()).thenReturn(List.of());
+        Ticket mockTicket = mock(Ticket.class);
+        when(mockTicket.getPrice()).thenReturn(Money.of(new BigDecimal("15000")));
+
+        when(tripRepository.findCompletedTripsInPeriod(any(), any()))
+                .thenReturn(List.of(trip));
+        when(ticketRepository.findActiveInPeriod(any(), any()))
+                .thenReturn(List.of(mockTicket));
+        when(ticketRepository.findAllByIds(any()))
+                .thenReturn(List.of());
+        when(fareRuleRepository.findActiveAtDate(any()))
+                .thenReturn(List.of());
+
         when(allocationStrategy.allocate(any(), any(), any()))
-                .thenReturn(Map.of(operatorId, Money.of(new BigDecimal("14950"))));
+                .thenReturn(new AllocationResult(
+                        Map.of(operatorId, Money.of(new BigDecimal("14800"))),
+                        Map.of()                    // <-- chỉ Direct
+                ));
 
         service.run(6, 2026, ranBy);
 
