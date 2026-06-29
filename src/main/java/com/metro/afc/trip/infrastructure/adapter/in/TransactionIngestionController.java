@@ -1,6 +1,5 @@
 package com.metro.afc.trip.infrastructure.adapter.in;
 
-import com.metro.afc.trip.application.ExternalIdMapper;
 import com.metro.afc.trip.application.TransactionIngestionService;
 import com.metro.afc.trip.application.dto.BatchIngestResponse;
 import com.metro.afc.trip.application.dto.ExternalTransactionBatchRequest;
@@ -22,7 +21,6 @@ import java.util.List;
 public class TransactionIngestionController {
 
     private final TransactionIngestionService ingestionService;
-    private final ExternalIdMapper externalIdMapper;
 
     @PostMapping("/batch")
     public ResponseEntity<BatchIngestResponse> ingest(
@@ -36,9 +34,9 @@ public class TransactionIngestionController {
                         item.ticketId(),
                         item.operatorCode(),
                         item.lineCode(),
-                        externalIdMapper.toStationCode(item.tapInStationId()),
+                        item.tapInStationCode(),
                         item.tapInAt(),
-                        externalIdMapper.toStationCode(item.tapOutStationId()),
+                        item.tapOutStationCode(),
                         item.tapOutAt(),
                         item.distanceKm(),
                         item.fareAmount(),
