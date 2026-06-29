@@ -3,7 +3,6 @@ TRUNCATE TABLE
     company_shares,
     settlements,
     trip_anomalies,
-    tap_events,
     trips,
     tickets,
     blacklist,

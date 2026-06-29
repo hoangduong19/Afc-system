@@ -382,25 +382,6 @@ CREATE INDEX idx_trips_status  ON trips(status);
 CREATE INDEX idx_trips_tap_in  ON trips(tap_in_at);
 CREATE INDEX idx_trips_tap_out ON trips(tap_out_at);
 
-CREATE TABLE tap_events (
-    id                        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    trip_id                   UUID NOT NULL REFERENCES trips(id),
-    event_type                VARCHAR(20) NOT NULL,
-    station_id                UUID NOT NULL REFERENCES stations(id),
-    gate_id                   VARCHAR(50) NOT NULL,
-    layer1_exists             BOOLEAN NOT NULL,
-    layer2_active             BOOLEAN NOT NULL,
-    layer3_not_blacklisted    BOOLEAN NOT NULL,
-    layer4_has_fund_or_ticket BOOLEAN NOT NULL,
-    layer5_no_duplicate       BOOLEAN NOT NULL,
-    failed_reason             TEXT,
-    tapped_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_tap_type CHECK (event_type IN ('TAP_IN','TAP_OUT'))
-);
-
-CREATE INDEX idx_tap_events_trip    ON tap_events(trip_id);
-CREATE INDEX idx_tap_events_station ON tap_events(station_id);
-CREATE INDEX idx_tap_events_time    ON tap_events(tapped_at);
 
 CREATE TABLE trip_anomalies (
     id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
