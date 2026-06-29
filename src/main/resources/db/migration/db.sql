@@ -242,6 +242,8 @@ CREATE TABLE fare_discounts (
     effective_from  DATE NOT NULL,
     effective_to    DATE,
     status          VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    version         INTEGER NOT NULL DEFAULT 1,
+    created_by      UUID NOT NULL REFERENCES users(id),
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_passenger_type CHECK (passenger_type IN ('STUDENT','SENIOR','PRIORITY')),
     CONSTRAINT chk_discount_type   CHECK (discount_type  IN ('PERCENT','FIXED'))

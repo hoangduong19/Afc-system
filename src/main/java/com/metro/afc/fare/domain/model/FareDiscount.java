@@ -48,6 +48,12 @@ public class FareDiscount extends AbstractAggregateRoot<FareDiscount> {
     @Column(nullable = false, length = 20)
     private DiscountStatus status;
 
+    @Column(nullable = false)
+    private Integer version;
+
+    @Column(name = "created_by", nullable = false, columnDefinition = "uuid")
+    private UUID createdBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -64,27 +70,44 @@ public class FareDiscount extends AbstractAggregateRoot<FareDiscount> {
         d.effectiveFrom = effectiveFrom;
         d.effectiveTo   = effectiveTo;
         d.status        = DiscountStatus.ACTIVE;
+        d.version       = 1;
+        d.createdBy     = createdBy;
+        d.createdAt     = Instant.now();
         d.registerEvent(new FareDiscountCreatedEvent(d.id, d.snapshot(), createdBy));
         return d;
     }
 
-    public void update(DiscountType discountType, BigDecimal value,
-                       LocalDate effectiveFrom, LocalDate effectiveTo,
-                       UUID updatedBy) {
-        String old         = snapshot();
-        this.discountValue = new DiscountValue(discountType, value);
-        this.effectiveFrom = effectiveFrom;
-        this.effectiveTo   = effectiveTo;
-        this.registerEvent(new FareDiscountUpdatedEvent(id, old, snapshot(), updatedBy));
+    public void closeVersion(LocalDate newVersionEffectiveFrom) {
+        this.effectiveTo = newVersionEffectiveFrom.minusDays(1);
+        this.status      = DiscountStatus.INACTIVE;
+    }
+
+    public FareDiscount newVersion(DiscountType discountType, BigDecimal value,
+                                   LocalDate effectiveFrom, LocalDate effectiveTo,
+                                   UUID createdBy) {
+        String oldSnapshot = this.snapshot();
+
+        FareDiscount next  = new FareDiscount();
+        next.id            = UUID.randomUUID();
+        next.passengerType = this.passengerType;
+        next.discountValue = new DiscountValue(discountType, value);
+        next.effectiveFrom = effectiveFrom;
+        next.effectiveTo   = effectiveTo;
+        next.status        = DiscountStatus.ACTIVE;
+        next.version       = this.version + 1;
+        next.createdBy     = createdBy;
+        next.registerEvent(new FareDiscountUpdatedEvent(
+                next.id, oldSnapshot, next.snapshot(), createdBy
+        ));
+        return next;
     }
 
     public void disable(UUID disabledBy) {
-        if (this.status == DiscountStatus.INACTIVE) {
+        if (this.status == DiscountStatus.INACTIVE)
             throw new BusinessRuleException(
                     ErrorCode.FARE_DISCOUNT_INACTIVE,
                     "Fare discount is already inactive"
             );
-        }
         String old  = snapshot();
         this.status = DiscountStatus.INACTIVE;
         this.registerEvent(new FareDiscountDisabledEvent(id, old, disabledBy));

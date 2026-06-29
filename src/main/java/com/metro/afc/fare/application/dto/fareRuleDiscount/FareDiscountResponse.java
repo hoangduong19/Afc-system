@@ -15,6 +15,7 @@ public record FareDiscountResponse(
         LocalDate effectiveFrom,
         LocalDate effectiveTo,
         String status,
+        Integer version,
         Instant createdAt
 ) {
     public static FareDiscountResponse from(FareDiscount d) {
@@ -26,6 +27,7 @@ public record FareDiscountResponse(
                 d.getEffectiveFrom(),
                 d.getEffectiveTo(),
                 d.getStatus().name(),
+                d.getVersion(),
                 d.getCreatedAt()
         );
     }

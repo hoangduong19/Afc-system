@@ -252,10 +252,10 @@ VALUES
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: FARE DISCOUNTS
 -- ═══════════════════════════════════════════════════════════════
-INSERT INTO fare_discounts (passenger_type, discount_type, discount_value, effective_from, status)
+INSERT INTO fare_discounts (passenger_type, discount_type, discount_value, effective_from, status, version, created_by)
 VALUES
-    ('STUDENT',  'PERCENT', 50, '2025-07-01', 'ACTIVE'),
-    ('PRIORITY', 'PERCENT', 50, '2025-07-01', 'ACTIVE');
+    ('STUDENT',  'PERCENT', 50, '2025-07-01', 'ACTIVE', 1, (SELECT id FROM users WHERE username = 'admin')),
+    ('PRIORITY', 'PERCENT', 50, '2025-07-01', 'ACTIVE', 1, (SELECT id FROM users WHERE username = 'admin'));
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: REVENUE SHARE RULES

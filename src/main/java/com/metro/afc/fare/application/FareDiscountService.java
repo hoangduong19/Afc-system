@@ -6,6 +6,7 @@ import com.metro.afc.fare.domain.model.FareDiscount;
 import com.metro.afc.fare.domain.model.enums.fareRuleDiscount.DiscountStatus;
 import com.metro.afc.fare.domain.model.enums.fareRuleDiscount.DiscountType;
 import com.metro.afc.fare.domain.model.enums.fareRuleDiscount.PassengerType;
+import com.metro.afc.shared.infrastructure.exception.BusinessRuleException;
 import com.metro.afc.shared.infrastructure.exception.ConflictException;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.NotFoundException;
@@ -44,9 +45,17 @@ public class FareDiscountService implements FareDiscountUseCase {
     public FareDiscount update(UUID id, DiscountType discountType, BigDecimal value,
                                LocalDate effectiveFrom, LocalDate effectiveTo,
                                UUID updatedBy) {
-        FareDiscount discount = findOrThrow(id);
-        discount.update(discountType, value, effectiveFrom, effectiveTo, updatedBy);
-        return fareDiscountRepository.save(discount);
+        FareDiscount current = findOrThrow(id);
+        if (!current.isActive())
+            throw new BusinessRuleException(ErrorCode.FARE_DISCOUNT_INACTIVE,
+                    "Cannot update an inactive fare discount");
+
+        current.closeVersion(effectiveFrom);
+        fareDiscountRepository.save(current);
+
+        return fareDiscountRepository.save(
+                current.newVersion(discountType, value, effectiveFrom, effectiveTo, updatedBy)
+        );
     }
 
     @Override
