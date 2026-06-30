@@ -14,6 +14,7 @@ import java.util.UUID;
 
 public interface TicketRepository {
     Ticket save(Ticket ticket);
+    List<Ticket> saveAll(List<Ticket> tickets);
     Optional<Ticket> findById(UUID id);
     Optional<Ticket> findActiveTicketByCardId(UUID cardId);
     boolean existsActiveTicketByCardId(UUID cardId);

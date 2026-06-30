@@ -16,6 +16,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
@@ -41,5 +45,5 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration-ms: 900000      # 15 phút
-  refresh-token-expiration-ms: 2592000000 # 30 ngày
+  access-token-expiration-ms: 900000
+  refresh-token-expiration-ms: 2592000000

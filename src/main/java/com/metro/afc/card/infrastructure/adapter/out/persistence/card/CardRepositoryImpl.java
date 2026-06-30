@@ -5,6 +5,7 @@ import com.metro.afc.card.domain.model.Card;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,5 +47,15 @@ public class CardRepositoryImpl implements CardRepository {
     @Override
     public Card save(Card card) {
         return jpa.save(card);
+    }
+
+    @Override
+    public List<Card> findByCardUidIn(Collection<String> cardUids) {
+        return jpa.findByCardUidIn(cardUids);
+    }
+
+    @Override
+    public List<Card> saveAll(List<Card> cards) {
+        return jpa.saveAll(cards);
     }
 }

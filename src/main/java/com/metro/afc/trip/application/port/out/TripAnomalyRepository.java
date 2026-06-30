@@ -13,6 +13,7 @@ import java.util.UUID;
 
 public interface TripAnomalyRepository {
     TripAnomaly save(TripAnomaly anomaly);
+    List<TripAnomaly> saveAll(List<TripAnomaly> anomalies);
     List<TripAnomaly> findByTripId(UUID tripId);
     List<TripAnomaly> findAllUnresolved();
     Page<TripAnomaly> findAllWithFilters(AnomalySeverity severity,

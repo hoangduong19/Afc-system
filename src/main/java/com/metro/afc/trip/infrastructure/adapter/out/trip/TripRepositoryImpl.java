@@ -9,9 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -61,5 +59,15 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public List<Trip> findByTicketIdIn(List<UUID> ticketIds) {
         return jpa.findByTicketIdIn(ticketIds);
+    }
+
+    @Override
+    public List<Trip> saveAll(List<Trip> trips) {
+        return jpa.saveAll(trips);
+    }
+
+    @Override
+    public Set<UUID> findExistingExternalTransactionIds(Collection<UUID> ids) {
+        return new HashSet<>(jpa.findExternalTransactionIdsIn(ids));
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,4 +32,7 @@ public interface TripJpaRepository
             @Param("threshold") Instant threshold);
 
     List<Trip> findByTicketIdIn(List<UUID> ticketIds);
+
+    @Query("SELECT t.externalTransactionId FROM Trip t WHERE t.externalTransactionId IN :ids")
+    List<UUID> findExternalTransactionIdsIn(@Param("ids") Collection<UUID> ids);
 }

@@ -51,4 +51,5 @@ public interface TicketJpaRepository extends JpaRepository<Ticket, UUID> {
     List<Ticket> findActiveInPeriod(
             @Param("from") LocalDate from,
             @Param("to")   LocalDate to);
+
 }

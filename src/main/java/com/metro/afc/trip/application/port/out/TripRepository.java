@@ -5,13 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public interface TripRepository {
     Trip save(Trip trip);
+    List<Trip> saveAll(List<Trip> trips);
     boolean existsByExternalTransactionId(UUID externalTransactionId);
+    Set<UUID> findExistingExternalTransactionIds(Collection<UUID> ids);
     List<Trip> findByOperatorIdAndTapInAtBetween(
             UUID operatorId, Instant from, Instant to);
     List<Trip> findByTicketIdIn(List<UUID> ticketIds);

@@ -54,4 +54,9 @@ public class TripAnomalyRepositoryImpl implements TripAnomalyRepository {
                                          AnomalyType type) {
         return jpa.existsByTripIdAndAnomalyType(tripId, type);
     }
+
+    @Override
+    public List<TripAnomaly> saveAll(List<TripAnomaly> anomalies) {
+        return jpa.saveAll(anomalies);
+    }
 }

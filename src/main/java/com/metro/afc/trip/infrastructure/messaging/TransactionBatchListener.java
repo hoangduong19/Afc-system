@@ -20,7 +20,7 @@ public class TransactionBatchListener {
 
     private final TransactionIngestionService ingestionService;
 
-    @RabbitListener(queues = RabbitMQConfig.TRANSACTION_BATCH_QUEUE)
+    @RabbitListener(queues = RabbitMQConfig.TRANSACTION_BATCH_QUEUE, concurrency = "5-10")
     public void handle(ExternalTransactionBatchRequest request) {
         log.info("Received batch: {} transactions",
                 request.transactions().size());

@@ -25,6 +25,11 @@ public class TicketRepositoryImpl implements TicketRepository {
     public Ticket save(Ticket ticket) { return jpa.save(ticket); }
 
     @Override
+    public List<Ticket> saveAll(List<Ticket> tickets) {
+        return jpa.saveAll(tickets);
+    }
+
+    @Override
     public Optional<Ticket> findById(UUID id) { return jpa.findById(id); }
 
     @Override
