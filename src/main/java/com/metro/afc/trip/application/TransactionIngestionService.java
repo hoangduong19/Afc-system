@@ -7,7 +7,7 @@ import com.metro.afc.fare.application.port.out.FareRuleRepository;
 import com.metro.afc.fare.domain.model.FareRule;
 import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.operator.application.port.out.OperatorRepository;
-import com.metro.afc.operator.domain.model.Operator;
+import com.metro.afc.passenger.FareCatalogService;
 import com.metro.afc.station.application.port.out.StationRepository;
 import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.ticket.application.port.out.TicketRepository;
@@ -44,18 +44,20 @@ public class TransactionIngestionService {
     private final FareRuleRepository     fareRuleRepository;
     private final TicketRepository       ticketRepository;
     private final CardRepository         cardRepository;
+    private final NetworkCatalogService networkCatalogService;
+    private final FareCatalogService fareCatalogService;
 
     public BatchIngestResponse ingest(TransactionBatchRequest req) {
         List<TransactionItemRequest> items = req.transactions();
 
-        Map<String, Station> stationByCode = stationRepository.findAll().stream()
-                .collect(Collectors.toMap(Station::getCode, s -> s));
+        Map<String, Station> stationByCode =
+                networkCatalogService.getStationByCodeMap();
 
-        Map<String, UUID> operatorIdByCode = operatorRepository.findAll().stream()
-                .collect(Collectors.toMap(Operator::getCode, Operator::getId));
+        Map<String, UUID> operatorIdByCode =
+                networkCatalogService.getOperatorIdByCodeMap();
 
-        Map<FareMode, FareRule> fareRuleByMode = fareRuleRepository.findAllActive().stream()
-                .collect(Collectors.toMap(FareRule::getMode, fr -> fr));
+        Map<FareMode, FareRule> fareRuleByMode =
+                fareCatalogService.getFareRuleByModeMap();
 
         int totalCount = items.size();
         int success = 0, skipped = 0, failed = 0;

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.metro.afc.fare.application.port.out.FareDiscountRepository;
 import com.metro.afc.fare.application.port.out.FareRuleRepository;
 import com.metro.afc.fare.domain.model.FareRule;
+import com.metro.afc.fare.domain.model.enums.fareRule.FareMode;
 import com.metro.afc.passenger.dto.DiscountResponse;
 import com.metro.afc.passenger.dto.FarePriceResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,15 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FareCatalogService {
 
     private static final String PRICES_KEY = "fare:prices:active";
+    private static final String RULE_MAP_KEY = "fare:rules:active:map";
     private static final String DISCOUNTS_KEY = "fare:discounts:active";
     private static final Duration TTL = Duration.ofMinutes(10);
 
@@ -65,6 +69,33 @@ public class FareCatalogService {
         );
         redisTemplate.opsForValue().set(DISCOUNTS_KEY, redisObjectMapper.writeValueAsString(fresh), TTL);
         return fresh;
+    }
+
+    @SneakyThrows
+    public Map<FareMode, FareRule> getFareRuleByModeMap() {
+        String cached = redisTemplate.opsForValue().get(RULE_MAP_KEY);
+
+        if (cached != null) {
+            return redisObjectMapper.readValue(
+                    cached,
+                    new TypeReference<Map<FareMode, FareRule>>() {}
+            );
+        }
+
+        Map<FareMode, FareRule> fresh = fareRuleRepository.findAllActive().stream()
+                .collect(Collectors.toMap(FareRule::getMode, fr -> fr));
+
+        redisTemplate.opsForValue().set(
+                RULE_MAP_KEY,
+                redisObjectMapper.writeValueAsString(fresh),
+                TTL
+        );
+
+        return fresh;
+    }
+
+    public void evictFareRuleMapCache() {
+        redisTemplate.delete(RULE_MAP_KEY);
     }
 
     public void evictPricesCache() {

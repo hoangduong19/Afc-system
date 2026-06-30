@@ -7,8 +7,10 @@ import com.metro.afc.station.application.port.in.SyncStationUseCase;
 import com.metro.afc.station.application.port.out.StationRepository;
 import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.station.infrastructure.messaging.StationSyncMessage;
+import com.metro.afc.trip.domain.events.StationCatalogChangedEvent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,6 +19,8 @@ public class SyncStationService implements SyncStationUseCase {
 
     private final StationRepository stationRepository;
     private final RouteRepository routeRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -36,5 +40,7 @@ public class SyncStationService implements SyncStationUseCase {
                                 message.stationOrder()
                         ))
                 );
+
+        eventPublisher.publishEvent(new StationCatalogChangedEvent());
     }
 }

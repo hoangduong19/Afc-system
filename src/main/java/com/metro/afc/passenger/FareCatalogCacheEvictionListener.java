@@ -18,20 +18,37 @@ public class FareCatalogCacheEvictionListener {
     private final FareCatalogService fareCatalogService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareRuleCreatedEvent event) { fareCatalogService.evictPricesCache(); }
+    public void on(FareRuleCreatedEvent event) {
+        evictFareRuleCaches();
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareRuleUpdatedEvent event) { fareCatalogService.evictPricesCache(); }
+    public void on(FareRuleUpdatedEvent event) {
+        evictFareRuleCaches();
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareRuleDisabledEvent event) { fareCatalogService.evictPricesCache(); }
+    public void on(FareRuleDisabledEvent event) {
+        evictFareRuleCaches();
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareDiscountCreatedEvent event) { fareCatalogService.evictDiscountsCache(); }
+    public void on(FareDiscountCreatedEvent event) {
+        fareCatalogService.evictDiscountsCache();
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareDiscountUpdatedEvent event) { fareCatalogService.evictDiscountsCache(); }
+    public void on(FareDiscountUpdatedEvent event) {
+        fareCatalogService.evictDiscountsCache();
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(FareDiscountDisabledEvent event) { fareCatalogService.evictDiscountsCache(); }
+    public void on(FareDiscountDisabledEvent event) {
+        fareCatalogService.evictDiscountsCache();
+    }
+
+    private void evictFareRuleCaches() {
+        fareCatalogService.evictPricesCache();
+        fareCatalogService.evictFareRuleMapCache();
+    }
 }
