@@ -6,6 +6,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record TransactionBatchRequest(
-        @NotNull @Size(min = 1, max = 500)
+        @NotNull @Size(min = 1, max = 10000)
         List<TransactionItemRequest> transactions
 ) {}
