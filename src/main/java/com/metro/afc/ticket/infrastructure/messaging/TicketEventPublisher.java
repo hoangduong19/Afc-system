@@ -73,7 +73,7 @@ public class TicketEventPublisher {
         try {
             amqpTemplate.convertAndSend(
                     RabbitMQConfig.AFC_EXCHANGE,
-                    RabbitMQConfig.TICKET_CREATED,
+                    RabbitMQConfig.TICKET_LINKED,
                     message
             );
             log.info("Published ticket linked to card: ticketId={}, cardId={}",
