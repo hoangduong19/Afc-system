@@ -67,18 +67,14 @@ public class TransactionIngestionService {
 
         for (int i = 0; i < chunks.size(); i++) {
             List<TransactionItemRequest> chunk = chunks.get(i);
-            try {
-                ChunkResult result = ingestChunk(chunk, stationByCode, operatorIdByCode, fareRuleByMode);
-                success += result.success();
-                skipped += result.skipped();
-                failed  += result.failed();
-                errors.addAll(result.errors());
-            } catch (Exception e) {
-                failed += chunk.size();
-                String msg = "Chunk #" + i + " failed entirely (" + chunk.size() + " items): " + e.getMessage();
-                errors.add(msg);
-                log.error(msg, e);
-            }
+            ChunkResult result = ingestChunk(chunk, stationByCode, operatorIdByCode, fareRuleByMode);
+            success += result.success();
+            skipped += result.skipped();
+            failed  += result.failed();
+            errors.addAll(result.errors());
+
+            log.info("Chunk {}/{} done: success={}, skipped={}, failed={}",
+                    i + 1, chunks.size(), result.success(), result.skipped(), result.failed());
         }
 
         log.info("Ingest finished: total={}, success={}, skipped={}, failed={}",

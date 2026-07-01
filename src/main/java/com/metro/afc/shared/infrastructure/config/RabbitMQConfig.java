@@ -53,6 +53,11 @@ public class RabbitMQConfig {
     public static final String TRANSACTION_BATCH_QUEUE = "transaction.batch.queue";
     public static final String TRANSACTION_BATCH_KEY   = "transaction.batch";
 
+    // Transaction DLX/DLQ
+    public static final String TRANSACTION_BATCH_DLX          = "transaction.batch.dlx";
+    public static final String TRANSACTION_BATCH_DLQ          = "transaction.batch.dlq";
+    public static final String TRANSACTION_BATCH_DLQ_ROUTING  = "transaction.batch.dlq";
+
     // Dev Test
     public static final String SYNC_CARD_ALL     = "sync.card.all";
     public static final String SYNC_TICKET_ALL   = "sync.ticket.all";
@@ -160,7 +165,10 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue transactionBatchQueue() {
-        return QueueBuilder.durable(TRANSACTION_BATCH_QUEUE).build();
+        return QueueBuilder.durable(TRANSACTION_BATCH_QUEUE)
+                .withArgument("x-dead-letter-exchange", TRANSACTION_BATCH_DLX)
+                .withArgument("x-dead-letter-routing-key", TRANSACTION_BATCH_DLQ_ROUTING)
+                .build();
     }
 
     @Bean
@@ -231,6 +239,23 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(transactionBatchQueue())
                 .to(afcExchange())
                 .with(TRANSACTION_BATCH_KEY);
+    }
+
+    @Bean
+    public DirectExchange transactionBatchDlx() {
+        return new DirectExchange(TRANSACTION_BATCH_DLX);
+    }
+
+    @Bean
+    public Queue transactionBatchDlq() {
+        return QueueBuilder.durable(TRANSACTION_BATCH_DLQ).build();
+    }
+
+    @Bean
+    public Binding transactionBatchDlqBinding() {
+        return BindingBuilder.bind(transactionBatchDlq())
+                .to(transactionBatchDlx())
+                .with(TRANSACTION_BATCH_DLQ_ROUTING);
     }
 
     @Bean
