@@ -119,15 +119,15 @@ WHERE u.username = 'admin' AND r.code = 'ACC_ADMIN';
 -- SEED: OPERATORS
 -- ═══════════════════════════════════════════════════════════════
 INSERT INTO operators (code, name, status) VALUES
-                                               ('HURC',      'Hanoi Urban Railway Company',  'ACTIVE'),
-                                               ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội', 'ACTIVE');
+                                               ('HMC',       'Công ty TNHH MTV Đường sắt Hà Nội (Hanoi Metro)', 'ACTIVE'),
+                                               ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội',                     'ACTIVE');
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: ROUTES
 -- ═══════════════════════════════════════════════════════════════
 INSERT INTO routes (operator_id, code, name, type) VALUES
-                                                       ((SELECT id FROM operators WHERE code = 'HURC'),      'HN_2A',     'Cát Linh - Hà Đông',         'METRO'),
-                                                       ((SELECT id FROM operators WHERE code = 'HURC'),      'HN_3_1',    'Nhổn - Ga Hà Nội',            'METRO'),
+                                                       ((SELECT id FROM operators WHERE code = 'HMC'),       'HN_2A',     'Cát Linh - Hà Đông',         'METRO'),
+                                                       ((SELECT id FROM operators WHERE code = 'HMC'),       'HN_3_1',    'Nhổn - Ga Hà Nội',            'METRO'),
                                                        ((SELECT id FROM operators WHERE code = 'TRANSERCO'), 'HN_BRT_01', 'BRT 01: Yên Nghĩa - Kim Mã',  'BUS'),
                                                        ((SELECT id FROM operators WHERE code = 'TRANSERCO'), 'HN_BUS_32', 'Buýt 32: Giáp Bát - Nhổn',    'BUS');
 
@@ -262,7 +262,7 @@ VALUES
 INSERT INTO revenue_share_rules (operator_id, share_model, share_percentage,
                                  effective_from, status, version, created_by)
 VALUES
-    ((SELECT id FROM operators WHERE code = 'HURC'),
+    ((SELECT id FROM operators WHERE code = 'HMC'),
      'KM_BASED', 65.00, '2025-07-01', 'ACTIVE', 1,
      (SELECT id FROM users WHERE username = 'admin')),
     ((SELECT id FROM operators WHERE code = 'TRANSERCO'),
@@ -588,7 +588,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_out_station_id, tap_out_at,
                    distance_km, fare_amount, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 14375
                                      AND status = 'ACTIVE' AND valid_from = CURRENT_DATE LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -605,7 +605,7 @@ INSERT INTO trips (card_id, operator_id, ticket_id,
                    distance_km, ticket_type_used, transport_mode)
 VALUES (
            (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001'),
-           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
                                      AND card_id = (SELECT id FROM cards WHERE card_uid = 'CARD-ID-001') LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_3_01'),
@@ -658,7 +658,7 @@ VALUES
     8.0, 'MONTHLY_PASS', 'BUS'
 ),
 (
-    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM operators WHERE code = 'HMC'),
     (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
         AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
     (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -691,7 +691,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_out_station_id, tap_out_at,
                    distance_km, fare_amount, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 15000
                                      AND valid_from = '2026-05-15' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -744,7 +744,7 @@ VALUES
     8.0, 'MONTHLY_PASS', 'BUS'
 ),
 (
-    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM operators WHERE code = 'HMC'),
     (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
         AND valid_from = '2026-05-01' LIMIT 1),
     (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -762,7 +762,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_out_station_id, tap_out_at,
                    distance_km, fare_amount, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 14376
                                      AND valid_from = '2026-04-15' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -778,7 +778,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_out_station_id, tap_out_at,
                    distance_km, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC'),
+           (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND mode = 'METRO'
                                      AND valid_from = '2026-04-01' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_3_05'),
@@ -831,7 +831,7 @@ VALUES
     8.0, 'MONTHLY_PASS', 'BUS'
 ),
 (
-    (SELECT id FROM operators WHERE code = 'HURC'),
+    (SELECT id FROM operators WHERE code = 'HMC'),
     (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
         AND valid_from = '2026-04-01' LIMIT 1),
     (SELECT id FROM stations WHERE code = 'HN_2A_01'),
@@ -879,7 +879,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_in_station_id, tap_in_at,
                    distance_km, fare_amount, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC' LIMIT 1),
+           (SELECT id FROM operators WHERE code = 'HMC' LIMIT 1),
        (SELECT id FROM tickets WHERE valid_from = '2026-03-20'
            AND from_station_id = (SELECT id FROM stations WHERE code = 'HN_2A_03' LIMIT 1) LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_03' LIMIT 1),
@@ -893,7 +893,7 @@ INSERT INTO trips (operator_id, ticket_id,
                    tap_out_station_id, tap_out_at,
                    distance_km, fare_amount, ticket_type_used, transport_mode)
 VALUES (
-           (SELECT id FROM operators WHERE code = 'HURC' LIMIT 1),
+           (SELECT id FROM operators WHERE code = 'HMC' LIMIT 1),
        (SELECT id FROM tickets WHERE valid_from = '2026-03-21'
            AND from_station_id = (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1) LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_01' LIMIT 1),
