@@ -117,10 +117,19 @@ WHERE u.username = 'admin' AND r.code = 'ACC_ADMIN';
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: OPERATORS
--- ═══════════════════════════════════════════════════════════════
-INSERT INTO operators (code, name, status) VALUES
-                                               ('HMC',       'Công ty TNHH MTV Đường sắt Hà Nội (Hanoi Metro)', 'ACTIVE'),
-                                               ('TRANSERCO', 'Tổng công ty Vận tải Hà Nội',                     'ACTIVE');
+INSERT INTO operators (code, name, status, mode) VALUES
+                                                     (
+                                                         'HMC',
+                                                         'Công ty TNHH MTV Đường sắt Hà Nội (Hanoi Metro)',
+                                                         'ACTIVE',
+                                                         'METRO'
+                                                     ),
+                                                     (
+                                                         'TRANSERCO',
+                                                         'Tổng công ty Vận tải Hà Nội',
+                                                         'ACTIVE',
+                                                         'BUS'
+                                                     );
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED: ROUTES
