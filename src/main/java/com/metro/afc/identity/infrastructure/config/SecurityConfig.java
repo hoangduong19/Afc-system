@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/afc/**").permitAll()
-                        .requestMatchers("/api/passenger/**").permitAll()
+                        .requestMatchers("/api/passengers/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/transactions/batch").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tickets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cards/*/active-ticket").permitAll()

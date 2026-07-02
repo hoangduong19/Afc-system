@@ -692,3 +692,8 @@ ALTER TABLE tickets ADD CONSTRAINT chk_ticket_mode_scope CHECK (
         OR (type = 'MONTHLY_PASS' AND mode = 'BUS' AND scope IS NOT NULL)
         OR (type = 'MONTHLY_PASS' AND mode <> 'BUS' AND scope IS NULL)
     );
+ALTER TABLE tickets
+DROP CONSTRAINT tickets_user_id_fkey;
+
+ALTER TABLE cards
+DROP CONSTRAINT cards_linked_user_id_fkey;
