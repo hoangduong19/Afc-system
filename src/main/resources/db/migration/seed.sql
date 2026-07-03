@@ -309,7 +309,7 @@ VALUES (
 -- SEED: TICKETS
 -- ═══════════════════════════════════════════════════════════════
 
--- ── JUNE 2026 SETTLEMENT — 4 tickets có trip ───────────────────
+--- ── JUNE 2026 SETTLEMENT — 4 tickets có trip ───────────────────
 -- totalExpected = 14375 + 200000 + 140000 + 280000 = 634375đ → MATCH
 
 -- Pool 1: SINGLE_TRIP 14375đ
@@ -323,7 +323,7 @@ VALUES (
            (SELECT id FROM stations WHERE code = 'HN_2A_01'),
            (SELECT id FROM stations WHERE code = 'HN_2A_08'),
            'METRO',
-           CURRENT_DATE, CURRENT_DATE + INTERVAL '1 day',
+           '2026-06-20', '2026-06-21',
            'ACTIVE'
        );
 
@@ -336,8 +336,7 @@ VALUES (
            'MONTHLY_PASS', 200000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
            'METRO',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
+           '2026-06-01', '2026-06-01'::date + INTERVAL '30 days',
            'ACTIVE'
        );
 
@@ -349,8 +348,7 @@ VALUES (
            'MONTHLY_PASS', 140000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
+           '2026-06-01', '2026-06-01'::date + INTERVAL '30 days',
            'ACTIVE', 'SINGLE_ROUTE'
        );
 
@@ -362,8 +360,7 @@ VALUES (
            'MONTHLY_PASS', 280000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE),
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '30 days',
+           '2026-06-01', '2026-06-01'::date + INTERVAL '30 days',
            'ACTIVE', 'MULTI_ROUTE'
        );
 
@@ -378,8 +375,8 @@ VALUES (
            'MONTHLY_PASS', 200000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
            'METRO',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           '2026-06-01'::date + INTERVAL '1 month',
+           '2026-06-01'::date + INTERVAL '1 month' + INTERVAL '30 days',
            'ACTIVE'
        );
 
@@ -395,8 +392,8 @@ VALUES (
            (SELECT id FROM stations WHERE code = 'HN_2A_01'),
            (SELECT id FROM stations WHERE code = 'HN_2A_08'),
            'METRO',
-           CURRENT_DATE + INTERVAL '32 days',
-           CURRENT_DATE + INTERVAL '33 days',
+           '2026-06-20'::date + INTERVAL '32 days',
+           '2026-06-20'::date + INTERVAL '33 days',
            'ACTIVE'
        );
 
@@ -413,7 +410,7 @@ VALUES (
            'METRO',
            '2026-05-20', '2026-05-21',
            'USED',
-           CURRENT_TIMESTAMP - INTERVAL '35 days'
+           TIMESTAMP '2026-05-20 10:00:00'
        );
 
 -- METRO MONTHLY STUDENT 100k
@@ -425,8 +422,8 @@ VALUES (
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
            (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
            'METRO',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           '2026-06-01'::date + INTERVAL '1 month',
+           '2026-06-01'::date + INTERVAL '1 month' + INTERVAL '30 days',
            'ACTIVE'
        );
 
@@ -438,8 +435,8 @@ VALUES (
            'MONTHLY_PASS', 160000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
            'METRO',
-           CURRENT_DATE + INTERVAL '32 days',
-           CURRENT_DATE + INTERVAL '39 days',
+           '2026-06-20'::date + INTERVAL '32 days',
+           '2026-06-20'::date + INTERVAL '39 days',
            'ACTIVE'
        );
 
@@ -452,8 +449,8 @@ VALUES (
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           '2026-06-01'::date + INTERVAL '1 month',
+           '2026-06-01'::date + INTERVAL '1 month' + INTERVAL '30 days',
            'ACTIVE', 'SINGLE_ROUTE'
        );
 
@@ -466,8 +463,8 @@ VALUES (
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            (SELECT id FROM fare_discounts WHERE passenger_type = 'STUDENT'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' + INTERVAL '30 days',
+           '2026-06-01'::date + INTERVAL '1 month',
+           '2026-06-01'::date + INTERVAL '1 month' + INTERVAL '30 days',
            'ACTIVE', 'MULTI_ROUTE'
        );
 
@@ -479,8 +476,8 @@ VALUES (
            'MONTHLY_PASS', 200000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_METRO_STANDARD'),
            'METRO',
-           DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month',
-           DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 day',
+           '2026-06-01'::date - INTERVAL '1 month',
+           '2026-06-01'::date - INTERVAL '1 day',
            'EXPIRED'
        );
 
@@ -492,11 +489,10 @@ VALUES (
            'MONTHLY_PASS', 140000.00,
            (SELECT id FROM fare_rules WHERE code = 'HN_BUS_STANDARD'),
            'BUS',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '2 months',
-           DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '3 months' - INTERVAL '1 day',
+           '2026-06-01'::date + INTERVAL '2 months',
+           '2026-06-01'::date + INTERVAL '3 months' - INTERVAL '1 day',
            'ACTIVE', 'SINGLE_ROUTE'
        );
-
 -- ── MAY 2026 — MISMATCH ─────────────────────────────────────────
 -- totalExpected = 200000 + 15000 + 140000 + 280000 = 635000đ
 -- METRO MONTHLY operator_id=NULL → 200000đ không allocate
@@ -591,7 +587,7 @@ VALUES (
 
 -- ── JUNE 2026 — MATCH ──────────────────────────────────────────
 
--- Pool 1
+-- Pool 1 trip
 INSERT INTO trips (operator_id, ticket_id,
                    tap_in_station_id, tap_in_at,
                    tap_out_station_id, tap_out_at,
@@ -599,7 +595,7 @@ INSERT INTO trips (operator_id, ticket_id,
 VALUES (
            (SELECT id FROM operators WHERE code = 'HMC'),
            (SELECT id FROM tickets WHERE type = 'SINGLE_TRIP' AND price = 14375
-                                     AND status = 'ACTIVE' AND valid_from = CURRENT_DATE LIMIT 1),
+                                     AND status = 'ACTIVE' AND valid_from = '2026-06-20' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'HN_2A_01'),
     TIMESTAMP '2026-06-20 08:00:00',
        (SELECT id FROM stations WHERE code = 'HN_2A_08'),
@@ -607,7 +603,7 @@ VALUES (
     7.5, 14375.00, 'SINGLE_TRIP', 'METRO'
     );
 
--- Pool 2a
+-- Pool 2a trip (không lọc theo valid_from, giữ nguyên vì đã join theo card_id)
 INSERT INTO trips (card_id, operator_id, ticket_id,
                    tap_in_station_id, tap_in_at,
                    tap_out_station_id, tap_out_at,
@@ -624,7 +620,7 @@ VALUES (
     5.0, 'MONTHLY_PASS', 'METRO'
     );
 
--- Pool 2b
+-- Pool 2b trip
 INSERT INTO trips (operator_id, ticket_id,
                    tap_in_station_id, tap_in_at,
                    tap_out_station_id, tap_out_at,
@@ -632,7 +628,7 @@ INSERT INTO trips (operator_id, ticket_id,
 VALUES (
            (SELECT id FROM operators WHERE code = 'TRANSERCO'),
            (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'SINGLE_ROUTE'
-                                     AND price = 140000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+                                     AND price = 140000 AND valid_from = '2026-06-01' LIMIT 1),
        (SELECT id FROM stations WHERE code = 'BUS32_01'),
     TIMESTAMP '2026-06-15 07:30:00',
        (SELECT id FROM stations WHERE code = 'BUS32_05'),
@@ -640,7 +636,7 @@ VALUES (
     10.2, 'MONTHLY_PASS', 'BUS'
     );
 
--- Pool 3
+-- Pool 3 trips (3 dòng)
 INSERT INTO trips (operator_id, ticket_id,
                    tap_in_station_id, tap_in_at,
                    tap_out_station_id, tap_out_at,
@@ -649,7 +645,7 @@ VALUES
     (
         (SELECT id FROM operators WHERE code = 'TRANSERCO'),
         (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-                                  AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+                                  AND price = 280000 AND valid_from = '2026-06-01' LIMIT 1),
     (SELECT id FROM stations WHERE code = 'BRT01_01'),
     TIMESTAMP '2026-06-10 08:00:00',
     (SELECT id FROM stations WHERE code = 'BRT01_10'),
@@ -659,7 +655,7 @@ VALUES
 (
     (SELECT id FROM operators WHERE code = 'TRANSERCO'),
     (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-        AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+        AND price = 280000 AND valid_from = '2026-06-01' LIMIT 1),
     (SELECT id FROM stations WHERE code = 'BUS32_05'),
     TIMESTAMP '2026-06-12 17:00:00',
     (SELECT id FROM stations WHERE code = 'BUS32_08'),
@@ -669,7 +665,7 @@ VALUES
 (
     (SELECT id FROM operators WHERE code = 'HMC'),
     (SELECT id FROM tickets WHERE type = 'MONTHLY_PASS' AND scope = 'MULTI_ROUTE'
-        AND price = 280000 AND valid_from = DATE_TRUNC('month', CURRENT_DATE) LIMIT 1),
+        AND price = 280000 AND valid_from = '2026-06-01' LIMIT 1),
     (SELECT id FROM stations WHERE code = 'HN_2A_01'),
     TIMESTAMP '2026-06-11 09:00:00',
     (SELECT id FROM stations WHERE code = 'HN_2A_07'),
