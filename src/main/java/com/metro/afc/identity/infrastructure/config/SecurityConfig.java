@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/issuance/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/transactions/batch").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tickets/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cards/*/active-ticket").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cards/{cardId}/active-ticket").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
