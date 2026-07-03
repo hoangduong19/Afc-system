@@ -6,6 +6,8 @@ import com.metro.afc.passenger.dto.PassengerTicketResponse;
 import com.metro.afc.passenger.dto.PassengerTripResponse;
 import com.metro.afc.shared.infrastructure.exception.ErrorCode;
 import com.metro.afc.shared.infrastructure.exception.UnauthorizedException;
+import com.metro.afc.station.application.port.out.StationRepository;
+import com.metro.afc.station.domain.model.Station;
 import com.metro.afc.ticket.application.port.in.TicketUseCase;
 import com.metro.afc.ticket.domain.Ticket;
 import com.metro.afc.ticket.domain.enums.TicketStatus;
@@ -28,13 +30,28 @@ public class PassengerController {
     private final CardUseCase cardUseCase;
     private final TripUseCase tripUseCase;
 
+    private final StationRepository stationRepository;
+
     @GetMapping("/api/passengers/{userId}/tickets")
     public ResponseEntity<List<PassengerTicketResponse>> getMyTickets(
             @PathVariable UUID userId,
             @RequestParam(required = false) TicketStatus status) {
+
         return ResponseEntity.ok(
-                ticketUseCase.findByUserId(userId, status).stream()
-                        .map(PassengerTicketResponse::from).toList()
+                ticketUseCase.findByUserId(userId, status)
+                        .stream()
+                        .map(ticket -> PassengerTicketResponse.from(
+                                ticket,
+                                ticket.getFromStationId() == null ? null :
+                                        stationRepository.findById(ticket.getFromStationId())
+                                                .map(Station::getCode)
+                                                .orElse(null),
+                                ticket.getToStationId() == null ? null :
+                                        stationRepository.findById(ticket.getToStationId())
+                                                .map(Station::getCode)
+                                                .orElse(null)
+                        ))
+                        .toList()
         );
     }
 
@@ -42,10 +59,25 @@ public class PassengerController {
     public ResponseEntity<PassengerTicketResponse> getTicket(
             @PathVariable UUID userId,
             @PathVariable UUID id) {
+
         Ticket ticket = ticketUseCase.findById(id);
+
         if (!ticket.getUserId().equals(userId))
             throw new UnauthorizedException(ErrorCode.FORBIDDEN);
-        return ResponseEntity.ok(PassengerTicketResponse.from(ticket));
+
+        return ResponseEntity.ok(
+                PassengerTicketResponse.from(
+                        ticket,
+                        ticket.getFromStationId() == null ? null :
+                                stationRepository.findById(ticket.getFromStationId())
+                                        .map(Station::getCode)
+                                        .orElse(null),
+                        ticket.getToStationId() == null ? null :
+                                stationRepository.findById(ticket.getToStationId())
+                                        .map(Station::getCode)
+                                        .orElse(null)
+                )
+        );
     }
 
     @GetMapping("/api/passengers/{userId}/cards")

@@ -18,19 +18,25 @@ public record PassengerTicketResponse(
         String toStationCode,
         LocalDate validFrom,
         LocalDate validTo,
-        String qrToken,
         boolean isExpired,
         Instant purchasedAt
 ) {
-    public static PassengerTicketResponse from(Ticket t) {
+    public static PassengerTicketResponse from(
+            Ticket t,
+            String fromStationCode,
+            String toStationCode
+    ) {
         return new PassengerTicketResponse(
-                t.getId(), t.getType().name(),
-                t.getMode().name(), t.getStatus().name(),
+                t.getId(),
+                t.getType().name(),
+                t.getMode().name(),
                 t.getScope() != null ? t.getScope().name() : null,
+                t.getStatus().name(),
                 t.getPrice().getAmount(),
-                null, null,
-                t.getValidFrom(), t.getValidTo(),
-                t.getId().toString(),          // qrToken = ticketId UUID
+                fromStationCode,
+                toStationCode,
+                t.getValidFrom(),
+                t.getValidTo(),
                 t.getValidTo().isBefore(LocalDate.now()),
                 t.getPurchasedAt()
         );
