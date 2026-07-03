@@ -697,3 +697,6 @@ DROP CONSTRAINT tickets_user_id_fkey;
 
 ALTER TABLE cards
 DROP CONSTRAINT cards_linked_user_id_fkey;
+
+ALTER TABLE card_status_history
+DROP CONSTRAINT card_status_history_changed_by_fkey;
