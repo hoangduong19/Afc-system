@@ -85,6 +85,27 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(ErrorCode.INTERNAL_ERROR, "Dữ liệu đã tồn tại hoặc vi phạm ràng buộc dữ liệu hệ thống."));
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        log.warn("JSON parse error: {}", ex.getMessage());
+
+        String errorMessage = "Định dạng dữ liệu không hợp lệ.";
+
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.ValueInstantiationException vie) {
+            if (vie.getCause() != null) {
+                errorMessage = vie.getCause().getMessage();
+            } else {
+                errorMessage = vie.getOriginalMessage();
+            }
+        } else if (ex.getCause() != null) {
+            errorMessage = ex.getCause().getMessage();
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ErrorCode.VALIDATION_ERROR, errorMessage));
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
