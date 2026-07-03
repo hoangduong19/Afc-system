@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/afc/**").permitAll()
                         .requestMatchers("/api/passengers/**").permitAll()
+                        .requestMatchers("/api/issuance/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/transactions/batch").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tickets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cards/*/active-ticket").permitAll()
