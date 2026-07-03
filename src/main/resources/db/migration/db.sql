@@ -700,3 +700,6 @@ DROP CONSTRAINT cards_linked_user_id_fkey;
 
 ALTER TABLE card_status_history
 DROP CONSTRAINT card_status_history_changed_by_fkey;
+
+ALTER TABLE card_link_history DROP CONSTRAINT IF EXISTS card_link_history_user_id_fkey;
+ALTER TABLE card_link_history DROP CONSTRAINT IF EXISTS card_link_history_performed_by_fkey;
