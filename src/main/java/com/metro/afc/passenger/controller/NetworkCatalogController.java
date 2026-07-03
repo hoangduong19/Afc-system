@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/passenger")
+@RequestMapping("/api/passengers")
 @RequiredArgsConstructor
 public class NetworkCatalogController {
 
