@@ -5,6 +5,7 @@ import com.metro.afc.trip.application.dto.BatchIngestResponse;
 import com.metro.afc.trip.application.dto.TransactionBatchRequest;
 import com.metro.afc.trip.application.dto.TransactionItemRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +27,7 @@ import java.util.UUID;
 @Testcontainers
 @SpringBootTest
 class TransactionIngestionBenchmarkTest {
-
+    private static final List<String> summaryRows = new ArrayList<>();
     @Container
     static PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:15-alpine")
@@ -48,11 +50,13 @@ class TransactionIngestionBenchmarkTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
 
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        // Ghi đè spring.data.redis.url thay vì host/port riêng lẻ,
+        // vì application.yml dùng "url:" nên nó luôn được ưu tiên hơn host/port.
+        registry.add("spring.data.redis.url",
+                () -> "redis://" + redis.getHost() + ":" + redis.getMappedPort(6379));
 
-        registry.add("spring.rabbitmq.host", rabbitmq::getHost);
-        registry.add("spring.rabbitmq.port", rabbitmq::getAmqpPort);
+        registry.add("spring.rabbitmq.addresses",
+                () -> rabbitmq.getHost() + ":" + rabbitmq.getAmqpPort());
         registry.add("spring.rabbitmq.username", rabbitmq::getAdminUsername);
         registry.add("spring.rabbitmq.password", rabbitmq::getAdminPassword);
 
@@ -69,17 +73,25 @@ class TransactionIngestionBenchmarkTest {
     @Autowired
     private TestDataSeeder seeder;
 
-    private List<String> stationCodes;
-    private List<String> operatorCodes;
-    private List<String> cardUids;
+    // static: dữ liệu seed được chia sẻ giữa các instance test (mỗi @Test 1 instance ở PER_METHOD)
+    private static volatile boolean seeded = false;
+    private static List<String> stationCodes;
+    private static List<String> operatorCodes;
+    private static List<String> cardUids;
 
+    // Chạy trước MỖI test method (đúng behavior mặc định của JUnit5),
+    // nhưng chỉ thực sự seed dữ liệu 1 LẦN DUY NHẤT nhờ cờ static "seeded".
+    // Cách này tránh được lỗi "Mapped port..." vì không đụng tới @TestInstance(PER_CLASS).
     @BeforeEach
-    void setup() {
-        UUID routeId = seeder.seedOperatorAndRoute();
-        stationCodes = seeder.seedStations(30, routeId);
-        operatorCodes = seeder.seedOperators(3);
-        cardUids = seeder.seedCards(50_000);
-        seeder.seedFareRules();
+    synchronized void setup() {
+        if (!seeded) {
+            UUID routeId = seeder.seedOperatorAndRoute();
+            stationCodes = seeder.seedStations(30, routeId);
+            operatorCodes = seeder.seedOperators(3);
+            cardUids = seeder.seedCards(50_000);
+            seeder.seedFareRules();
+            seeded = true;
+        }
     }
 
     @Test
@@ -101,11 +113,18 @@ class TransactionIngestionBenchmarkTest {
 
         double throughput = res.success() * 1000.0 / elapsedMs;
 
-        log.info("=== BENCHMARK N={} ===", count);
-        log.info("Elapsed: {} ms | success={}, skipped={}, failed={}",
-                elapsedMs, res.success(), res.skipped(), res.failed());
-        log.info("Throughput: {} txn/s", String.format("%.2f", throughput));
+        summaryRows.add(String.format("| %,10d | %8d ms | %10.2f txn/s | success=%d skipped=%d failed=%d |",
+                count, elapsedMs, throughput, res.success(), res.skipped(), res.failed()));
 
         Assertions.assertEquals(0, res.failed());
+    }
+
+    @AfterAll
+    static void printSummary() {
+        log.info("\n========== BENCHMARK SUMMARY ==========\n" +
+                "| N (txn)    | Elapsed    | Throughput      | Result                        |\n" +
+                "|------------|------------|------------------|-------------------------------|\n" +
+                String.join("\n", summaryRows) +
+                "\n========================================");
     }
 }

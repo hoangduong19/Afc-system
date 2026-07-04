@@ -77,7 +77,8 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "https://fmc-system.vercel.app"
+                "https://fmc-system.vercel.app",
+                "https://ticket-web-app-production.up.railway.app"
 
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -1,6 +1,7 @@
 package com.metro.afc.trip.dlq;
 
 import com.metro.afc.shared.infrastructure.config.RabbitMQConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Test độc lập verify hạ tầng DLQ + retry của transaction.batch.queue,
  * KHÔNG đụng tới TransactionIngestionService thật — tránh phải sửa code tay mỗi lần.
  */
+@Slf4j
 @Testcontainers
 class TransactionBatchDlqTest {
 
@@ -42,7 +44,6 @@ class TransactionBatchDlqTest {
 
         RabbitAdmin admin = new RabbitAdmin(connectionFactory);
 
-        // Khai báo topology GIỐNG HỆT RabbitMQConfig thật
         admin.declareExchange(new org.springframework.amqp.core.TopicExchange(RabbitMQConfig.AFC_EXCHANGE));
         admin.declareExchange(new org.springframework.amqp.core.DirectExchange(RabbitMQConfig.TRANSACTION_BATCH_DLX));
 
@@ -65,38 +66,43 @@ class TransactionBatchDlqTest {
                 .bind(dlq).to(new org.springframework.amqp.core.DirectExchange(RabbitMQConfig.TRANSACTION_BATCH_DLX))
                 .with(RabbitMQConfig.TRANSACTION_BATCH_DLQ_ROUTING));
 
-        // Retry interceptor GIỐNG application.yml: max-attempts=3, initial=2000, multiplier=2.0
         AtomicInteger attemptCount = new AtomicInteger(0);
         CountDownLatch dlqLatch = new CountDownLatch(1);
 
         RetryOperationsInterceptor retryInterceptor = RetryInterceptorBuilder.stateless()
                 .maxAttempts(3)
                 .backOffOptions(2000, 2.0, 10000)
-                .recoverer(new RejectAndDontRequeueRecoverer()) // tương đương default-requeue-rejected: false
+                .recoverer(new RejectAndDontRequeueRecoverer())
                 .build();
 
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueueNames(RabbitMQConfig.TRANSACTION_BATCH_QUEUE);
         container.setAdviceChain(retryInterceptor);
         container.setMessageListener((MessageListener) message -> {
-            attemptCount.incrementAndGet();
+            int attempt = attemptCount.incrementAndGet();
+            // THÊM LOG Ở ĐÂY: in ra mỗi lần listener bị gọi lại (retry)
+            log.warn(">>> [RETRY {}/3] Nhận message trên transaction.batch.queue, giả lập lỗi hệ thống...", attempt);
             throw new RuntimeException("SIMULATED SYSTEM ERROR - test DLQ");
         });
         container.start();
 
-        // Listener phụ để bắt message khi nó rơi vào DLQ
         SimpleMessageListenerContainer dlqContainer = new SimpleMessageListenerContainer(connectionFactory);
         dlqContainer.setQueueNames(RabbitMQConfig.TRANSACTION_BATCH_DLQ);
-        dlqContainer.setMessageListener((MessageListener) message -> dlqLatch.countDown());
+        dlqContainer.setMessageListener((MessageListener) message -> {
+            // THÊM LOG Ở ĐÂY: xác nhận message đã rơi vào DLQ, kèm số lần đã retry trước đó
+            log.info(">>> [DLQ] Message đã bị chuyển vào {} sau {} lần retry thất bại",
+                    RabbitMQConfig.TRANSACTION_BATCH_DLQ, attemptCount.get());
+            dlqLatch.countDown();
+        });
         dlqContainer.start();
 
-        // Publish 1 message giả
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(new SimpleMessageConverter());
+        log.info(">>> Publish message giả lên {} với routing key {}",
+                RabbitMQConfig.AFC_EXCHANGE, RabbitMQConfig.TRANSACTION_BATCH_KEY);
         template.convertAndSend(RabbitMQConfig.AFC_EXCHANGE, RabbitMQConfig.TRANSACTION_BATCH_KEY,
                 "{\"transactions\":[]}");
 
-        // Tổng thời gian tối đa: 2s + 4s + 8s = 14s, cho dư thời gian buffer
         boolean landedInDlq = dlqLatch.await(20, TimeUnit.SECONDS);
 
         container.stop();
